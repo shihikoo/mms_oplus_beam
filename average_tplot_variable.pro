@@ -22,13 +22,13 @@
 ;-
 PRO average_tplot_variable, var, avg, NEW_NAME = NEW_NAME, sumup = sumup
   
-COMMON get_error, get_err_no, get_err_msg, default_verbose
+  COMMON get_error, get_err_no, get_err_msg, default_verbose
   
-get_err_no = 0 & get_err_msg = ''
-
+  get_err_no = 0 & get_err_msg = ''
+  
   IF avg LE 0 THEN BEGIN
-    PRINT, 'the avg time must be > 0'
-    RETURN
+     PRINT, 'the avg time must be > 0'
+     RETURN
   ENDIF
   
   ;--------------------------------------------------------------------
@@ -107,14 +107,14 @@ get_err_no = 0 & get_err_msg = ''
       IF av_cnt GT 0 THEN BEGIN ; if there are measurements within 
                                 ; an AVG sec interval
         
-          time_avg(jj)   = TOTAL(time(av_ind))   / av_cnt
+          time_avg(jj)   = TOTAL(time(av_ind),/NaN)   / av_cnt
           IF dim_numb EQ 1 THEN BEGIN
               yray_avg(jj, *) = MEAN(yray(av_ind),  /NaN)
           ENDIF ELSE BEGIN
               IF KEYWORD_SET(sumup) THEN BEGIN 
-                  yray_avg(jj, *) = TOTAL(yray(av_ind, *), 1)
+                  yray_avg(jj, *) = TOTAL(yray(av_ind, *), 1, /NaN)
               ENDIF ELSE BEGIN 
-                  yray_avg(jj, *) = TOTAL(yray(av_ind, *), 1) /av_cnt
+                  yray_avg(jj, *) = TOTAL(yray(av_ind, *), 1, /NaN) /av_cnt
               ENDELSE 
           ENDELSE       
           jj = jj + 1
@@ -168,7 +168,6 @@ get_err_no = 0 & get_err_msg = ''
     ; Set plot attributes for new variable names
     ;------------------------------------------------------------------
     IF KEYWORD_SET(NEW_NAME) THEN BEGIN
-      
       IF strpos(var_names(iv), '_UN') NE -1 THEN BEGIN
         dumstr = strmid(var_names(iv), $
                         strpos(var_names(iv), '_UN')+3,$
@@ -191,32 +190,18 @@ get_err_no = 0 & get_err_msg = ''
         options, new_var_name, 'spec',1
         options, new_var_name, 'x_no_interp',1
         options, new_var_name, 'y_no_interp',1
-        options, new_var_name, 'ytitle', $
-          'SC' + string(sat, format='(i1.1)') + '!C!C' + $
-          specie_str(specie)+' (eV)'
+        options, new_var_name, 'ytitle', 'SC' + string(sat, format='(i1.1)') + '!C!C' +  specie_str(specie)+' (eV)'
         options, new_var_name, 'ztitle', uname
         ylim,    new_var_name,  20., 4.5e4, 1
-        
-;        zlim, '*SP0*', 1.e0,  1.e3, 1
-;        zlim, '*SP1*', 1.e-1, 1.e2, 1
-;        zlim, '*SP2*', 1.e-2, 1.e1, 1
-;        zlim, '*SP3*', 1.e-1, 1.e1, 1
       ENDIF
       
       IF STRMID(var_names(iv),0,6) EQ 'PASPEC' THEN BEGIN
         options, new_var_name, 'spec',1
         options, new_var_name, 'x_no_interp',1
         options, new_var_name, 'y_no_interp',1
-        options, new_var_name, 'ytitle', $
-          'SC' + string(sat, format='(i1.1)') + '!C!C' + $
-          specie_str(specie)+' (deg)'
+        options, new_var_name, 'ytitle', 'SC' + string(sat, format='(i1.1)') + '!C!C' +  specie_str(specie)+' (deg)'
         options, new_var_name, 'ztitle', uname
         ylim,    new_var_name,  0., 360., 0
-        
-;        zlim, '*SP0*', 1.e0,  1.e3, 1
-;        zlim, '*SP1*', 1.e-1, 1.e2, 1
-;        zlim, '*SP2*', 1.e-2, 1.e1, 1
-;        zlim, '*SP3*', 1.e-1, 1.e1, 1
       ENDIF
       
       IF STRMID(var_names(iv),0,3) EQ 'MAG' THEN BEGIN
@@ -226,6 +211,7 @@ get_err_no = 0 & get_err_msg = ''
     ENDIF
     
     next:
-  ENDFOR
+ ENDFOR
+
 END
   

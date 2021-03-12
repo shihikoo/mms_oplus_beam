@@ -1,6 +1,5 @@
-PRO beam_filter, sc, pap_name, epcut_name, pap_beam_et_name, epcut_beam_name
+PRO beam_filter, pap_name, epcut_name, bx_name, x_gse_name, z_gsm_name, pap_beam_et_name, epcut_beam_name
 
-sc_str = STRING(sc, FORMAT = '(i1.1)')
 ;-----------------------------------
 ;load input data and basic settings
 ;-------------------------------------
@@ -23,21 +22,21 @@ n_e = 2                         ;accepted energy bin difference
 ;Bx (tail region) and z_gsm (near earth region)
 ;------------------------------------------------------------------
 ;load data 
-bx_name = 'MAG_SC'+sc_str+'_B_xyz_gse_X'
+;bx_name = 'MMS'+sc_str+'FGM_SRVY_MAG_GSM_X'
 get_data,bx_name, data = data
 time_bx = data.x
 data_bx = data.y
 data_bx = INTERPOL(data_bx, time_bx, time_avg)
 time_bx = time_avg
 
-x_gse_name = 'EPH_SC'+sc_str+'_GSE_X'
+;x_gse_name = 'MMS'+sc_str+'_EPHEM_'+bmodel+'_GSE_X'
 get_data, x_gse_name, data = data
 time_x_gse = data.x
 data_x_gse = data.y
 data_x_gse = INTERPOL(data_x_gse, time_x_gse, time_avg)
 time_x_gse = time_avg
 
-z_gsm_name = 'EPH_SC'+sc_str+'_GSM_Z'
+;z_gsm_name = 'MMS'+sc_str+'_FGM_SRVY_MAG_GSM_Z'
 get_data, z_gsm_name, data = data
 time_z_gsm = data.x
 data_z_gsm = data.y
