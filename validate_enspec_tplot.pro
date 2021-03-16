@@ -1,11 +1,12 @@
-PRO validate_enspec_tplot, tplot_name, t_s, t_e, average_time, error_message = error_message
+PRO validate_enspec_tplot, tplot_var_name, t_s, t_e, average_time, error_message = error_message
+
 ; wether energy data loaded or not  
-  tplot_names, tplot_name, names = names   
+  tplot_names, tplot_var_name, names = names   
   IF names(0) EQ '' OR names(0) EQ '*' THEN BEGIN 
      error_message = error_message + 'No data loaded '+'('+tplot_name+'). '
   ENDIF ELSE BEGIN 
 ; data during display time need to be more than 2 
-     get_data, tplot_name,  data = data, dlim = dlim, lim = lim
+     get_data, tplot_var_name,  data = data, dlim = dlim, lim = lim
      index = where(data.x GT (t_s+1) AND data.x LE t_e, ct)
      IF ct LT 2 THEN BEGIN 
         error_message = error_message + 'Data are less than 2 '+'('+tplot_name+'). '

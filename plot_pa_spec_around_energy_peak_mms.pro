@@ -1,4 +1,4 @@
-PRO plot_pa_spec_around_energy_peak_mms, sat, specie, units_name, epcut, outvar = outvar, average_time = average_time, start_time = start_time, END_time = END_time, n_range = n_range, PaBin = PaBin
+PRO plot_pa_spec_around_energy_peak_mms, sat, specie, units_name, epcut, pa_range, outvar = outvar, average_time = average_time, start_time = start_time, END_time = END_time, n_range = n_range, PaBin = PaBin
 ;----------------------------------------------------------
 ; check keywords and set the energybins range to nrange           
 ;---------------------------------------------------------
@@ -80,7 +80,12 @@ PRO plot_pa_spec_around_energy_peak_mms, sat, specie, units_name, epcut, outvar 
            
            s_time_pa = s_pa.x
            s_flux_pa = s_pa.y
-           s_pa_pa = s_pa.v                   
+           s_pa_pa = s_pa.v
+           pitch_angle = s_pa_pa(0,*)
+
+           index = where(pitch_angle LT pa_range(0) OR pitch_angle GT pa_range(1), ct)
+           IF ct GT 0 THEN s_flux_pa(*,index) = 0
+                   
 ;average flux data over average_time and save them into arrays 
            IF units_name EQ 'DIFF FLUX' THEN  y_data = TOTAL(s_flux_pa(*, 0:7),1 ,/Nan)/N_ELEMENTS(s_flux_pa(*, 0))
            IF units_name EQ 'EFLUX' THEN   y_data = TOTAL(s_flux_pa(*, 0:7), 1,/Nan)

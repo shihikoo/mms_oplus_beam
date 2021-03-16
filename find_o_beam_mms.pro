@@ -19,6 +19,8 @@
 ;
 PRO find_o_beam_mms, sc = sc, $
                      sp = sp, $
+                     t_s = t_s, $
+                     t_e = t_e, $
                      log_filename = log_filename, $
                      average_time = average_time, $
                      idl_plot = idl_plot, $
@@ -70,23 +72,23 @@ PRO find_o_beam_mms, sc = sc, $
 ;n_delay = 1
   low_counts_line = 9
   pa_counts_line = low_counts_line/88.
-  
-  beta_name = 'Plasma_Beta_SC'+sc_str 
-  beam_name = 'PASPEC_SC' + sc_str + '_IN' + '_COMBINED_UNDIFFFLUX_SP' + sp_str + '_ET0_All_AVG*_PAP_ET_beam'
-
+ 
 ;-------------------------------------------------------------
 ;Delete all the string stored data in order to make sure the program can run correctly
 ;-----------------------------------------------------------
   tplot_names, names = names
   store_data, DELETE = names
 
-;----------------------------------------------------------------
+;---------------------------------------------------------------
 ;Get the time interval from timespan
 ;-----------------------------------------------------------------
-  get_timespan, interval
+  IF NOT KEYWORD_SET(t_s) OR NOT KEYWORD_SET(t_e) THEN BEGIN
+     get_timespan, interval
   
-  t_s = interval(0)  
-  t_e = interval(1)
+     t_s = interval(0)  
+     t_e = interval(1)
+  ENDIF 
+ 
   t_dt = t_e - t_s
   ts = time_string(t_s)  
   te = time_string(t_e)
@@ -97,6 +99,8 @@ PRO find_o_beam_mms, sc = sc, $
   
   data_filename = output_path + 'tplot_restore/o_beam_' + date_s + '_' + time_s
   IF NOT KEYWORD_SET(log_filename) THEN log_filename = output_path + 'log.txt'
+
+  timespan, t_s, t_dt, /seconds
 ;----------------------------------------------------------------
 ;Loading data
 ;----------------------------------------------------------------
@@ -107,6 +111,9 @@ PRO find_o_beam_mms, sc = sc, $
         spawn,'gzip -d ' + flndata + '.tplot.gz'
         tplot_restore, filenames = flndata + '.tplot' 
     ;    spawn,'gzip -9 '+flndata+'.tplot'
+
+  beam_name = 'PASPEC_SC' + sc_str + '_IN' + '_COMBINED_UNDIFFFLUX_SP' + sp_str + '_ET0_All_AVG*_PAP_ET_beam'
+
         tplot_names, beam_name, names = names
         IF names(0) NE  '' THEN BEGIN 
            beam_name = names(0)
@@ -132,34 +139,18 @@ PRO find_o_beam_mms, sc = sc, $
 ;-- Load ephemeris-- 
   bmodel = 'ts04d'
   get_mms_ephemeris, [sc], bmodel = bmodel 
+
   ephemeris_names = 'MMS'+sc_str+'_EPHEM_'+bmodel+'_*'
-  
-;-- Load energy spectra - parallel --
-  plot_mms_hpca_en_spec, [sc], [sp], 'DIFF FLUX', pa = [0, 60]
-  diffflux_o1_parallel_name = 'mms'+sc_str+'_hpca_oplus_eflux_pa_red_000_060_nflux'
-
-  plot_mms_hpca_en_spec, [sc], [sp], 'EFLUX', pa = [0, 60]
-  eflux_o1_parallel_name = 'mms'+sc_str+'_hpca_oplus_eflux_pa_red_000_060'
-
-;-- Load energy spectra - perpendicular --
-  plot_mms_hpca_en_spec, [sc], [sp], 'DIFF FLUX', pa = [60, 120]
-  diffflux_o1_perpendicular_name = 'mms'+sc_str+'_hpca_oplus_eflux_pa_red_060_120_nflux'
-
-  plot_mms_hpca_en_spec, [sc], [sp], 'EFLUX', pa = [60, 120]
-  eflux_o1_perpendicular_name = 'mms'+sc_str+'_hpca_oplus_eflux_pa_red_060_120'
-
-;-- Load energy spectra - anti-parallel --
-  plot_mms_hpca_en_spec, [sc], [sp], 'DIFF FLUX', pa = [120, 180]
-  diffflux_o1_antiparallel_name = 'mms'+sc_str+'_hpca_oplus_eflux_pa_red_120_180_nflux'
-
-  plot_mms_hpca_en_spec, [sc], [sp], 'EFLUX', pa = [120, 180]
-  eflux_o1_antiparallel_name = 'mms'+sc_str+'_hpca_oplus_eflux_pa_red_120_180'
+  x_gse_name = 'MMS'+sc_str+'_EPHEM_'+bmodel+'_GSE_X'
 
 ;-- Load Magnetic field--
   coord = 'GSM'
   plot_mms_fgm_mag, [sc], coord
+
   mag_names = 'MMS' + sc_str + '_FGM_SRVY_MAG_'+coord+'_*'
   mag_pressure_name =  'MMS' + sc_str + '_FGM_SRVY_MAG_'+coord+'_MAG_PR'
+  bx_gsm_name =  'MMS'+sc_str+'_FGM_SRVY_MAG_GSM_X'
+  bz_gsm_name = 'MMS'+sc_str+'_FGM_SRVY_MAG_GSM_Z'
 
 ;-- Load H+ and O+ moments--
   plot_mms_hpca_moments, [sc, sc], [0, 3] , 'GSM'
@@ -170,6 +161,17 @@ PRO find_o_beam_mms, sc = sc, $
   h1_velocity_name = 'MMS'+sc_str+'_HPCA_SRVY_L2_h1_velocity_GSM_T'
   o1_velocity_name = 'MMS'+sc_str+'_HPCA_SRVY_L2_o1_velocity_GSM_T'
 
+;-- Validate and calculate total pressure & beta --
+  calculate_plasma_beta, h1_pressure_name, mag_pressure_name, o1_pressure_name, error_message
+ 
+  beta_name = 'Plasma_Beta_SC'+sc_str 
+
+  IF error_message NE ''  THEN BEGIN
+     write_text_to_file, log_filename, TIME_STRING(t_s) + ' TO '+ TIME_STRING(t_e) + error_message, /APPEND
+     close, /all
+     RETURN 
+  ENDIF 
+
 ;-- read OMNI data --
 ;  read_omni, HR=1, ALL=1
 
@@ -177,26 +179,36 @@ PRO find_o_beam_mms, sc = sc, $
 ;  sc = ['All'] 
 ;  plot_lanl_geo_sopa_enspec, sc
 
-;-- Plot PA --
-;plot_mms_hpca_pa_spec, [sc], [sp], 'DIFF FLUX', no_convert_en = 1, energy = [1e3,1e4], path=path, fln = fln
+;-- Load energy spectra - parallel --
+  plot_mms_hpca_en_spec, [sc], [sp], 'DIFF FLUX', pa = [0, 60]
+  diffflux_o1_parallel_name = 'mms'+sc_str+'_hpca_oplus_eflux_pa_red_000_060_nflux'
 
-;-- Validate and calculate total pressure & beta --
-  calculate_plasma_beta, h1_pressure_name, mag_pressure_name, o1_pressure_name, error_message
-  IF error_message NE ''  THEN BEGIN
-     write_text_to_file, log_filename, TIME_STRING(t_s) + ' TO '+ TIME_STRING(t_e) + error_message, /APPEND
-     close, /all
-     RETURN 
-  ENDIF 
+  plot_mms_hpca_en_spec, [sc], [sp], 'EFLUX', pa = [0, 60]
+  eflux_o1_parallel_name = 'mms'+sc_str+'_hpca_oplus_eflux_pa_red_000_060'
 
+ beam_identification, [sc], [sp], diffflux_o1_parallel_name,eflux_o1_parallel_name,  average_time, [0, 60], bx_gsm_name, x_gse_name, bz_gsm_name, t_s = t_s, t_e= t_e, low_counts_line = low_counts_line, pa_counts_line = pa_counts_line, plot_low_count_filter = plot_low_count_filter, et_beam = et_beam, epcut_beam = epcut_beam, dlimf = dlimf, limf = limf, dlimc = dlimc, limc = limc, error_message = error_message
+
+;-- Load energy spectra - perpendicular --
+  plot_mms_hpca_en_spec, [sc], [sp], 'DIFF FLUX', pa = [60, 120]
+  diffflux_o1_perpendicular_name = 'mms'+sc_str+'_hpca_oplus_eflux_pa_red_060_120_nflux'
+
+  plot_mms_hpca_en_spec, [sc], [sp], 'EFLUX', pa = [60, 120]
+  eflux_o1_perpendicular_name = 'mms'+sc_str+'_hpca_oplus_eflux_pa_red_060_120'
+
+  beam_identification, [sc], [sp], diffflux_o1_perpendicular_name,eflux_o1_perpendicular_name,  average_time, [0, 60], bx_gsm_name, x_gse_name, bz_gsm_name, t_s = t_s, t_e= t_e, low_counts_line = low_counts_line, pa_counts_line = pa_counts_line, plot_low_count_filter = plot_low_count_filter, et_beam = et_beam, epcut_beam = epcut_beam, dlimf = dlimf, limf = limf, dlimc = dlimc, limc = limc, error_message = error_message
+
+;-- Load energy spectra - anti-parallel --
+  plot_mms_hpca_en_spec, [sc], [sp], 'DIFF FLUX', pa = [120, 180]
+  diffflux_o1_antiparallel_name = 'mms'+sc_str+'_hpca_oplus_eflux_pa_red_120_180_nflux'
+
+  plot_mms_hpca_en_spec, [sc], [sp], 'EFLUX', pa = [120, 180]
+  eflux_o1_antiparallel_name = 'mms'+sc_str+'_hpca_oplus_eflux_pa_red_120_180'
+
+  beam_identification, [sc], [sp], diffflux_o1_antiparallel_name,eflux_o1_antiparallel_name,  average_time, [0, 60], bx_gsm_name, x_gse_name, bz_gsm_name, t_s = t_s, t_e= t_e, low_counts_line = low_counts_line, pa_counts_line = pa_counts_line, plot_low_count_filter = plot_low_count_filter, et_beam = et_beam, epcut_beam = epcut_beam, dlimf = dlimf, limf = limf, dlimc = dlimc, limc = limc, error_message = error_message
 ;----------------------------------------------------------------
 ; Identify O+ beam
 ;----------------------------------------------------------------
-
-
-
-beam_identification, diffflux_o1_parallel_name,eflux_o1_parallel_name, t_s, t_e, bx_name
-
-
+stop
 ;----------------------------------------------------------------
 ; Validation
 ;----------------------------------------------------------------  
