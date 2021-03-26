@@ -20,7 +20,7 @@
 ;   09/25/01 - The time step loop index is declared as a long.
 ;   06/11/08 - Keyword total added            
 ;-
-PRO average_tplot_variable, var, avg, NEW_NAME = NEW_NAME, sumup = sumup
+PRO average_tplot_variable, var, avg, NEW_NAME = NEW_NAME, sumup = sumup, new_var_names = new_var_names
   
   COMMON get_error, get_err_no, get_err_msg, default_verbose
   
@@ -43,7 +43,7 @@ PRO average_tplot_variable, var, avg, NEW_NAME = NEW_NAME, sumup = sumup
   ENDIF ELSE BEGIN                    ; var -> integer
     tplot_names, var, NAMES=var_names
   ENDELSE
-  
+  new_var_names = strarr(n_elements(var_names))
   ;--------------------------------------------------------------------
   ; Loop through all variables
   ;--------------------------------------------------------------------
@@ -108,6 +108,11 @@ PRO average_tplot_variable, var, avg, NEW_NAME = NEW_NAME, sumup = sumup
                                 ; an AVG sec interval
         
           time_avg(jj)   = TOTAL(time(av_ind),/NaN)   / av_cnt
+
+          index = where(yray_avg(jj,*) le -9e10,ct) ; Jing: add -9e10 value to nan check point
+          IF ct GT 0 THEN yray_avg(jj, index) = !VALUES.F_NAN   
+          av_cnt = av_cnt - ct ; if there is nan data, the average should  take the nan out entirely, so the av_cnt should change
+
           IF dim_numb EQ 1 THEN BEGIN
               yray_avg(jj, *) = MEAN(yray(av_ind),  /NaN)
           ENDIF ELSE BEGIN
@@ -163,7 +168,7 @@ PRO average_tplot_variable, var, avg, NEW_NAME = NEW_NAME, sumup = sumup
     ENDELSE
     
     store_data, new_var_name, data=datastr, dlim=dlim, lim=lim
-    
+    new_var_names(iv) = new_var_name
     ;------------------------------------------------------------------
     ; Set plot attributes for new variable names
     ;------------------------------------------------------------------

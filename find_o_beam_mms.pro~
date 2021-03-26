@@ -1,24 +1,22 @@
-;-------------------------------------------------------------------------------------
-; Purpose: Identify O+ beam using from energy spec, pitch angle spec
+;Purpose: Identify O+ beam using from energy spec, pitch angle spec
 ;         and then make corresponding mom plot in page1 the whole procedure
 ;         plot in page2
 ;
-; Input: sc           : Cluster no. if not set the default is 4
+;Input: sc           : Cluster no. if not set the default is 4
 ;       average_time : in seconds , if not set the default is 5 min
 ;       
-; Keywords: idl_plot  : plot the result plot in idl_window
+;Keywords: idl_plot  : plot the result plot in idl_window
 ;          ps        : plot the result plot in dumpdata,
 ;          dumpdata  : output data
 ;          globe_plot: plot a set of ot_globe plot to show the selected
 ;                      range for plotting mom
 ;          store_data: store_data into .tplot  default: 1 
 ;
-; Output: Depends on Keywords settings 
+;Output: Depends on Keywords settings 
 ;        There will also be two .log files
 ;
-; Written by Jing Liao  03/10/2021
-;------------------------------------------------------------------------------------
-
+;Written by Jing Liao  03/10/2021
+;
 PRO find_o_beam_mms, sc = sc, $
                      sp = sp, $
                      t_s = t_s, $
@@ -38,20 +36,20 @@ PRO find_o_beam_mms, sc = sc, $
                      displaytime = displaytime, $
                                 ;   plot_mom = plot_mom, $
                      plot_all = plot_all, $
-                                ;              use_angle_range = use_angle_range, $
-                                ;              use_energy_range = use_energy_range, $
+       ;              use_angle_range = use_angle_range, $
+       ;              use_energy_range = use_energy_range, $
                                 ;      plot_imf = plot_imf, $
-                                ;             beam_angle_range =  beam_angle_range, $
+        ;             beam_angle_range =  beam_angle_range, $
                                 ;        only_in_lobe=only_in_lobe,$
                                 ;        plot_add_eflux_procedure=plot_add_eflux_procedure,$
                                 ;          add_distfunc = add_distfunc,$
                                 ;         plot_add_distfunc_procedure=plot_add_distfunc_procedure,$
-                     flux_threshold = flux_threshold
+                     flux_threshold=flux_threshold
   
 ;-----------------------------------------------------
-; Check keywords  
+;check keywords  
 ;---------------------------------------------------
-  running_time_s = systime(,/seconds)
+  running_time_s = systime()
   IF NOT keyword_set(sc) THEN sc = 1
   sc_str = STRING(sc, FORMAT = '(i1.1)')
   
@@ -80,6 +78,7 @@ PRO find_o_beam_mms, sc = sc, $
      END             
   ENDCASE  
 
+;  sp_str= STRING(sp, FORMAT = '(i1.1)')
   beam_name = 'PAs'+sc_str+'_COMBINED_nfluxa_ET_beam'
 
   IF NOT KEYWORD_SET(AVERAGE_TIME) THEN average_time = 5 * 60 ;in seconds
@@ -307,7 +306,7 @@ PRO find_o_beam_mms, sc = sc, $
 ;-------------------------------------------------------------------------------
 
 ; parallel
-  parallel_pa_range = [0,60]
+  parallel_pa_range = [0,90]
   parallel_pa_low_str = STRCOMPRESS(STRING(parallel_pa_range(0), FORMAT = '(i3.3)'), /REMOVE_ALL) 
   parallel_pa_high_str = STRCOMPRESS(STRING(parallel_pa_range(1), FORMAT ='(i3.3)'),  /REMOVE_ALL) 
 
@@ -317,9 +316,8 @@ PRO find_o_beam_mms, sc = sc, $
 
   tplot_names, parallel_et_beam_name, names = names
   IF NOT KEYWORD_SET(names) THEN  identify_beams, [sc], [sp], diffflux_o1_parallel_name,eflux_o1_parallel_name $
-     ,  average_time, time_avg,  bx_name, x_gse_name, z_gsm_name, beta_name, region_name $
+     ,  average_time, time_avg,  parallel_pa_range, bx_name, x_gse_name, z_gsm_name, beta_name, region_name $
      , t_s = adjusted_t_s, t_e= adjusted_t_e $
-     , pa_range = [0,90], peak_pa_range = parallel_pa_range $
      , low_count_line = low_count_line, pa_count_line = pa_count_line, plot_low_count_filter = plot_low_count_filter, flux_threshold = flux_threshold $
      , pa_name = parallel_pa_name, pap_name = parallel_pap_name, pap_beam_name = parallel_pap_beam_name $
      , pap_et_beam_name = parallel_et_beam_name, epcut_beam_name = parallel_epcut_beam_name,erange_beam_name = parallel_erange_beam_name $
@@ -343,7 +341,7 @@ PRO find_o_beam_mms, sc = sc, $
 ;     , dlimf = dlimf, limf = limf, dlimc = dlimc, limc = limc, error_message = error_message, bin_size_pa = bin_size_pa
   
 ; antiparallel
-  antiparallel_pa_range = [120,180]
+  antiparallel_pa_range = [90,180]
   antiparallel_pa_low_str = STRCOMPRESS(STRING(antiparallel_pa_range(0), FORMAT = '(i3.3)'), /REMOVE_ALL) 
   antiparallel_pa_high_str = STRCOMPRESS(STRING(antiparallel_pa_range(1), FORMAT ='(i3.3)'),  /REMOVE_ALL) 
   antiparallel_et_beam_name = 'PAs' + sc_str + '_hpca_oplus_eflux_pa_re_nfluxa_red_'+ antiparallel_pa_low_str +'_'+antiparallel_pa_high_str +'_nflux_PAP_ET_beam'
@@ -352,9 +350,8 @@ PRO find_o_beam_mms, sc = sc, $
   
   tplot_names, antiparallel_et_beam_name, names = names
   IF NOT KEYWORD_SET(names) THEN  identify_beams, [sc], [sp], diffflux_o1_antiparallel_name,eflux_o1_antiparallel_name $
-     ,  average_time, time_avg, bx_name, x_gse_name, z_gsm_name, beta_name, region_name $
+     ,  average_time, time_avg, antiparallel_pa_range, bx_name, x_gse_name, z_gsm_name, beta_name, region_name $
      , t_s = adjustd_t_s, t_e= adjusted_t_e $
-     , pa_range = [90,180], peak_pa_range = antiparallel_pa_range $
      , low_count_line = low_count_line, pa_count_line = pa_count_line, plot_low_count_filter = plot_low_count_filter, flux_threshold = flux_threshold  $
      , pa_name = antiparallel_pa_name, pap_name = antiparallel_pap_name, pap_beam_name = antiparallel_pap_beam_name $
      , pap_et_beam_name = antiparallel_et_beam_name, epcut_beam_name = antiparallel_epcut_beam_name, erange_beam_name = antiparallel_erange_beam_name $
@@ -401,7 +398,7 @@ PRO find_o_beam_mms, sc = sc, $
   sw_t_name = 'OMNI_HR_temperature'
   
   tplot_names, omni_tplot_names, names = names
-  IF NOT KEYWORD_SET(names) THEN read_omni, ALL=1
+  IF NOT KEYWORD_SET(names) THEN read_omni, HR=1, ALL=1
   average_tplot_variable_with_given_time, omni_tplot_names, average_time, time_avg
 
 ;-----------------------------------------------------------------------
@@ -538,8 +535,8 @@ PRO find_o_beam_mms, sc = sc, $
   ENDFOR       
   timespan, t_s, t_dt, /SECONDS
          
-;print, running_time_s
-print,systime(,/seconds) - running_time_s     
+print, running_time_s
+print,systime()        
 stop
 ;--------------------------------------
 ;dump the data out if required

@@ -1,5 +1,5 @@
 ;Clean up the low counts data in flux data, for energy data in all dirctions
-PRO filter_enspec, counts_avg_name, flux_avg_name, low_counts_line, plot_low_count_filter = plot_low_count_filter, filename = filename
+PRO filter_enspec, counts_avg_name, flux_avg_name, low_count_line, plot_low_count_filter = plot_low_count_filter, filename = filename
   tplot_names, counts_avg_name, names = names1
   tplot_names, flux_avg_name, names = names2
   IF names1(0) EQ '' OR names2(0) EQ '' THEN RETURN
@@ -21,10 +21,10 @@ PRO filter_enspec, counts_avg_name, flux_avg_name, low_counts_line, plot_low_cou
   str = {x:time_avg, y:flux_avg, v:energy_avg}
   store_data, flux_avg_name+'_Original', data = str, dlim = dlimf, lim = limf 
 
-; filtered all the data which have counts lower than low_counts_line
+; filtered all the data which have counts lower than low_count_line
 ; also clean the flux in the last energybin since the compression problem (or 2
 ; bins if energy bin # is 31) and store them in the original name
-  index = where(counts_avg LT low_counts_line, ct)
+  index = where(counts_avg LT low_count_line, ct)
   IF ct GT 0 THEN  flux_avg(index) = 0
   str = {x:time_avg, y:flux_avg, v:energy_avg}
   store_data, flux_avg_name, data = str, dlim = dimf, lim = limf
