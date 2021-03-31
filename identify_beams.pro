@@ -39,8 +39,8 @@ PRO identify_beams, sat, specie, flux_name, counts_name,  average_time, time_avg
      t_e = interval(1)
   ENDIF
 
-  IF NOT KEYWORD_SET(low_count_line) THEN low_count_line = 9
-  IF NOT KEYWORD_SET(pa_count_line) THEN pa_count_line = low_count_line/88
+  IF NOT KEYWORD_SET(low_count_line) THEN low_count_line = 800.
+  IF NOT KEYWORD_SET(pa_count_line) THEN pa_count_line = low_count_line/16.
 
   IF NOT KEYWORD_SET(low_count_filename) THEN BEGIN
      ts = time_string(t_s)  
@@ -120,7 +120,7 @@ PRO identify_beams, sat, specie, flux_name, counts_name,  average_time, time_avg
   tplot_names, pap_name, names = names                       
                                                                                
   IF NOT KEYWORD_SET(names) THEN find_pa_peak, pa_name_eflux, pa_name, pap_name, beta_name $
-     , pa_count_line = low_count_line/8., flux_threshold = flux_threshold, peak_pa_range = peak_pa_range, def_pap_factor = [1.1,1.4,1.7]
+     , pa_count_line = pa_count_line, flux_threshold = flux_threshold, peak_pa_range = peak_pa_range, def_pap_factor = [1.1,1.4,1.7]
 
 ; filter pitch angle peak to beams by requiring continuity and close
 ; energy range
@@ -129,8 +129,7 @@ PRO identify_beams, sat, specie, flux_name, counts_name,  average_time, time_avg
   erange_beam_name = erange_name +'_beam'
   tplot_names, pap_et_beam_name, names = names 
                      
-  IF NOT KEYWORD_SET(names) THEN filter_beams, pap_name, epcut_name, erange_name $
-     , bx_name, x_gse_name, z_gsm_name $
+  IF NOT KEYWORD_SET(names) THEN filter_beams, pap_name, epcut_name, erange_name, bx_name, x_gse_name, z_gsm_name $
      , pap_et_name, pap_et_beam_name, epcut_beam_name, erange_beam_name
 
 END 

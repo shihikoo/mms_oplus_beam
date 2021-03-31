@@ -1,4 +1,4 @@
-;-------------------------------------------------------------------------------------
+ ;-------------------------------------------------------------------------------------
 ; Purpose: Identify O+ beam using from energy spec, pitch angle spec
 ;         and then make corresponding mom plot in page1 the whole procedure
 ;         plot in page2
@@ -51,7 +51,7 @@ PRO find_o_beam_mms, sc = sc, $
 ;-----------------------------------------------------
 ; Check keywords  
 ;---------------------------------------------------
-  running_time_s = systime(,/seconds)
+  running_time_s = systime(/seconds)
   IF NOT keyword_set(sc) THEN sc = 1
   sc_str = STRING(sc, FORMAT = '(i1.1)')
   
@@ -92,26 +92,71 @@ PRO find_o_beam_mms, sc = sc, $
   if not keyword_set(beam_angle_range) then beam_angle_range = 11.25
   if not keyword_set(use_energy_range) then use_energy_range = 1
 
-  if not keyword_set(low_count_line) then low_count_line = 9
-  if not keyword_set(low_count_line) then pa_count_line = low_count_line/88.
- 
-  bin_size_pa = 11.25 ; for mms it's 11.25, for codif it's 22.5
+  if not keyword_set(low_count_line) then low_count_line = 800 
+  if not keyword_set(low_count_line) then pa_count_line = low_count_line/16. ; 16 is number of pitch angular bins
+
+;--------------------------------------------------------------------
+; Settings 
+;--------------------------------------------------------------------  
+  bin_size_pa = 11.25           ; for mms it's 11.25, for codif it's 22.5
   error_message = ''
-;-------------------------------------------------------------
+
+  full_mms_energy_range = [1e1, 5e4]
+  
+  parallel_pa_range = [0, 60]                                                                                                                                                               
+  parallel_pa_low_str = STRCOMPRESS(STRING(parallel_pa_range(0), FORMAT = '(i3.3)'), /REMOVE_ALL) 
+  parallel_pa_high_str = STRCOMPRESS(STRING(parallel_pa_range(1), FORMAT ='(i3.3)'),  /REMOVE_ALL)
+;  perpendicular_pa_range = [60, 120]
+;  perpendicular_pa_low_str = STRCOMPRESS(STRING(antiparallel_pa_range(0), FORMAT = '(i3.3)'), /REMOVE_ALL) 
+;  perpendicular_pa_high_str = STRCOMPRESS(ROUND(antiparallel_pa_range(1), FORMAT ='(i3.3)',  /REMOVE_ALL) 
+  antiparallel_pa_range = [120,180]                                                                                                                                          
+  antiparallel_pa_low_str = STRCOMPRESS(STRING(antiparallel_pa_range(0), FORMAT = '(i3.3)'), /REMOVE_ALL) 
+  antiparallel_pa_high_str = STRCOMPRESS(STRING(antiparallel_pa_range(1), FORMAT ='(i3.3)'),  /REMOVE_ALL)
+  
+;----------------------------------------------------------------------
+; Constants
+;-----------------------------------------------------------------------
+  Avogadro_constant = 6.02214086e23 ; moe-1
+  electron_charge = 1.60217662e-19 ;coulombs
+;ion mass in amu
+  CASE sp OF                                                                                                                                                                               
+     0: BEGIN                                                  
+        ion_mass = 1.0                                                                                                                                                                      
+        sp_str = 'h'                                                                                                                                                                        
+     END                                                                                                                                                                                    
+     1: BEGIN                                                                                                                                                                               
+        ion_mass = 4.002602/2. 
+        sp_str = 'he1'                                                                                                                                                                      
+     END                                                                                                                                                                                    
+     2: BEGIN                                                                                                                                                                
+        ion_mass = 4.002602                                                                                                                                                                 
+        sp_str = 'he2'                                                                                                                                                                      
+     END                                                                                                                                                                                    
+     3: BEGIN                                                                                                                                                                               
+        ion_mass = 15.89                                                                                                                                                        
+        sp_str = 'o'                                                                                                                                                                       
+     END                                                                                                                                                                                    
+     4: BEGIN                                                                                                                                                                               
+        ion_mass = 1./1837.                                                                                                                                                                
+        sp_str = 'e'                                                                                                                                                                        
+     END                                                                                                                                                                                    
+  ENDCASE  
+
+;--------------------------------------------------------------------------
 ;Delete all the string stored data in order to make sure the program can run correctly
-;-----------------------------------------------------------
+;--------------------------------------------------------------------------
   tplot_names, names = names
   store_data, DELETE = names
 
-;---------------------------------------------------------------
+;------------------------------------------------------------------------
 ;Get the time interval from timespan
-;-----------------------------------------------------------------
+;------------------------------------------------------------------------
   IF NOT KEYWORD_SET(t_s) OR NOT KEYWORD_SET(t_e) THEN BEGIN
      get_timespan, interval
      t_s = interval(0)  
      t_e = interval(1)
   ENDIF 
- 
+  
   t_dt = t_e - t_s
   ts = time_string(t_s)  
   te = time_string(t_e)
@@ -127,8 +172,8 @@ PRO find_o_beam_mms, sc = sc, $
 ;-- We adjust the time to include two average_time before and after
 ;   the original time range to ensure we capture all the edge beams of
 ;   the time
-  adjusted_t_s = t_s - average_time * 2
-  adjusted_t_e = t_e + average_time * 2
+  adjusted_t_s = t_s - average_time * 2 > time_double('2016-01-01')
+  adjusted_t_e = t_e + average_time * 2 
   adjusted_dt = adjusted_t_e - adjusted_t_s
 
   timespan, adjusted_t_s,  adjusted_dt, /seconds
@@ -148,7 +193,7 @@ PRO find_o_beam_mms, sc = sc, $
      IF ct_tplot GT 0 THEN BEGIN     
         tplot_restore, filenames = data_filename + '.tplot' 
         spawn,'gzip -9f '+data_filename+'.tplot'        
-       
+        
         tplot_names, beam_name, names = names
         IF names(0) NE '' THEN BEGIN
            beam_name = names(0)
@@ -165,11 +210,11 @@ PRO find_o_beam_mms, sc = sc, $
            beam_found = 1
 
            write_text_to_file, log_filename,  ts+' TO '+ te+ '-------- Found O+ Beam------',/APPEND 
-;           close,/all
-;           RETURN
+           close,/all
+           RETURN
         ENDIF ELSE  beam_found = 0
      ENDIF ELSE beam_found = 0
-;     IF beam_found == 0 THEN BEGIN
+;     IF beam_found EQ 0 THEN BEGIN
 ;        write_text_to_file, log_filename,  ts + ' TO '+ te + '-----BEAM NOT FOUND------', /APPEND
 ;        close, /all
 ;        RETURN
@@ -177,7 +222,7 @@ PRO find_o_beam_mms, sc = sc, $
   ENDIF
 
 ;-----------------------------------------------------------------
-;If beam_recalc is set, then rerun the O+ identification process.
+;If beam_recalc is set, then return the O+ identification process.
 ;
 ;Load the tplot varibles
 ;----------------------------------------------------------------
@@ -192,10 +237,11 @@ PRO find_o_beam_mms, sc = sc, $
   y_gsm_name = 'MMS'+sc_str+'_EPHEM_'+bmodel+'_GSM_Y'
   z_gsm_name = 'MMS'+sc_str+'_EPHEM_'+bmodel+'_GSM_Z'
   mlt_name = 'MMS'+sc_str+'_EPHEM_'+bmodel+'_MLT'
-  ilat_name = 'MMS'+sc_str+'_EPHEM_'+bmodel+'_L_D'
+  ilatd_name = 'MMS'+sc_str+'_EPHEM_'+bmodel+'_L_D'
   dst_name = 'MMS'+sc_str+'_EPHEM_'+bmodel+'_Dst'
   kp_name = 'MMS'+sc_str+'_EPHEM_'+bmodel+'_Kp'
   tplot_names, ephemeris_names, names = names
+
   IF NOT KEYWORD_SET(names) THEN get_mms_ephemeris, [sc], bmodel = bmodel 
 
 ;-- Load Magnetic field--
@@ -233,7 +279,7 @@ PRO find_o_beam_mms, sc = sc, $
      n_avg = N_ELEMENTS(time_avg)
      average_tplot_variable_with_given_time, '*', average_time, time_avg
   ENDIF 
- 
+  
 ;-- Validate and calculate total pressure & beta --
   beta_name = 'Plasma_Beta_SC'+sc_str 
   p_total_name = 'Pressure_total_SC'+sc_str
@@ -243,6 +289,11 @@ PRO find_o_beam_mms, sc = sc, $
      calculate_plasma_beta, h1_pressure_name, mag_pressure_name, o1_pressure_name, beta_name = beta_name, p_total_name = p_total_name,  error_message = error_message
 
      IF error_message NE ''  THEN BEGIN
+        IF KEYWORD_SET(store_data)  THEN  BEGIN                                                                                                                   
+           tplot_save, filename = data_filename                                                                                                                                             
+           spawn,'gzip -9f '+data_filename+'.tplot'                                                                                                                                         
+        ENDIF   
+        
         write_text_to_file, log_filename, TIME_STRING(t_s) + ' TO '+ TIME_STRING(t_e) + error_message, /APPEND
         close, /all
         RETURN 
@@ -266,6 +317,11 @@ PRO find_o_beam_mms, sc = sc, $
      ct_magnetosphere = TOTAL(magnetosphere_region,/nan)
      IF ct_magnetosphere EQ 0 THEN BEGIN 
         write_text_to_file, log_filename,  ts + ' TO '+ te + '-----Not in magnetosphere------', /APPEND
+        IF KEYWORD_SET(store_data)  THEN  BEGIN                                                                          
+           tplot_save, filename = data_filename                                                                                                                                      
+           spawn,'gzip -9f '+data_filename+'.tplot'                                                                                                                                     
+        ENDIF  
+        
         close, /all
         RETURN
      ENDIF
@@ -275,42 +331,27 @@ PRO find_o_beam_mms, sc = sc, $
 ; Load enegy spectra
 ;----------------------------------------------------------------
 ;-- Load energy spectra - parallel --
-  diffflux_o1_parallel_name = 'mms'+sc_str+'_hpca_oplus_eflux_pa_red_000_090_nflux'
+  diffflux_o1_parallel_name = 'mms'+sc_str+'_hpca_oplus_eflux_pa_red_'+parallel_pa_low_str+'_' + parallel_pa_high_str+'_nflux'
   tplot_names, diffflux_o1_parallel_name, names =names
-  IF NOT KEYWORD_SET(names)  THEN plot_mms_hpca_en_spec, [sc], [sp], 'DIFF FLUX', pa = [0, 90]
- 
-  eflux_o1_parallel_name = 'mms'+sc_str+'_hpca_oplus_eflux_pa_red_000_090'
+  IF NOT KEYWORD_SET(names)  THEN plot_mms_hpca_en_spec, [sc], [sp], 'DIFF FLUX', pa = parallel_pa_range, energy = full_mms_energy_range
+  
+  eflux_o1_parallel_name = 'mms'+sc_str+'_hpca_oplus_eflux_pa_red_'+parallel_pa_low_str+'_'+parallel_pa_high_str
   tplot_names, eflux_o1_parallel_name, names = names
-  IF NOT KEYWORD_SET(names)  THEN plot_mms_hpca_en_spec, [sc], [sp], 'EFLUX', pa = [0, 90]
-
-;-- Load energy spectra - perpendicular --
-;  diffflux_o1_perpendicular_name = 'mms'+sc_str+'_hpca_oplus_eflux_pa_red_060_120_nflux'
-;  tplot_names, diffflux_o1_perpendicular_name, names = names
-;  IF NOT KEYWORD_SET(names)  THEN plot_mms_hpca_en_spec, [sc], [sp], 'DIFF FLUX', pa = [60, 120]
-
-;  eflux_o1_perpendicular_name = 'mms'+sc_str+'_hpca_oplus_eflux_pa_red_060_120'
-;  tplot_names,eflux_o1_perpendicular_name , names = names
-;  IF NOT KEYWORD_SET(names)  THEN plot_mms_hpca_en_spec, [sc], [sp], 'EFLUX', pa = [60, 120]
+  IF NOT KEYWORD_SET(names)  THEN plot_mms_hpca_en_spec, [sc], [sp], 'EFLUX', pa = parallel_pa_range, 	energy = full_mms_energy_range
 
 ;-- Load energy spectra - anti-parallel --
-  
-  diffflux_o1_antiparallel_name = 'mms'+sc_str+'_hpca_oplus_eflux_pa_red_090_180_nflux'
+  diffflux_o1_antiparallel_name = 'mms'+sc_str+'_hpca_oplus_eflux_pa_red_'+antiparallel_pa_low_str+'_'+antiparallel_pa_high_str+'_nflux'
   tplot_names, diffflux_o1_antiparallel_name, names = names
-  IF NOT KEYWORD_SET(names)  THEN plot_mms_hpca_en_spec, [sc], [sp], 'DIFF FLUX', pa = [90, 180]
+  IF NOT KEYWORD_SET(names)  THEN plot_mms_hpca_en_spec, [sc], [sp], 'DIFF FLUX', pa = antiparallel_pa_range, energy = full_mms_energy_range
 
-  eflux_o1_antiparallel_name = 'mms'+sc_str+'_hpca_oplus_eflux_pa_red_090_180'
+  eflux_o1_antiparallel_name = 'mms'+sc_str+'_hpca_oplus_eflux_pa_red_'+antiparallel_pa_low_str+'_'+antiparallel_pa_high_str
   tplot_names, eflux_o1_antiparallel_name, names = names
-  IF NOT KEYWORD_SET(names) THEN plot_mms_hpca_en_spec, [sc], [sp], 'EFLUX', pa = [90, 180]
- 
+  IF NOT KEYWORD_SET(names) THEN plot_mms_hpca_en_spec, [sc], [sp], 'EFLUX', pa = antiparallel_pa_range, energy = full_mms_energy_range
+
 ;------------------------------------------------------------------------------
 ; Identify O+ beam for different directions or pitch angle ranges
 ;-------------------------------------------------------------------------------
-
 ; parallel
-  parallel_pa_range = [0,60]
-  parallel_pa_low_str = STRCOMPRESS(STRING(parallel_pa_range(0), FORMAT = '(i3.3)'), /REMOVE_ALL) 
-  parallel_pa_high_str = STRCOMPRESS(STRING(parallel_pa_range(1), FORMAT ='(i3.3)'),  /REMOVE_ALL) 
-
   parallel_et_beam_name = 'PAs' + sc_str + '_hpca_oplus_eflux_pa_re_nfluxa_red_'+parallel_pa_low_str +'_'+ parallel_pa_high_str +'_nflux_PAP_ET_beam'
   parallel_epcut_beam_name= 'mms' + sc_str + '_hpca_oplus_eflux_pa_red_'+parallel_pa_low_str +'_'+ parallel_pa_high_str +'_nflux_epcut'
   parallel_erange_beam_name = 'mms' + sc_str + '_hpca_oplus_eflux_pa_red_'+parallel_pa_low_str +'_'+ parallel_pa_high_str +'_nflux_erange'         
@@ -324,28 +365,8 @@ PRO find_o_beam_mms, sc = sc, $
      , pa_name = parallel_pa_name, pap_name = parallel_pap_name, pap_beam_name = parallel_pap_beam_name $
      , pap_et_beam_name = parallel_et_beam_name, epcut_beam_name = parallel_epcut_beam_name,erange_beam_name = parallel_erange_beam_name $
      , dlimf = dlimf, limf = limf, dlimc = dlimc, limc = limc, error_message = error_message, bin_size_pa = bin_size_pa
-
-; perpendicular
-;  perpendicular_pa_range = [90,180]
-;  perpendicular_pa_low_str = STRCOMPRESS(STRING(antiparallel_pa_range(0), FORMAT = '(i3.3)'), /REMOVE_ALL) 
-;  perpendicular_pa_high_str = STRCOMPRESS(ROUND(antiparallel_pa_range(1), FORMAT ='(i3.3)',  /REMOVE_ALL) 
-;  perpendicular_et_beam_name = 'PAs' + sc_str + '_hpca_oplus_eflux_pa_re_nfluxa_red_060_120_nflux_PAP_ET_beam'
-;  perpendicular_epcut_beam_name = 'mms' + sc_str + '_hpca_oplus_eflux_pa_red_060_120_nflux_epcut'
-;  perpendicular_erange_beam_name = 'mms' + sc_str + '_hpca_oplus_eflux_pa_red_060_120_nflux_erange' 
-
-;  tplot_names, perpendicular_et_beam_name, names = names
-;  IF NOT KEYWORD_SET(names) THEN  identify_beams, [sc], [sp], diffflux_o1_perpendicular_name,eflux_o1_perpendicular_name $
-;     ,  average_time, time_avg, [60,120], bx_name, x_gse_name, z_gsm_name,beta_name, region_name $
-;     , t_s = t_s, t_e= t_e $
-;     , low_count_line = low_count_line, pa_count_line = pa_count_line, plot_low_count_filter = plot_low_count_filter, flux_threshold = flux_threshold  $
-;     , pa_name = perpendicular_pa_name, pap_name = perpendicular_pap_name, pap_beam_name = perpendicular_pap_beam_name $
-;     , pap_et_beam_name = perpendicular_et_beam_name, epcut_beam_name = perpendicular_epcut_beam_name, erange_beam_name = perpendicular_erange_beam_name $
-;     , dlimf = dlimf, limf = limf, dlimc = dlimc, limc = limc, error_message = error_message, bin_size_pa = bin_size_pa
-  
+ 
 ; antiparallel
-  antiparallel_pa_range = [120,180]
-  antiparallel_pa_low_str = STRCOMPRESS(STRING(antiparallel_pa_range(0), FORMAT = '(i3.3)'), /REMOVE_ALL) 
-  antiparallel_pa_high_str = STRCOMPRESS(STRING(antiparallel_pa_range(1), FORMAT ='(i3.3)'),  /REMOVE_ALL) 
   antiparallel_et_beam_name = 'PAs' + sc_str + '_hpca_oplus_eflux_pa_re_nfluxa_red_'+ antiparallel_pa_low_str +'_'+antiparallel_pa_high_str +'_nflux_PAP_ET_beam'
   antiparallel_epcut_beam_name = 'mms' + sc_str + '_hpca_oplus_eflux_pa_red_'+ antiparallel_pa_low_str +'_'+ antiparallel_pa_high_str +'_nflux_epcut'
   antiparallel_erange_beam_name = 'mms' + sc_str + '_hpca_oplus_eflux_pa_red_'+ antiparallel_pa_low_str +'_'+ antiparallel_pa_high_str +'_nflux_erange' 
@@ -361,6 +382,10 @@ PRO find_o_beam_mms, sc = sc, $
      , dlimf = dlimf, limf = limf, dlimc = dlimc, limc = limc, error_message = error_message, bin_size_pa = bin_size_pa
 
   IF error_message NE ''  THEN BEGIN
+     IF KEYWORD_SET(store_data)  THEN  BEGIN                                                                                                                                              
+        tplot_save, filename = data_filename                                                                                                                                              
+        spawn,'gzip -9f '+data_filename+'.tplot'                                                                                                                                          
+     ENDIF     
      write_text_to_file, log_filename, ts + ' TO '+ te + error_message, /APPEND
      close, /all
      RETURN 
@@ -371,36 +396,50 @@ PRO find_o_beam_mms, sc = sc, $
   IF NOT KEYWORD_SET(names) THEN combine_et_pap, sc, x_gse_name, bx_name, z_gsm_name, parallel_et_beam_name, antiparallel_et_beam_name, pap_beam_combine_et, pap_beam_combine_pa, parallel_epcut_beam_name, antiparallel_epcut_beam_name, parallel_erange_beam_name, antiparallel_erange_beam_name, start_time = adjusted_t_s, END_time = adjusted_t_e, average_time = average_time
 
 ;-- write to log that beam is found --
-  write_text_to_file, log_filename,  ts +' TO '+ te + '-------- Found O+ Beam------',/APPEND     
-
+  write_text_to_file, log_filename,  ts +' TO '+ te + '-------- Found O+ Beam------ '+ STRING((systime(/seconds) - running_time_s)/60.) + ' minitues used',/APPEND
+     
 ;-----------------------------------------------------------------------
 ; Calculate Moments for the beam and save them into tplot 
-;----------------------------------------------------------------------                                                                                                                         
-; data_energy = r_data(  parallel_epcut_beam_name,/Y)                                                                                                                                                           
-;  data_vel = 4.577e7*sqrt(data_energy/1e3/AMU)  
-;  data_1_of_vel = 1/data_vel
-;  str = {x: data.x, y: data_1_of_vel}
-;  store_data, parallel_epcut_beam_name +'_1_of_velocity' , data= str
-                                                                                                                      
-;  data_energy = r_data( antiparallel_epcut_beam_name,/Y)                                                                                                                                                      
-;  data_vel = 4.577e7*sqrt(data_energy/1e3/AMU)  
-;  data_1_of_vel = 1/data_vel
-;  str =  {x: data.x, y: data_1_of_vel}
-;  store_data, antiparallel_epcut_beam_name +'_1_of_velocity' , data = str 
+;----------------------------------------------------------------------
+
+  tplot_names, parallel_epcut_beam_name, names = names
+  IF KEYWORD_SET(names) THEN BEGIN
+     data_energy = r_data(  parallel_epcut_beam_name,/Y)       
+; velocity = sqrt(2*energy/mass)
+; energy in eV times electron_charge is enregy in joule
+; amu divide by avogadro constant is mass in g, then divide 1e3 to get
+; mass in kg Avogadro_constant 6.02214086e23
+; divide by 1e3 in the end to get velocity in kg/s
+     data_vel = sqrt(2.*data_energy*electron_charge/(ion_mass/Avogadro_constant/1e3))/1e3 ;4.577e7*sqrt(data_energy/1e3/AMU) 
+     
+     data_1_of_vel = 1/data_vel
+
+     str = {x: time_avg, y: data_1_of_vel}
+     store_data, parallel_epcut_beam_name +'_1_of_velocity' , data= str
+  ENDIF 
+  tplot_names, antiparallel_epcut_beam_name, names = names                                                                                                                    
+  IF KEYWORD_SET(names) THEN BEGIN     
+     data_energy = r_data( antiparallel_epcut_beam_name,/Y)                   
+     data_vel = sqrt(2.*data_energy*electron_charge/(ion_mass/Avogadro_constant/1e3))/1e3 ; data_vel = 4.577e7*sqrt(data_energy/1e3/AMU)  
+     
+     data_1_of_vel = 1/data_vel
+     str =  {x: time_avg, y: data_1_of_vel}
+     store_data, antiparallel_epcut_beam_name +'_1_of_velocity' , data = str 
+  ENDIF 
 ;-----------------------------------------------------------------------
 ; Load ACE data
 ;----------------------------------------------------------------------
 ;-- read OMNI data --
-  omni_tplot_names = 'OMNI_HR*'
-  imf_bx_name = 'OMNI_HR_Bx_gse'
-  imf_by_name = 'OMNI_HR_By_gsm'
-  imf_bz_name = 'OMNI_HR_Bz_gsm'
-  sw_v_name = 'OMNI_HR_flow_speed'
-  sw_p_name = 'OMNI_HR_flow_pressure'
-  sw_n_name = 'OMNI_HR_proton_density'
-  sw_t_name = 'OMNI_HR_temperature'
+  imf_bx_name = 'Bx_gse'
+  imf_by_gsm_name = 'By_gsm'
+  imf_bz_gsm_name = 'Bz_gsm'
+  sw_v_name = 'flow_speed'
+  sw_p_name = 'flow_pressure'
+  sw_n_name = 'proton_density'
+  sw_t_name = 'proton_temp'
+  sunspot_name = 'Sunspot_number'
   
-  tplot_names, omni_tplot_names, names = names
+  tplot_names, imf_bx_name, names = names
   IF NOT KEYWORD_SET(names) THEN read_omni, ALL=1
   average_tplot_variable_with_given_time, omni_tplot_names, average_time, time_avg
 
@@ -460,7 +499,7 @@ PRO find_o_beam_mms, sc = sc, $
   p44 = h1_velocity_name
   p45 = h1_pressure_name
   p60 = mlt_name
-  p61 = ilat_name    
+  p61 = ilatd_name    
   
   options, '*', 'panel_size', 1
   options, '*', 'zticks', 3
@@ -501,8 +540,8 @@ PRO find_o_beam_mms, sc = sc, $
      IF KEYWORD_SET(idl_plot) THEN BEGIN 
 ; window, idisplay
         tplot, [p02, p34, p09, p11, p13,p15, p17,p10,p12,p14,p16,p18], var_label = var_label
-        tplot_panel, v = p09, o = p09+'_epcut_beam', psym = -7;, thick=2
-        tplot_panel, v = p10, o = p10+'_epcut_beam', psym = -7;, thick=2
+        tplot_panel, v = p09, o = p09+'_epcut_beam', psym = -7 ;, thick=2
+        tplot_panel, v = p10, o = p10+'_epcut_beam', psym = -7 ;, thick=2
         tplot_panel, v = p09, o = p09+'_erange', psym = 0
         tplot_panel, v = p10, o = p10+'_erange', psym = 0
         
@@ -537,186 +576,118 @@ PRO find_o_beam_mms, sc = sc, $
      ENDIF  
   ENDFOR       
   timespan, t_s, t_dt, /SECONDS
-         
+  
 ;print, running_time_s
-print,systime(,/seconds) - running_time_s     
-stop
+  print, STRING((systime(/seconds) - running_time_s)/60.) + ' minitues used'     
+
 ;--------------------------------------
 ;dump the data out if required
 ;--------------------------------------    
   IF keyword_set(dumpdata) THEN BEGIN 
-     title_set =  [   '         flag  ' $
-                   ,  '         Beta  ' $
-                   ,  '      GSE_X(Re)' $
-                   ,  '      GSE_Y(Re)' $
-                   ,  '      GSE_Z(Re)' $
-                      , '      GSM_X(Re)' $
-                      , '      GSM_Y(Re)' $
-                   , '      GSM_Z(Re)' $
-                   ,'       MLT     ' $
-                   ,'     ILAT_D    ' $
-                   ,  '       en_tail ' $
-                   ,  '       pa_tail ' $
-                   ,  '       en_earth' $
-                   ,  '       pa_earth' $
-                   , '     MAG_X(GSE)' $
-                   , '     MAG_Y(GSE)' $
-                   , '     MAG_Z(GSE)' $
-                   ,'      flux_tail' $
-;                          '   Density_tail', $
-;                          '   V_total_tail', $
-;                          '     V_par_tail', $
-;                          '    V_perp_tail', $
-;                          '   T_total_tail', $
-;                          '   P_total_tail', $
-                  , '     flux_earth' $
-;                          '  Density_earth', $
-;                          '  V_total_earth', $
-;                          '    V_par_earth', $
-;                          '   V_perp_earth', $
-;                          '  T_total_earth', $
-;                          '  P_total_earth', $
-                  ,        '      H_DENSITY' $
-                   ,       '       H_V_X   ' $
-                    ,      '       H_V_Y   ' $
-                     ,     '       H_V_Z   ' $
-;                          '       H_T_X   ', $
-;                          '       H_T_Y   ', $
-;                          '       H_T_Z   ', $
-;                          '      T_x_tail ', $
-;                          '      T_y_tail ', $
-;                          '      T_z_tail ', $
-;                          '      T_x_earth', $
-;                          '      T_y_earth', $
-;                          '      T_z_earth', $
-;                          '    Storm_Phase', $
-;                          '      IMF_Bx   ', $
-;                          '      IMF_By   ', $
-;                          '      IMF_Bz   ', $
-;                          '       SW_V    ', $
-;                          '       SW_P    ', $
-;                          '  eflux_tail   ', $ 
-;                          '  eflux_earth  ', $ 
-;                          '  theta_tail   ', $ 
-;                          '  theta_earth  ', $
-;                          '    IMF_Bx_DC  ', $
-;                          '    IMF_By_DC  ', $
-;                          '    IMF_Bz_DC  ', $
-;                          '      SW_V_DC  ', $
-;                          '      SW_P_DC  ', $
-;                          ' DistFunc_tail ', $
-;                          ' DistFunc_earth', $
-;                          '  Vgse_tail_x  ', $
-;                          '  Vgse_tail_y  ', $
-;                          '  Vgse_tail_z  ', $
-;                          '  Vgse_earth_x ', $
-;                          '  Vgse_earth_y ', $
-;                          '  Vgse_earth_z ', $
+     title_set =  ['Time','Beta', 'P_tot' $
+                   , 'GSE_X' , 'GSE_Y', 'GSE_Z', 'GSM_X' , 'GSM_Y', 'GSM_Z', 'MLT', 'ILAT_D' $
+                   , 'Bx_GSM', 'By_GSM', 'Bz_GSM' $
+                   , 'IMF_Bx', 'IMF_By', 'IMF_Bz', 'SW_v', 'SW_p','SW_n','Sunspot' $
+                   , 'H_v','H_p','H_n' $
+                   , 'en_tail',  'en_earth' $
+                   , 'flag'$
+                   , 'pa_tail', 'flux_tail' $
+                   , 'pa_earth', 'flux_earth' $
+                   , 'eflux_tail',  'eflux_earth' $
                   ]
+;                   , 'H_V_X','H_V_Y','H_V_Z', 'H_T_X', 'H_T_Y', 'H_T_Z' $
+;                     , 'Storm_Phase', 'Substorm_flag' $
+;                     , 'Density_tail', 'Density_earth' $
+;                     , 'V_total_tail', 'V_par_tail', 'V_perp_tail' $
+;                     , 'T_total_tail', 'P_total_tail', 'Density_earth' $
+;                     , 'V_total_earth', 'V_par_earth', 'V_perp_earth' $
+;                     , 'T_total_earth', 'P_total_earth' $
+;                     , 'T_x_tail ', 'T_y_tail ', 'T_z_tail ', $
+;                     , 'T_x_earth', 'T_y_earth', 'T_z_earth', $
+;                     , 'theta_tail', 'theta_earth', $
+;                     , 'DistFunc_tail', 'DistFunc_earth', $
+;                     , 'Vgse_tail_x', 'Vgse_tail_y', 'Vgse_tail_z', $
+;                     , 'Vgse_earth_x', 'Vgse_earth_y', 'Vgse_earth_z' $
+     
+     data_tplot_names = [beta_name, p_total_name $
+                         , x_gse_name, y_gse_name, z_gse_name, x_gsm_name, y_gsm_name, z_gsm_name, mlt_name, ilatd_name $
+                         , bx_name, by_gsm_name, bz_gsm_name $
+                         , imf_bx_name, imf_by_gsm_name, imf_bz_gsm_name, sw_v_name, sw_p_name, sw_n_name, sunspot_name $
+                         , h1_velocity_name, h1_pressure_name, h1_density_name $
+                         , beam_name, parallel_epcut_beam_name, antiparallel_epcut_beam_name $
+                        ]
 
      nterm = N_ELEMENTS(title_set)
-     title_dd = STRARR(n_avg, nterm)
      data_dd = DBLARR(n_avg, nterm)
-     FOR i_time = 0, n_avg-1 DO title_dd(i_time, *) = title_set
+     nerm1 = 25
+     FOR ii = 0, nterm1-1 DO BEGIN 
+        data_dd(*,ii) = r_data(data_tplot_names(ii), /Y)
+     ENDFOR
 
-     IF ct GT 0 THEN BEGIN 
-        get_data,beta_name, data = data
-        data_dd(*, 1) = datayy
-                              
-        get_data, x_gse_name, data = data  
-        data_dd(*, 2) = data.y               
-                              
-        get_data, y_gse_name, data = data  
-        data_dd(*, 3) = data_y             
-                                ;GSE Z
-        get_data, z_gse_name, data = data
-        data_dd(*, 4) = data_y             
-                                ;GSM X
-        get_data, x_gsm_name, data = data  
-        data_dd(*, 23 ) = data_y              
-                                ;GSM Y
-        get_data, y_gsm_name, data = data 
-        data_dd(*, 24 ) = data_y   
-                                ;GSM Z
-        get_data, z_gsm_name, data = data     
-        data_dd(*, 25 ) = data_y              
-                                ;MLT
-        get_data, mlt_name , data = data     
-        data_dd(*, 52 ) = data_y
-                                ;ILAT_D
-        get_data, ilat_name, data = data   
-        data_dd(*, 53 ) = data_y               
                                 ;tail energy and flag
-        get_data, p09+'_epcut_beam', data = data
-        data_y = data.y(index_valid)
-        data_dd(*, 0) = data_dd(*, 0) + (data_y GT 0)
-        data_dd(*, 5) = data_y                                           
+     energy_parallel = r_data(parallel_epcut_beam_name, /Y)
+     flag_parallel = energy_parallel GT 0                                           
                                 ; tail pap and flux
-        get_data, p17, data = data
-        data_y = data.y(index_valid, *)
-        data_v = data.v(index_valid, *)
-        FOR itime = 0, n_avg-1 DO BEGIN 
-           index = where(data_y(itime, *) EQ max(data_y(itime, *), /nan))
-           IF index(0) EQ -1 THEN begin 
-              data_dd(itime, 6) = !VALUES.F_NAN
-              data_dd(itime, 7) = !VALUES.F_NAN
-           endif else begin 
-              data_dd(itime, 6) = data_v(itime, index(0))
-              data_dd(itime, 7) = (data_y(itime, index(0))/10.)
-           endelse 
-        ENDFOR 
+     get_data, parallel_pap_et_beam, data = data
+     FOR itime = 0, n_avg-1 DO BEGIN 
+        index = where(data_y(itime, *) EQ max(data_y(itime, *), /nan))
+        IF index(0) EQ -1 THEN begin 
+           data_dd(itime, 6) = !VALUES.F_NAN
+           data_dd(itime, 7) = !VALUES.F_NAN
+        endif else begin 
+           data_dd(itime, 6) = data_v(itime, index(0))
+           data_dd(itime, 7) = (data_y(itime, index(0))/10.)
+        endelse 
+     ENDFOR 
                                 ; earth energy and flag
-        get_data, p10+'_epcut_beam', data = data
-        data_y = data.y(index_valid)
-        data_dd(*, 0) = data_dd(*, 0) - (data_y GT 0)*10
-        data_dd(*, 14) = data_y
+     energy_antiparallel = r_data(antiparallel_epcut_beam_name, /Y)
+     flag_antiparallel = energy_antiparallel GT 0               
                                 ; dealing with flag 
-        index = where(data_dd(*, 0) EQ -10)
-        IF index(0) GE 0 THEN data_dd(index, 0) = -1
-        index = where(data_dd(*, 0) EQ -9)
-        IF index(0) GE 0 THEN data_dd(index, 0) = 2                 
+     index = where(data_dd(*, 0) EQ -10)
+     IF index(0) GE 0 THEN data_dd(index, 0) = -1
+     index = where(data_dd(*, 0) EQ -9)
+     IF index(0) GE 0 THEN data_dd(index, 0) = 2                 
                                 ; earth pitch angle peak and flux
-        get_data, p18, data = data
-        data_y = data.y(index_valid, *)
-        data_v = data.v(index_valid, *)
-        FOR itime = 0, n_avg-1 DO BEGIN 
-           index = where(data_y(itime, *) EQ max(data_y(itime, *), /nan))
-           IF index(0) EQ -1 THEN begin 
-              data_dd(itime, 15) =  !VALUES.F_NAN
-              data_dd(itime, 16) =  !VALUES.F_NAN
-           endif else begin 
-              data_dd(itime, 15) = data_v(itime, index(0))
-              data_dd(itime, 16) = (data_y(itime, index(0))/10.)
-           endelse 
-        ENDFOR 
-               
+     get_data, p18, data = data
+     data_y = data.y(index_valid, *)
+     data_v = data.v(index_valid, *)
+     FOR itime = 0, n_avg-1 DO BEGIN 
+        index = where(data_y(itime, *) EQ max(data_y(itime, *), /nan))
+        IF index(0) EQ -1 THEN begin 
+           data_dd(itime, 15) =  !VALUES.F_NAN
+           data_dd(itime, 16) =  !VALUES.F_NAN
+        endif else begin 
+           data_dd(itime, 15) = data_v(itime, index(0))
+           data_dd(itime, 16) = (data_y(itime, index(0))/10.)
+        endelse 
+     ENDFOR 
+     
 ;dump data using routine dump_data
-        IF date_s EQ date_e THEN BEGIN 
-           str = {x:time_dd, y:data_dd, v:title_dd}
-           store_data, 'dump_data', data = str   
+     IF date_s EQ date_e THEN BEGIN 
+        str = {x:time_dd, y:data_dd, v:title_dd}
+        store_data, 'dump_data', data = str   
+        fln_dump = output_path+'data/'+ '/storm_o_beam_'+date_s+'.dat'
+        dump_data, 'dump_data', file_out = fln_dump
+     ENDIF ELSE BEGIN             
+        midnight = time_double(STRMID(te, 0, 10)+'/00:00:00')
+        fday = where(time_dd LT midnight)
+        sday = where(time_dd GE midnight)         
+        IF fday(0) GE 0 THEN BEGIN 
+           str = {x:time_dd(fday), y:data_dd(fday, *), v:title_dd(fday, *)}
+           store_data, 'dump_data_f', data = str
            fln_dump = output_path+'data/'+ '/storm_o_beam_'+date_s+'.dat'
-           dump_data, 'dump_data', file_out = fln_dump
-        ENDIF ELSE BEGIN             
-           midnight = time_double(STRMID(te, 0, 10)+'/00:00:00')
-           fday = where(time_dd LT midnight)
-           sday = where(time_dd GE midnight)         
-           IF fday(0) GE 0 THEN BEGIN 
-              str = {x:time_dd(fday), y:data_dd(fday, *), v:title_dd(fday, *)}
-              store_data, 'dump_data_f', data = str
-              fln_dump = output_path+'data/'+ '/storm_o_beam_'+date_s+'.dat'
-              dump_data,  'dump_data_f', file_out = fln_dump
-           ENDIF         
-           IF sday(0) GE 0 THEN BEGIN 
-              str = {x:time_dd(sday), y:data_dd(sday, *), v:title_dd(sday, *)}
-              store_data, 'dump_data_s', data = str
-              fln_dump = output_path+'data/'+ '/storm_o_beam_'+date_e+'.dat'
-              dump_data, 'dump_data_s', file_out = fln_dump
-           ENDIF 
-        ENDELSE    
-        tplot_names, 'dump_data*', names = names
-        store_data, delete = names
-     ENDIF        
+           dump_data,  'dump_data_f', file_out = fln_dump
+        ENDIF         
+        IF sday(0) GE 0 THEN BEGIN 
+           str = {x:time_dd(sday), y:data_dd(sday, *), v:title_dd(sday, *)}
+           store_data, 'dump_data_s', data = str
+           fln_dump = output_path+'data/'+ '/storm_o_beam_'+date_e+'.dat'
+           dump_data, 'dump_data_s', file_out = fln_dump
+        ENDIF 
+     ENDELSE    
+     tplot_names, 'dump_data*', names = names
+     store_data, delete = names      
   ENDIF             
 
-close, /all
+  close, /all
 END 

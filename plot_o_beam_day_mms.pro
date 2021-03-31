@@ -16,7 +16,7 @@
 ;
 ;Written by Jing Liao  03/10/2021
 ;
-PRO plot_o_beam_day_mms, time_start = time_start, time_end= time_end,stop=stop,sc=sc,sp=sp, beam_recalc = beam_recalc, store_data = store_data, idl_plot = idl_plot
+PRO plot_o_beam_day_mms, time_start = time_start, time_end = time_end, stop = stop, sc = sc, sp = sp, beam_recalc = beam_recalc, store_data = store_data, idl_plot = idl_plot
   if not keyword_set(sc) then sc = 1 ;set the satallite number 
   sc_str = STRING(sc, FORMAT = '(i1.1)')
   
@@ -33,7 +33,6 @@ PRO plot_o_beam_day_mms, time_start = time_start, time_end= time_end,stop=stop,s
 ;Set the keywords used in find_o_beam.pro
 ;------------------------------------------  
 ;  mom_recalc = 0
-;  find_phase = 0
 ;  add_eflux = 0  &  plot_add_eflux_procedure = 0
 ;  add_anodes = 0 
 ;  add_distfunc = 0 & plot_add_distfunc_procedure = 0
@@ -41,11 +40,9 @@ PRO plot_o_beam_day_mms, time_start = time_start, time_end= time_end,stop=stop,s
 ; idl_plot = 0
   ps = 1
 ;  store_data = 1
-  dumpdata = 1
+  dumpdata = 0
 
-;  plot_imf = 0
 ;  plot_mom = 0
-  
 ;  dfit_temperature = 0
 ;  show_fit = 1
   
@@ -66,15 +63,15 @@ PRO plot_o_beam_day_mms, time_start = time_start, time_end= time_end,stop=stop,s
   spawn, 'mkdir -p '+output_path+'plots/'
   spawn, 'mkdir -p '+output_path+'log/'
   
-  log_errors_filename = 'log_errors.txt'
-  log_plotted_filename = 'log_plotted.txt'
+  log_filename = output_path + STRMID(time_start, 0, 4)+'_'+STRMID(time_end, 0, 4)+'_log.txt'
+;  log_plotted_filename = output_path + STRMID(time_start, 0, 4)+'_'+STRMID(time_end, 0, 4)+'_log.txt'
   
   display_time = 6.*60*60 < dt
   average_time = 5 * 60         ;in seconds 
 
 ;Write [START] in log files
-  write_text_to_file, log_plotted_filename, '[START]', /APPEND
-  write_text_to_file, log_errors_filename, '[START]', /APPEND
+  write_text_to_file, log_filename, '[START]', /APPEND
+;  write_text_to_file, log_errors_filename, '[START]', /APPEND
 
 ;---------------------------------------------------
 ; Set the loop as requested
@@ -95,6 +92,7 @@ PRO plot_o_beam_day_mms, time_start = time_start, time_end= time_end,stop=stop,s
                       sp = sp,$
                       t_s = t_s, $
                       t_e = t_e, $
+                      log_filename = log_filename, $         
                       average_time = average_time, $ 
                       idl_plot = idl_plot, $
                       ps = ps, $
@@ -121,8 +119,8 @@ PRO plot_o_beam_day_mms, time_start = time_start, time_end= time_end,stop=stop,s
 
 ;------------------------------------------------------------
 ; write [END] in the logs 
-  write_text_to_file, log_plotted_filename, '[END]', /APPEND
-  write_text_to_file, log_errors_filename, '[END]', /APPEND
+  write_text_to_file, log_filename, '[END]', /APPEND
+;  write_text_to_file, log_errors_filename, '[END]', /APPEND
 
   print, time_start, time_end
   stop

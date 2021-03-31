@@ -21,7 +21,8 @@ PRO find_energy_range_from_enspec, enspec_name, epcut_name, erange_name
   IF n_energybins NE 16 THEN stop
 
 ; In MMS data, the energy bins in the energy spectrum are not always exactly the same at digits levle. so we round the enregybins here for later comparisons.
-  energybins = ROUND(reform(energy(0, *)))
+  index_valid = WHERE(FINITE(energy(*,0)), ct)
+  IF ct GT 0 THEN energybins = ROUND(reform(energy(index_valid(0), *))) ELSE stop
 
 ; n_energybins_good = n_elements(energy(0, where(energy(0, *) GT 35))) 
 ; codif: make sure energy is higer than 35eV to avoid the bad energy bin
