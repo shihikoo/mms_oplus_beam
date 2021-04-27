@@ -23,15 +23,15 @@
 ; Created on 03/22/2021
 ;------------------------------------------------------------------------ 
 
-PRO identify_regions, sc_str, beta_name, h_density_name, h_velocity_name, x_gse_name, y_gse_name, z_gsm_name, region_name = region_name
+PRO identify_regions, sc_str, all_tplot_names
 
 ;-- load data into arrays
-  get_data, h_density_name, data = data & h_density = data.y
-  get_data, h_velocity_name, data = data &  h_velocity = data.y
-  get_data, x_gse_name, data = data & x_gse = data.y & time_avg = data.x
-  get_data, y_gse_name, data = data & y_gse = data.y
-  get_data, z_gsm_name, data = data & z_gsm = data.y
-  get_data, beta_name, data = data & beta = data.y
+  get_data, all_tplot_names.h1_density_name, data = data & h_density = data.y
+  get_data, all_tplot_names.h1_velocity_t_name, data = data &  h_velocity = data.y
+  get_data, all_tplot_names.x_gse_name, data = data & x_gse = data.y & time_avg = data.x
+  get_data, all_tplot_names.y_gse_name, data = data & y_gse = data.y
+  get_data, all_tplot_names.z_gsm_name, data = data & z_gsm = data.y
+  get_data, all_tplot_names.beta_name, data = data & beta = data.y
 
 ;-- sheath, dayside polar region and high latitude region
   sheath_region = h_density GT 3 and h_velocity GT 65
@@ -52,10 +52,12 @@ PRO identify_regions, sc_str, beta_name, h_density_name, h_velocity_name, x_gse_
 ;-- combine region information into one string
   region = magnetosphere_region * 1. + (sheath_region OR dayside_polar_region OR high_latitude_region) * 10. + solar_wind_region * 100.
 
+  index = where(~FINITE(beta), ct)
+  IF ct GT 0 THEN region[index] = !VALUES.F_NAN
+
 ;-- store the region information into tplot string  
-  region_name =  'Spacecraft_region_sc'+sc_str
   str = {x:time_avg, y: region}
   lim = {yrange:[1, 100], ylog: 1, psym:10}
-  store_data,region_name, data = str, lim = lim
+  store_data, all_tplot_names.region_name, data = str, lim = lim
 
 END 

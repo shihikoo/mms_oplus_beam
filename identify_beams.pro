@@ -29,7 +29,8 @@ PRO identify_beams, sat, specie, flux_name, counts_name,  average_time, time_avg
                     , pa_range = pa_range, peak_pa_range = peak_pa_range $
                     , low_count_line = low_count_line, pa_count_line = pa_count_line, flux_threshold = flux_threshold $
                     , plot_low_count_filter = plot_low_count_filter, low_count_filename= low_count_filename $
-                    , pa_name = pa_name, pap_name = pap_name, pap_beam_name = pap_beam_name, pap_et_beam_name = pap_et_beam_name $
+                    , pa_name = pa_name, pa_eflux_name = pa_eflux_name $
+                    , pap_name = pap_name, pap_et_name = pap_et_name, pap_et_beam_name = pap_et_beam_name $
                     , epcut_beam_name = epcut_beam_name, erange_beam_name = erange_beam_name $
                     , dlimf = dlimf, limf = limf, dlimc = dlimc, limc = limc, error_message = error_message , bin_size_pa = bin_size_pa
 ; Keywords handling
@@ -43,10 +44,9 @@ PRO identify_beams, sat, specie, flux_name, counts_name,  average_time, time_avg
   IF NOT KEYWORD_SET(pa_count_line) THEN pa_count_line = low_count_line/16.
 
   IF NOT KEYWORD_SET(low_count_filename) THEN BEGIN
-     ts = time_string(t_s)  
-     te = time_string(t_e)
+     ts = EXTRACT_DATE_STRING(time_string(t_s))  
+     te = EXTRACT_TIME_STRING(time_string(t_e))
      low_count_filename = 'output/low_count_filter/' + 'low_count_filter_' + ts + '_' + te + '.ps'
-     spawn, 'mkdir -p '+ (low_count_filename)
   ENDIF
 
   IF NOT KEYWORD_SET(pa_range) THEN pa_range = [0,180]
@@ -89,47 +89,32 @@ PRO identify_beams, sat, specie, flux_name, counts_name,  average_time, time_avg
 
 ; find the evergy range and energy peak from average energy spectra           
   find_energy_range_from_enspec, flux_avg_name, epcut_name, erange_name
- 
-; plot pitch angle in 'DIFF FLUX' with routine plot_pa_spec_around_energy_peak 
-  unit = 'DIFF FLUX'
-  unit_str = '_nflux'
-  pos = STREGEX(epcut_name, '_epcut')                                   
 
-  pa_name = 'PA'+ STRMID(epcut_name, 2, 25)+unit_str+STRMID(epcut_name, pos-19, 19) 
+; plot pitch angle in 'DIFF FLUX' with routine plot_pa_spec_around_energy_peak 
   tplot_names, pa_name, names = names
+
   IF NOT KEYWORD_SET(names)  THEN plot_pa_spec_around_energy_peak_mms, sat, specie, 'DIFF FLUX' $
      , epcut_name, erange_name, pa_name = pa_name $
      , average_time = average_time  $
      , bin_size_pa = bin_size_pa, pa_range = pa_range
 
 ; plot pitch angle for IN 'EFLUX' unit
-  unit = 'EFLUX'
-  unit_str = ''
-  pos = STREGEX(epcut_name, '_epcut')     
-                                                 
-  pa_name_eflux = 'PA'+ STRMID(epcut_name, 2, 25)+unit_str+STRMID(epcut_name, pos-19, 19)
-  tplot_names, pa_name_eflux, names = names    
+  tplot_names, pa_eflux_name, names = names    
 
   IF NOT KEYWORD_SET(names) THEN  plot_pa_spec_around_energy_peak_mms, sat, specie, 'EFLUX' $
-     , epcut_name, erange_name, pa_name = pa_name_eflux $
+     , epcut_name, erange_name, pa_name = pa_eflux_name $
      , average_time = average_time $
      , bin_size_pa = bin_size_pa, pa_range = pa_range
-  
+
 ; find pitch angle peak 
-  pap_name = pa_name + '_PAP'
-  tplot_names, pap_name, names = names                       
-                                                                               
-  IF NOT KEYWORD_SET(names) THEN find_pa_peak, pa_name_eflux, pa_name, pap_name, beta_name $
+  tplot_names, pap_name, names = names
+  IF NOT KEYWORD_SET(names) THEN find_pa_peak, pa_eflux_name, pa_name, pap_name, beta_name $
      , pa_count_line = pa_count_line, flux_threshold = flux_threshold, peak_pa_range = peak_pa_range, def_pap_factor = [1.1,1.4,1.7]
 
-; filter pitch angle peak to beams by requiring continuity and close
-; energy range
-  pap_et_name = pap_name +'_ET_beam'
-  epcut_beam_name = epcut_name +'_beam'
-  erange_beam_name = erange_name +'_beam'
-  tplot_names, pap_et_beam_name, names = names 
-                     
-  IF NOT KEYWORD_SET(names) THEN filter_beams, pap_name, epcut_name, erange_name, bx_name, x_gse_name, z_gsm_name $
+; filter pitch angle peak to beams by requiring continuity and close energy range
+  tplot_names, epcut_beam_name, names = names                      
+;  IF NOT KEYWORD_SET(names) THEN 
+  filter_beams, pap_name, epcut_name, erange_name, bx_name, x_gse_name, z_gsm_name $
      , pap_et_name, pap_et_beam_name, epcut_beam_name, erange_beam_name
 
 END 

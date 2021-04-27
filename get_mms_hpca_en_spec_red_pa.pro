@@ -63,7 +63,7 @@ PRO convertfrom63to16, tvar
 END
 
 
-PRO get_mms_hpca_pa_spec, sat, species, units, tplot_var_name, energy=energy, no_convert_en=no_convert_en, path=path, fln=fln
+PRO get_mms_hpca_en_spec_red_pa, sat, species, units, tplot_var_name, pa, no_convert_en=no_convert_en
 
   COMMON get_error, get_err_no, get_err_msg, default_verbose
 
@@ -72,9 +72,7 @@ PRO get_mms_hpca_pa_spec, sat, species, units, tplot_var_name, energy=energy, no
                                 ;----------------------------------------------------------------------
   sp_name = ['h1','he2','he1','o1']
 
-  if ~keyword_set(path) then begin
-     path = getenv('MMS' + STRING(sat, FORMAT='(i1.1)') + '_HPCA_SRVY_L2PA') + '/' + sp_name(species)
-  endif
+  path = getenv('MMS' + STRING(sat, FORMAT='(i1.1)') + '_HPCA_SRVY_L2PA') + '/' + sp_name(species)
 
   get_timespan, time_interval
   t_s=gettime(time_interval(0)) ; start time in tplot-time
@@ -91,7 +89,7 @@ PRO get_mms_hpca_pa_spec, sat, species, units, tplot_var_name, energy=energy, no
                                 ;Last day is not included if hour=min=sec=0
   IF t_e_str.hour EQ 0 AND t_e_str.min EQ 0 AND t_e_str.sec EQ 0 THEN $
      no_of_files = no_of_files - 1
-
+  
                                 ;--------------------------------------------------------------------
                                 ; Read all 1 day files that correspond to requested time interval
                                 ;--------------------------------------------------------------------
@@ -102,36 +100,35 @@ PRO get_mms_hpca_pa_spec, sat, species, units, tplot_var_name, energy=energy, no
 
      CASE species OF 
         0: begin
-           tplot_var_dflux_name = $ ; units: DIFF FLUX (units files are saved in)
+           tplot_var_dflux_name = $ ; units: EFLUX (units files are saved in)
               'mms' + strcompress(sat,/remove_all) + $
               '_hpca_hplus_phase_space_density_pad'
            tplot_var_name = 'mms'+ strcompress(sat,/remove_all) + $
-                            '_hpca_hplus_eflux_pa_' + STRING(energy(0), FORMAT='(i5.5)') + '_' + STRING(energy(1), FORMAT='(i5.5)')
+                            '_hpca_hplus_eflux_pa_red_' + STRING(pa(0), FORMAT='(i3.3)') + '_' + STRING(pa(1), FORMAT='(i3.3)')
         end
         1: begin
-           tplot_var_dflux_name = $ ; units: DIFF FLUX (units files are saved in)
+           tplot_var_dflux_name = $ ; units: EFLUX (units files are saved in)
               'mms' + strcompress(sat,/remove_all) + $
               '_hpca_heplusplus_phase_space_density_pad'
            tplot_var_name = 'mms'+ strcompress(sat,/remove_all) + $
-                            '_hpca_heplusplus_eflux_pa_' + STRING(energy(0), FORMAT='(i5.5)') + '_' + STRING(energy(1), FORMAT='(i5.5)')
+                            '_hpca_heplusplus_eflux_pa_red_' + STRING(pa(0), FORMAT='(i3.3)') + '_' + STRING(pa(1), FORMAT='(i3.3)')
         end
         2: begin
-           tplot_var_dflux_name = $ ; units: DIFF FLUX (units files are saved in)
+           tplot_var_dflux_name = $ ; units: EFLUX (units files are saved in)
               'mms' + strcompress(sat,/remove_all) + $
               '_hpca_heplus_phase_space_density_pad'
            tplot_var_name = 'mms'+ strcompress(sat,/remove_all) + $
-                            '_hpca_heplus_eflux_pa_' + STRING(energy(0), FORMAT='(i5.5)') + '_' + STRING(energy(1), FORMAT='(i5.5)')
+                            '_hpca_heplus_eflux_pa_red_' + STRING(pa(0), FORMAT='(i3.3)') + '_' + STRING(pa(1), FORMAT='(i3.3)')
         end
         3: begin
-           tplot_var_dflux_name = $ ; units: DIFF FLUX (units files are saved in)
+           tplot_var_dflux_name = $ ; units: EFLUX (units files are saved in)
               'mms' + strcompress(sat,/remove_all) + $
               '_hpca_oplus_phase_space_density_pad'
            tplot_var_name = 'mms'+ strcompress(sat,/remove_all) + $
-                            '_hpca_oplus_eflux_pa_' + STRING(energy(0), FORMAT='(i5.5)') + '_' + STRING(energy(1), FORMAT='(i5.5)')
-        end
-     ENDCASE
+                            '_hpca_oplus_eflux_pa_red_' + STRING(pa(0), FORMAT='(i3.3)') + '_' + STRING(pa(1), FORMAT='(i3.3)')
+        end 
+     ENDCASE 
                                 ;tplot_var_name = tplot_var_dflux_name
-
      
      filename = 'mms' + STRING(sat,FORMAT='(i1.1)') + $
                 '_hpca_sp' + STRING(species, FORMAT='(i1.1)') + $
@@ -146,27 +143,27 @@ PRO get_mms_hpca_pa_spec, sat, species, units, tplot_var_name, energy=energy, no
      ff = findfile(path + '/' + filename, COUNT=fc)
      IF fc GT 0 THEN BEGIN 
         for jj = 0, N_ELEMENTS(ff)-1 do begin
+ ; Jing: add the size check      
            file_path = ff(jj)
+           ff_info = FILE_INFO(file_path)
 
-           f_info = FILE_INFO(file_path) ;Jing
-           IF FLOAT(f_info.SIZE) GT 3000 THEN BEGIN  ;Jing
-
+           IF FLOAT(ff_info.SIZE) GT 3000. THEN BEGIN
               ffc = ffc + 1
               IF ffc GT 1 THEN BEGIN
-                 
                  tplot_restore, filename = file_path, /APPEND
                  
-              ENDIF ELSE BEGIN  ; restore the first file
+              ENDIF  ELSE BEGIN  ; restore the first file
                  
                  tplot_restore, filename = file_path
                  get_data, tplot_var_dflux_name, data=d1
-              ENDELSE
-           ENDIF                 ; Jing
-        ENDFOR
-     ENDIF  
-  ENDFOR
+              ENDELSE 
+           ENDIF              
+        ENDFOR  
+     ENDIF
+    
+  ENDFOR   
 
-  if fc eq 0 AND ffc eq 0 then begin
+  if fc eq 0 then begin
      get_err_no = 1
      return
   endif
@@ -178,37 +175,30 @@ PRO get_mms_hpca_pa_spec, sat, species, units, tplot_var_name, energy=energy, no
                                 ;----------------------------------------------------------------------
   get_data, tplot_var_dflux_name, data=data, dlim=dlim, lim=lim
 
-  if units eq 'DIFF FLUX' then begin
+  energy = data.v1
 
-     for idx1=0, N_ELEMENTS(data.v1)-1 do begin
-        data.y(*,idx1,*) = data.y(*,idx1,*) / data.v1(idx1)
-     ENDFOR
-  endif
-
-  pa = data.v1
-
-  A = (pa - SHIFT(pa,1)) / (pa + SHIFT(pa,1))
+  A = (energy - SHIFT(energy,1)) / (energy + SHIFT(energy,1))
   A(0) = A(1)
 
-  pa_low  = pa * (1. - A)
-  pa_high = pa * (1. + A)
+  energy_low  = energy * (1. - A)
+  energy_high = energy * (1. + A)
 
-  dpa = FLTARR(16)
+  denergy = FLTARR(63)
 
-  FOR ii = 0, 15 DO BEGIN
-     dpa(ii) = pa_high(ii) - pa_low(ii)
+  FOR ii = 0, 62 DO BEGIN
+     denergy(ii) = energy_high(ii) - energy_low(ii)
   ENDFOR
 
-  en_idx = WHERE(data.v1 GE energy(0) AND data.v1 LE energy(1), ien_idx)
+  pa_idx = WHERE(data.v2 GE pa(0) AND data.v2 LE pa(1), ipa_idx)
 
-;  if ien_idx EQ 0 then stop
-  if ien_idx eq 1 then begin
-     store_data, tplot_var_name, data={x:data.x, y:REFORM(data.y(*,en_idx,*)), v:data.v2, dv:dpa}, dlim=dlim, lim=lim
+  if ipa_idx EQ 0 then stop
+  if ipa_idx eq 1 then begin
+     store_data, tplot_var_name, data={x:data.x, y:REFORM(data.y(*,*,pa_idx)), v:data.v1, dv:denergy}, dlim=dlim, lim=lim
   endif else begin
-     store_data, tplot_var_name, data={x:data.x, y:REFORM(MEAN(data.y(*,en_idx,*), DIM=2, /NaN)), v:data.v2, dv:dpa}, dlim=dlim, lim=lim
+     store_data, tplot_var_name, data={x:data.x, y:REFORM(MEAN(data.y(*,*,pa_idx), DIM=3, /NaN)), v:data.v1, dv:denergy}, dlim=dlim, lim=lim
   endelse
 
-
+  store_data, tplot_var_dflux_name, /DEL
                                 ;----------------------------------------------------------------------
                                 ; Convert the energy spectra from 63 energies to 16
                                 ;----------------------------------------------------------------------
@@ -221,7 +211,7 @@ PRO get_mms_hpca_pa_spec, sat, species, units, tplot_var_name, energy=energy, no
                                 ;----------------------------------------------------------------------
   tvarexist = ''
   tplot_names, tplot_var_name, names=tvarexist
-  IF tvarexist(0) NE '' THEN BEGIN
+  IF ~keyword_set(no_convert_en) AND tvarexist(0) NE '' THEN BEGIN
 
      get_data, tplot_var_name, data=data, dlim=dlim, lim=lim
      
@@ -240,8 +230,6 @@ PRO get_mms_hpca_pa_spec, sat, species, units, tplot_var_name, energy=energy, no
      store_data, tplot_var_name(0), data={x:data.x, y:data.y, v:new_v, dv:new_dv}, dlim=dlim, lim=lim
      options, tplot_var_name(0), 'minzlog', 0
   ENDIF
-
-  store_data, tplot_var_dflux_name, /del
 
   IF ffc eq 0 THEN BEGIN
      get_err_no = 1

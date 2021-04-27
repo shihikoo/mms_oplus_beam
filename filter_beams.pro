@@ -70,8 +70,8 @@ PRO filter_beams, pap_name, epcut_name, erange_name, bx_name, x_gse_name, z_gsm_
   ENDFOR 
 
   str = {x:time_avg, y:flux_pap_et, v:pa_pap}
-  pos = STREGEX(pap_name, 'PAP')
-  pap_et_name = STRMID(pap_name, 0, pos+3)+'_ET'
+;  pos = STREGEX(pap_name, 'PAP')
+;  pap_et_name = STRMID(pap_name, 0, pos+3)+'_ET'
   store_data, pap_et_name, data = str, dlim = dlim, lim = lim
   zlim, pap_et_name, 0.1, 100
   options, pap_et_name, 'ytitle', 'PAP!C!C E------T'
@@ -105,9 +105,9 @@ PRO filter_beams, pap_name, epcut_name, erange_name, bx_name, x_gse_name, z_gsm_
 
 ; add the beam edge point back
      FOR i = 1, n_time-2 DO BEGIN 
-        IF ep_beam(i) eq 2 THEN BEGIN 
-           IF ep_beam(i-1) eq 1 THEN ep_beam(i-1) = ep_beam(i-1)+1
-           IF ep_beam(i+1) eq 1 THEN ep_beam(i+1) = ep_beam(i+1)+1
+        IF ep_beam(i) EQ 2 THEN BEGIN 
+           IF ep_beam(i-1) EQ 1 AND index_ep(i)-index_ep(i-1) LE diff_e THEN ep_beam(i-1) = ep_beam(i-1)+1
+           IF ep_beam(i+1) EQ 1 AND index_ep(i)-index_ep(i+1) LE diff_e THEN ep_beam(i+1) = ep_beam(i+1)+1
         ENDIF
      ENDFOR
   endif  else ep_beam(*)=0

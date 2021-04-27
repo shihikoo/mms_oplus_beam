@@ -7,16 +7,16 @@ PRO time_trim_tplot_variable, tplot_name, t_s, t_e
      index = where(data.x GE t_s AND data.x LE t_e, ct)
      IF ct GT 0 THEN BEGIN
         str_element, data, 'X', value, SUCCESS=xfound
-        data_x = value(index) 
+        IF KEYWORD_SET(xfound) THEN data_x = value(index) 
         
         str_element, data, 'Y', value, SUCCESS=yfound
-        data_y = value(index, *)
+        IF KEYWORD_SET(yfound) THEN data_y = value(index, *)
         
         str_element, data, 'V', value, SUCCESS=vfound
-        data_v = value(index, *)  
+        IF KEYWORD_SET(vfound) THEN data_v = value(index, *)  
         
         str_element, data, 'dY', value, SUCCESS=dyfound
-        data_dy = value(index, *)
+        IF KEYWORD_SET(dyfound) THEN data_dy = value(index, *)
      ENDIF ELSE BEGIN
         data_x = !VALUES.F_NAN
         data_y = !VALUES.F_NAN
@@ -36,7 +36,6 @@ PRO time_trim_tplot_variable, tplot_name, t_s, t_e
      IF beamFound EQ 1 THEN BEGIN
         datastr = {x: data_x, y:data_y, v:data_v, start_time:data.start_time, END_time: data.end_time, average_time: data.average_time}
      ENDIF 
-
   store_data, names(iname), data= datastr
   ENDFOR 
 END

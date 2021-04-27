@@ -4,29 +4,28 @@ PRO average_data_y, data, tag, average_time,time_avg, y_avg=y_avg, yfound=yfound
   
   data_y = value
 
-  index = where(data_y le -9e10,ct)
+  index = where(data_y LE -9e10,ct)
   IF ct GT 0 THEN data_y(index) = !VALUES.F_NAN 
 
-  size_y = size(data_y)  
+  size_y = SIZE(data_y)  
   dim_y = size_y(0)
   IF dim_y GT 2 THEN RETURN 
   IF dim_y EQ 1 THEN n_v = 1 ELSE n_v = size_y(2)
 
   n_avg = N_ELEMENTS(time_avg)
-  y_avg = dblarr(n_avg, n_v)
+  y_avg = DBLARR(n_avg, n_v)
   
 ; calculate mean of the data for time points
   FOR itime = 0l, n_avg-1 DO BEGIN
-     index = where(data.x GE time_avg(itime)-average_time/2 AND data.x LT time_avg(itime)+average_time/2 AND FINITE(data_y(*,0)), ct)
-
+     IF dim_y EQ 2 THEN index = where(data.x GE time_avg(itime)-average_time/2 AND data.x LT time_avg(itime)+average_time/2 AND TOTAL(data_y,2,/NAN) NE 0, ct)
+     IF dim_y EQ 1 THEN index = where(data.x GE time_avg(itime)-average_time/2 AND data.x LT time_avg(itime)+average_time/2 AND TOTAL(data_y, /NAN) NE 0, ct)
      IF ct GT 0 AND TOTAL(ABS(data_y(index, *)) GE 0,/NAN) GT 0  THEN BEGIN
         IF KEYWORD_SET(sum_up) THEN  BEGIN
-           y_avg(itime, *) = total(data_y(index, *),1, /NAN)
+           y_avg(itime, *) = TOTAL(data_y(index, *),1, /NAN)
         ENDIF  ELSE BEGIN
-           y_avg(itime, *) = total(data_y(index, *), 1, /NAN)/TOTAL(FINITE(data_y(index,0)))
+           y_avg(itime, *) = TOTAL(data_y(index, *), 1, /NAN)/TOTAL(FINITE(data_y(index, *)),1)
         ENDELSE
      ENDIF ELSE y_avg(itime, *) = !VALUES.F_NAN
-
   ENDFOR
 
 END   
@@ -82,6 +81,7 @@ PRO average_tplot_variable_with_given_time, var, average_time, time_avg, NEW_NAM
 ;------------------------------------------------------------------
 ; Extract data information from tplot variable
 ;------------------------------------------------------------------
+
      time_trim_tplot_variable, var_names(iv), min(time_avg)-average_time/2, max(time_avg)+average_time/2
 
      get_data, var_names(iv), data=data, dlim=dlim, lim=lim
@@ -95,6 +95,7 @@ PRO average_tplot_variable_with_given_time, var, average_time, time_avg, NEW_NAM
 
      average_data_y, data,'V', average_time, time_avg, y_avg=v_avg, yfound = vfound
      average_data_y, data,'dy', average_time, time_avg,y_avg=dy_avg, yfound = dyfound
+
 ;------------------------------------------------------------------
 ; If keyword NEW_NAME is set the time averaged variable is stored
 ; with a new name that includes the averaging time

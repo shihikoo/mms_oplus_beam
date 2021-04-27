@@ -21,7 +21,7 @@ PRO validate_enspec_tplot, tplot_var_name, t_s, t_e, average_time, error_message
 ; data cannot be averaged if data.y are all 0
            IF  TOTAL(data.y(index, *)) EQ 0 THEN BEGIN 
               error_message = error_message + 'Empty energy data '+'('+tplot_var_name+'). '
-           ENDIF ELSE BEGIN 
+           ENDIF ELSE BEGIN
               str = {x:data.x(index), y:data.y(index, *), v:data.v(index, *)}
               store_data, tplot_var_name, data = str, dlim = dlim, lim = lim
            ENDELSE 

@@ -1,17 +1,13 @@
 PRO sort_o_beam_map, stop = stop,ps_plot=ps_plot,short_time_plot=short_time_plot
 sc = 4  & sc_str = STRING(sc, format = '(i1.1)')
 
-time_start = '2001-01-01/00:00:00' 
+time_start = '2016-01-01/00:00:00' 
 ;time_start='2005-09-02/10'
-time_end = '2002-12-31/12:59:59'
+time_end = '2017-12-31/12:59:59'
 ;time_end='2005-09-03'
-;inst_name = 'HIA'
-inst_name = 'CODIF'
-if inst_name eq 'HIA' then sc =1
-IF inst_name EQ 'CODIF' and sc eq 4 THEN path = 'output/o_beam/new_beam_filter/'
-;IF inst_name EQ 'CODIF' and sc eq 4 THEN path = 'output/o_beam/sc4_5min_ar225/'
-IF inst_name EQ 'CODIF' and sc eq 1 then path = 'output/o_beam/test_year_dependence_with_HIA/sc1_hiabeta_lobe/'
-IF inst_name EQ 'HIA' THEN path = 'output/o_beam/test_year_dependence_with_HIA/hia_hiabeta_lobe/'
+inst_name = 'hpca'
+IF inst_name EQ 'CODIF' and sc eq 4 THEN data_filepath = 'output/o_beam/data/'
+
 average_time = 300
 ;--- keywords settings ---
 data_read_from_dat = 0 & save_data = 0
@@ -101,7 +97,7 @@ energy_threshold =[0,100.]  & energy_threshold_str = strcompress(STRING(energy_t
 ;------------------------------------------
 ;check prestore data 
 ;------------------------------------
-flndata = path+	'tplot_restore/data_'+time_str
+flndata = data_filepath+	'tplot_restore/data_'+time_str
 print, FINDFILE(flndata+'.tplot', COUNT = ct_data)
 
 IF KEYWORD_SET(data_read_from_dat) THEN ct_data = 0
@@ -200,7 +196,7 @@ ENDIF ELSE BEGIN
         month_str = string(month, format = '(i2.2)')
         day_str = string(day, format = '(i2.2)')
         year_str = string(year, format = '(i4.4)')
-        fln = path+'data/'+'storm_o_beam_'+year_str+month_str+day_str  +'.dat'
+        fln = data_filepath+'data/'+'storm_o_beam_'+year_str+month_str+day_str  +'.dat'
         
         names = FINDFILE(fln)
         IF names(0) NE '' THEN BEGIN 
@@ -460,7 +456,7 @@ IF keyword_set(en_vs_beta) THEN BEGIN
         
         FOR i = 0, 14 DO t_counts(*, i) = total(counts, 2)
         n_counts = counts/(t_counts)
-        popen, path+'plots/beta_energy/energy_vs_beta_'+phase_beta+'.ps', /land
+        popen, data_filepath+'plots/beta_energy/energy_vs_beta_'+phase_beta+'.ps', /land
         specplot, beta_scale_plot, en_scale_plot, counts, $
           no_interp = 1, $
           lim = { title:'O+ Beam Energy vs beta '+phase_beta+' (x<-15Re)', $
@@ -473,7 +469,7 @@ IF keyword_set(en_vs_beta) THEN BEGIN
                   XSTYLE:1, ystyle: 1, zstyle:1, $
                   position:[0.2, 0.2, 0.8, 0.8], charsize: 1.5}
         pclose
-        popen, path+'plots/beta_energy/energy_vs_beta_normalized_'+phase_beta+'.ps', /land
+        popen, data_filepath+'plots/beta_energy/energy_vs_beta_normalized_'+phase_beta+'.ps', /land
         specplot, beta_scale_plot, en_scale_plot, n_counts, $
           no_interp = 1, $
           lim = { title:'O+ Beam Energy vs beta (Normalized)'+phase_beta+' (x<-15Re)', $
@@ -491,7 +487,7 @@ ENDIF
 ;--------------------------------------
 ;set the path for plots
 ;----------------------------------------
-main_path = path+'plots/'  &  spawn, 'mkdir ' + main_path
+main_path = data_filepath+'plots/'  &  spawn, 'mkdir ' + main_path
 main_path = main_path+'map/' &  spawn, 'mkdir ' + main_path
 
 IF keyword_set(symmetry_template) THEN  main_path = main_path+'symmetry/' &  spawn, 'mkdir ' + main_path
@@ -597,7 +593,7 @@ ENDIF
 ;------------------------------------------
 ; restore data of index and solar wind & IMF pre 1 hour data
 ;------------------------------------------------------------
-flndata_sort = path+'tplot_restore/sort_condition_data_'+time_str
+flndata_sort = data_filepath+'tplot_restore/sort_condition_data_'+time_str
 print, FINDFILE(flndata_sort+'.tplot', COUNT = ct_sort_store)
 IF ct_sort_store GT 0 THEN tplot_restore, filenames = flndata_sort+'.tplot' 
 
@@ -3385,20 +3381,10 @@ temperature_h=pressure_h/proton_n/kb*1e-8*1e-9/1.16e4
                   ;      xyouts, 1e3,5e-4,strcompress(calculated_density,/remove_all)+', '+strcompress(calculated_flux,/remove_all),color=6,charsize=2
                         if keyword_set(shift) then begin
                             errplot,en_set,distfunc_avg(*,6),distfunc_avg(*,7),thick=thickness,color=6
-;    oplot,en_set,distfunc_avg(*,6),psym=-2,color=6,thick=thickness
-;   oplot,en_set,distfunc_avg(*,7),psym=-2,color=6,thick=thickness
+
                         endif
                     endelse   
-; max and min         
-;   oplot,en_set,distfunc_avg(*,2),psym=0,color=4
-; oplot,en_set,distfunc_avg(*,3),psym=0,color=5 
-                                ; case value
-                                ;        oplot, en_set,cusp_outflow_max,color=3,linestyle=5,thick=6
-                                ;         xyouts, 5e2,4e-3,'outflow envelop from cases',color=3,charsize=2
-                                ;       oplot, en_set,cusp_outflow_median,color=2,linestyle=5,thick=6
-                                ;      xyouts, 5e2,9e-3,'outflow median from cases',color=2,charsize=2
-                                ;    oplot, en_set,lobe_beam_median,color=3
-                                ;     xyouts, 5e2,2.5e6,'lobe beam median from cases',color=3,charsize=2
+
                 endif  
             endelse                
             
@@ -3440,27 +3426,12 @@ temperature_h=pressure_h/proton_n/kb*1e-8*1e-9/1.16e4
                 if keyword_set(ps_plot) then pclose else stop
                 if keyword_set(ps_plot) then  popen, plot_path+'en_distfunc_'+region_str(ire)+'_'+storm_phase_set(istorm)+'_'+plot_type+'_dE.ps',/land
 
-;                plot,[0.,0.],[0.,0.],xlog=1,ylog=0,xrange=[500,4e4],yrange=[0,1],xstyle=1,ystyle=1,charsize=1.5,$
- ;                 title=region_str(ire)+'    '+storm_phase_set(istorm),xtitle='E (eV)',ytitle='dE (eV)',/nodata
-  ;              oplot,en_set,energy_shift(*,0)/en_set,psym=-1,thick=thickness
-   ;             errplot,en_set,energy_shift(*,1)/en_set,energy_shift(*,2)/en_set,thick=thickness
-
                                    plot,[0.,0.],[0.,0.],xlog=1,ylog=1,xrange=[40,4e4],yrange=[1,3e4],xstyle=1,ystyle=1,charsize=1.5,$
                                      title=region_str(ire)+'    '+storm_phase_set(istorm),xtitle='E(eV)',ytitle='dE (eV)',/nodata
                                    oplot,en_set,energy_shift(*,0),psym=-7,thick=thickness
                                    errplot,en_set,energy_shift(*,1),energy_shift(*,2),thick=thickness
             endif  
-            
-;            x=[!values.f_NaN ,           !values.f_NaN  ,           !values.f_NaN       ,      !values.f_nan , 1.3585331e-08,   3.0600020e-08,$
-;            1.2461401e-07 ,  2.9932620e-07  , 1.4845807e-06,   3.3834524e-06 ,  8.7104033e-06,   1.9936867e-05,$
-;            4.7596766e-05 ,  0.00010271290 ,  7.6125051e-05]
-                                ;NaN             NaN             NaN             NaN      0.21516875       1.0152053
-                                ;     0.18268627      0.14990889      0.28781352      0.53547180      0.22664038      0.16876128
-                                ;     0.14124770      0.28600672      0.55014061
 
-;r=   [ NaN             NaN             NaN             NaN       4.6475151      0.98502248
-;       5.4738651       6.6707186       3.4744720       1.8675120       4.4122765       5.9255299
-;       7.0797611       3.4964214       1.8177171]
             if keyword_set(ps_plot) then pclose else stop
         endfor
     endfor

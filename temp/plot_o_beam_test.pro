@@ -142,62 +142,35 @@ FOR ipath = 0, 6 DO  BEGIN
         ENDIF 
 
         at_str = STRCOMPRESS(ROUND(average_time),  /REMOVE_ALL) 
-        t_name_tail = 'TDMOM_ENVARIOUS_SC'+sc_str $
-                      +'_PHI90_270_MTTEMPERATURE_SP3_ET0_All_T_AVG'+at_str
-        t_name_tail_para = 'TDMOM_ENVARIOUS_SC'+sc_str $
-                           +'_PHI90_270_MTTEMPERATURE_SP3_ET0_All_X_AVG'+at_str
-        t_name_tail_perp1 = 'TDMOM_ENVARIOUS_SC' +sc_str $
-                            +'_PHI90_270_MTTEMPERATURE_SP3_ET0_All_Y_AVG'+at_str
-        t_name_tail_perp2 = 'TDMOM_ENVARIOUS_SC'+sc_str $
-                            +'_PHI90_270_MTTEMPERATURE_SP3_ET0_All_Z_AVG'+at_str
-        t_fit_name_tail_para = 'TDMOM_ENVARIOUS_SC' + sc_str $
-          +'_PHI90_270_MTTEMPERATURE_SP3_ET0_All_para_dfit_AVG'+at_str
-        t_fit_name_tail_perp = 'TDMOM_ENVARIOUS_SC'+sc_str $
-          +'_PHI90_270_MTTEMPERATURE_SP3_ET0_All_perp_dfit_AVG'+at_str
-        t_fit_name_tail = 'TDMOM_ENVARIOUS_SC'+sc_str $
-                          +'_PHI90_270_MTTEMPERATURE_SP3_ET0_All_T_dfit_AVG'+at_str
+        t_name_tail = 'TDMOM_ENVARIOUS_SC'+sc_str +'_PHI90_270_MTTEMPERATURE_SP3_ET0_All_T_AVG'+at_str
+        t_name_tail_para = 'TDMOM_ENVARIOUS_SC'+sc_str +'_PHI90_270_MTTEMPERATURE_SP3_ET0_All_X_AVG'+at_str
+        t_name_tail_perp1 = 'TDMOM_ENVARIOUS_SC' +sc_str +'_PHI90_270_MTTEMPERATURE_SP3_ET0_All_Y_AVG'+at_str
+        t_name_tail_perp2 = 'TDMOM_ENVARIOUS_SC'+sc_str +'_PHI90_270_MTTEMPERATURE_SP3_ET0_All_Z_AVG'+at_str
+        t_fit_name_tail_para = 'TDMOM_ENVARIOUS_SC' + sc_str +'_PHI90_270_MTTEMPERATURE_SP3_ET0_All_para_dfit_AVG'+at_str
+        t_fit_name_tail_perp = 'TDMOM_ENVARIOUS_SC'+sc_str +'_PHI90_270_MTTEMPERATURE_SP3_ET0_All_perp_dfit_AVG'+at_str
+        t_fit_name_tail = 'TDMOM_ENVARIOUS_SC'+sc_str +'_PHI90_270_MTTEMPERATURE_SP3_ET0_All_T_dfit_AVG'+at_str
         
-        t_name_earth = 'TDMOM_ENVARIOUS_SC'+sc_str $
-                       +'_PHI270_90_MTTEMPERATURE_SP3_ET0_All_T_AVG'+at_str
-        t_name_earth_para = 'TDMOM_ENVARIOUS_SC'+sc_str $
-                            +'_PHI270_90_MTTEMPERATURE_SP3_ET0_All_X_AVG'+at_str
-        t_name_earth_perp1 = 'TDMOM_ENVARIOUS_SC'+sc_str $
-                             +'_PHI270_90_MTTEMPERATURE_SP3_ET0_All_Y_AVG'+at_str
-        t_name_earth_perp2 = 'TDMOM_ENVARIOUS_SC'+sc_str $
-                             +'_PHI270_90_MTTEMPERATURE_SP3_ET0_All_Z_AVG'+at_str
-        t_fit_name_earth_para = 'TDMOM_ENVARIOUS_SC'+sc_str $
-          +'_PHI270_90_MTTEMPERATURE_SP3_ET0_All_para_dfit_AVG'+at_str
-        t_fit_name_earth_perp = 'TDMOM_ENVARIOUS_SC'+sc_str $
-          +'_PHI270_90_MTTEMPERATURE_SP3_ET0_All_perp_dfit_AVG'+at_str
-        t_fit_name_earth = 'TDMOM_ENVARIOUS_SC'+sc_str $
-                           +'_PHI270_90_MTTEMPERATURE_SP3_ET0_All_T_dfit_AVG'$
-                           +at_str
+        t_name_earth = 'TDMOM_ENVARIOUS_SC'+sc_str +'_PHI270_90_MTTEMPERATURE_SP3_ET0_All_T_AVG'+at_str
+        t_name_earth_para = 'TDMOM_ENVARIOUS_SC'+sc_str +'_PHI270_90_MTTEMPERATURE_SP3_ET0_All_X_AVG'+at_str
+        t_name_earth_perp1 = 'TDMOM_ENVARIOUS_SC'+sc_str +'_PHI270_90_MTTEMPERATURE_SP3_ET0_All_Y_AVG'+at_str
+        t_name_earth_perp2 = 'TDMOM_ENVARIOUS_SC'+sc_str +'_PHI270_90_MTTEMPERATURE_SP3_ET0_All_Z_AVG'+at_str
+        t_fit_name_earth_para = 'TDMOM_ENVARIOUS_SC'+sc_str  +'_PHI270_90_MTTEMPERATURE_SP3_ET0_All_para_dfit_AVG'+at_str
+        t_fit_name_earth_perp = 'TDMOM_ENVARIOUS_SC'+sc_str +'_PHI270_90_MTTEMPERATURE_SP3_ET0_All_perp_dfit_AVG'+at_str
+        t_fit_name_earth = 'TDMOM_ENVARIOUS_SC'+sc_str +'_PHI270_90_MTTEMPERATURE_SP3_ET0_All_T_dfit_AVG' +at_str
 
-        d_name_tail = 'TDMOM_ENVARIOUS_SC'+sc_str $
-                      +'_PHI90_270_MTDENSITY_SP3_ET0_All_AVG'+at_str
+        d_name_tail = 'TDMOM_ENVARIOUS_SC'+sc_str +'_PHI90_270_MTDENSITY_SP3_ET0_All_AVG'+at_str
         
-        d_fit_name_tail = 'TDMOM_ENVARIOUS_SC'+sc_str $
-                          +'_PHI90_270_MTDENSITY_SP3_ET0_All_dfit_AVG'+at_str
-        d_name_earth = 'TDMOM_ENVARIOUS_SC'+sc_str $
-                       +'_PHI270_90_MTDENSITY_SP3_ET0_All_AVG'+at_str
-        d_fit_name_earth = 'TDMOM_ENVARIOUS_SC'+sc_str $
-                           +'_PHI270_90_MTDENSITY_SP3_ET0_All_dfit_AVG'+at_str
+        d_fit_name_tail = 'TDMOM_ENVARIOUS_SC'+sc_str +'_PHI90_270_MTDENSITY_SP3_ET0_All_dfit_AVG'+at_str
+        d_name_earth = 'TDMOM_ENVARIOUS_SC'+sc_str +'_PHI270_90_MTDENSITY_SP3_ET0_All_AVG'+at_str
+        d_fit_name_earth = 'TDMOM_ENVARIOUS_SC'+sc_str +'_PHI270_90_MTDENSITY_SP3_ET0_All_dfit_AVG'+at_str
 
-        ylim, [t_fit_name_tail, t_fit_name_tail_para, $
-               t_fit_name_tail_perp, $
-               t_fit_name_earth, t_fit_name_earth_para, $
-               t_fit_name_earth_perp], 0.1, 10000
-        options, [t_name_tail, t_name_tail_para,$
-                  t_name_tail_perp1, t_name_tail_perp2, $
-                  t_name_earth, t_name_earth_para, $
-                  t_name_earth_perp1, t_name_earth_perp2], $
-                 'color', 6
-;tail        
-        IF NOT keyword_set(fit_result) THEN $
-          popen, path+'20021001_'+s+'_'+e+'temperature_compare_tail.ps', /land ELSE window, /free
+        ylim, [t_fit_name_tail, t_fit_name_tail_para, t_fit_name_tail_perp, t_fit_name_earth, t_fit_name_earth_para, t_fit_name_earth_perp], 0.1, 10000
+        options, [t_name_tail, t_name_tail_para, t_name_tail_perp1, t_name_tail_perp2, t_name_earth, t_name_earth_para, t_name_earth_perp1, t_name_earth_perp2], 'color', 6
+
+; tail        
+        IF NOT keyword_set(fit_result) THEN popen, path+'20021001_'+s+'_'+e+'temperature_compare_tail.ps', /land ELSE window, /free
         
-        tplot,  [t_fit_name_tail, t_fit_name_tail_para, $
-                 t_fit_name_tail_perp], title = path
+        tplot,  [t_fit_name_tail, t_fit_name_tail_para, t_fit_name_tail_perp], title = path
         
         tplot_panel, v = t_fit_name_tail, o = t_name_tail, psym = 7
         tplot_panel, v = t_fit_name_tail_para, o = t_name_tail_para, psym = 7
@@ -207,12 +180,11 @@ FOR ipath = 0, 6 DO  BEGIN
         xyouts, 7000, 50, 'T (fit)', size = 2
         xyouts, 7000, 1000, 'T (3dmom)', color = 6, size = 2
         IF NOT keyword_set(show_fit) THEN   pclose
-;earth
-        IF NOT keyword_set(fit_result) THEN $
-          popen, path+'20021001_'+s+'_'+e+'temperature_compare_earth.ps', /land ELSE window, /free
+
+; earth
+        IF NOT keyword_set(fit_result) THEN popen, path+'20021001_'+s+'_'+e+'temperature_compare_earth.ps', /land ELSE window, /free
         
-        tplot,  [t_fit_name_earth, t_fit_name_earth_para, $
-                 t_fit_name_earth_perp], title = path
+        tplot,  [t_fit_name_earth, t_fit_name_earth_para, t_fit_name_earth_perp], title = path
         
         tplot_panel, v = t_fit_name_earth, o = t_name_earth, psym = 7
         tplot_panel, v = t_fit_name_earth_para, o = t_name_earth_para, psym = 7
@@ -222,9 +194,9 @@ FOR ipath = 0, 6 DO  BEGIN
         xyouts, 7000, 50, 'T (fit)', size = 2
         xyouts, 7000, 1000, 'T (3dmom)', color = 6, size = 2
         IF NOT keyword_set(show_fit) THEN   pclose
-;density
-        IF NOT keyword_set(fit_result) THEN $
-          popen, path+'20021001_'+s+'_'+e+'density_compare.ps', /land ELSE window, /free
+
+; density
+        IF NOT keyword_set(fit_result) THEN popen, path+'20021001_'+s+'_'+e+'density_compare.ps', /land ELSE window, /free
         
         tplot,  [d_fit_name_tail, d_fit_name_earth], title = path
         

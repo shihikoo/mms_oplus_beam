@@ -32,7 +32,7 @@ PRO filter_enspec, counts_avg_name, flux_avg_name, low_count_line, plot_low_coun
 ;draw all those counts and flux plots into ps file if requested 
   IF KEYWORD_SET(plot_low_count_filter) AND KEYWORD_SET(filename) THEN BEGIN 
      filepath = file_dirname(filename)
-     spwan = 'mkdir -p '+ filepath
+     spwan = 'mkdir -pf '+ filepath
 
      popen, filename
      tplot, [flux_name, flux_name+'_AVG'+at_str+'_Original', counts_name, counts_name+'_AVG'+at_str, flux_name+'_AVG'+at_str ]     
