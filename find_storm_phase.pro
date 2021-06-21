@@ -10,16 +10,18 @@
 ;-------------------------------------------------------------------
 
 PRO find_storm_phase, time_avg, storm_phase_filename = storm_phase_filename, storm_phase_tplot_name = storm_phase_tplot_name
-  IF KEYWORD_SET(storm_phase_filename) THEN storm_phase_filename = 'data/storm_phase_2016_2017.dat'
-  IF KEYWORD_SET(storm_phase_tplot_name) THEN storm_phase_tplot_name = 'storm_phaes'
+  IF NOT KEYWORD_SET(storm_phase_filename) THEN storm_phase_filename = 'data/storm_phase_2016_2017.csv'
+  IF NOT KEYWORD_SET(storm_phase_tplot_name) THEN storm_phase_tplot_name = 'storm_phase'
+
   storm_phase_data = READ_CSV(storm_phase_filename, HEADER = storm_phase_header)
+
   prestorm_start = time_double(storm_phase_data.FIELD1)
   storm_onset = time_double( storm_phase_data.FIELD2)
-  min_dst_time =   time_double(storm_phase_data.FIELD3)
-  recovery_fast_end =  time_double(storm_phase_data.FIELD4)
-  recovery_early_end =  time_double(storm_phase_data.FIELD5)
-  recovery_long_end =  time_double(storm_phase_data.FIELD6)
-  min_dst =  time_double(storm_phase_data.FIELD7)
+  min_dst_time = time_double(storm_phase_data.FIELD3)
+  recovery_fast_end = time_double(storm_phase_data.FIELD4)
+  recovery_early_end = time_double(storm_phase_data.FIELD5)
+  recovery_long_end = time_double(storm_phase_data.FIELD6)
+  min_dst = time_double(storm_phase_data.FIELD7)
 
   nstorm = N_ELEMENTS(min_dst)
   n_avg = N_ELEMENTS(time_avg)

@@ -23,16 +23,16 @@
 ; Created on 03/12/2021
 ;-----------------------------------------------------------------------
 
-PRO identify_beams, sat, specie, flux_name, counts_name,  average_time, time_avg, bx_name, x_gse_name, z_gsm_name $
+PRO identify_beams, sat, specie, flux_name, counts_name,  average_time, time_avg  $                   
                     , beta_name, magnetosphere_region_name $
-                    , t_s = t_s, t_e=t_e $
+                    , t_s = t_s, t_e = t_e $
                     , pa_range = pa_range, peak_pa_range = peak_pa_range $
                     , low_count_line = low_count_line, pa_count_line = pa_count_line, flux_threshold = flux_threshold $
                     , plot_low_count_filter = plot_low_count_filter, low_count_filename= low_count_filename $
                     , pa_name = pa_name, pa_eflux_name = pa_eflux_name $
-                    , pap_name = pap_name, pap_et_name = pap_et_name, pap_et_beam_name = pap_et_beam_name $
+                    , pap_name = pap_name, pap_beam_name = pap_beam_name $
                     , epcut_beam_name = epcut_beam_name, erange_beam_name = erange_beam_name $
-                    , dlimf = dlimf, limf = limf, dlimc = dlimc, limc = limc, error_message = error_message , bin_size_pa = bin_size_pa
+                    , dlimf = dlimf, limf = limf, dlimc = dlimc, limc = limc, error_message = error_message , bin_size_pa = bin_size_pa, diff_e = diff_e, diff_pa = diff_pa
 ; Keywords handling
   IF NOT KEYWORD_SET(t_s) OR NOT KEYWORD_SET(t_e) THEN BEGIN
      get_timespan, interval
@@ -46,16 +46,16 @@ PRO identify_beams, sat, specie, flux_name, counts_name,  average_time, time_avg
   IF NOT KEYWORD_SET(low_count_filename) THEN BEGIN
      ts = EXTRACT_DATE_STRING(time_string(t_s))  
      te = EXTRACT_TIME_STRING(time_string(t_e))
-     low_count_filename = 'output/low_count_filter/' + 'low_count_filter_' + ts + '_' + te + '.ps'
+     low_count_filename = 'output/plots/low_count_filter/' + 'low_count_filter_' + ts + '_' + te + '.ps'
   ENDIF
 
   IF NOT KEYWORD_SET(pa_range) THEN pa_range = [0,180]
   IF NOT KEYWORD_SET(pa_range) THEN peak_pa_range = [0,180]
 ;-----------------------------------------------------------------
-;Validate the energy spectra data for the calculation time period.
-;Keep data between t_s and t_e and save them again in original names  
-;Validate the energy spectra. If not valid, record the error_message
-;in the log and return
+; Validate the energy spectra data for the calculation time period.
+; Keep data between t_s and t_e and save them again in original names  
+; Validate the energy spectra. If not valid, record the error_message
+; in the log and return
 ;-------------------------------------------------------------------
   validate_enspec_tplot, flux_name, t_s, t_e, average_time,  error_message = error_message
   validate_enspec_tplot, counts_name, t_s, t_e, average_time, error_message = error_message
@@ -95,26 +95,23 @@ PRO identify_beams, sat, specie, flux_name, counts_name,  average_time, time_avg
 
   IF NOT KEYWORD_SET(names)  THEN plot_pa_spec_around_energy_peak_mms, sat, specie, 'DIFF FLUX' $
      , epcut_name, erange_name, pa_name = pa_name $
-     , average_time = average_time  $
-     , bin_size_pa = bin_size_pa, pa_range = pa_range
+     , average_time = average_time, bin_size_pa = bin_size_pa, pa_range = pa_range
 
 ; plot pitch angle for IN 'EFLUX' unit
   tplot_names, pa_eflux_name, names = names    
 
   IF NOT KEYWORD_SET(names) THEN  plot_pa_spec_around_energy_peak_mms, sat, specie, 'EFLUX' $
      , epcut_name, erange_name, pa_name = pa_eflux_name $
-     , average_time = average_time $
-     , bin_size_pa = bin_size_pa, pa_range = pa_range
-
+     , average_time = average_time, bin_size_pa = bin_size_pa, pa_range = pa_range
+  
 ; find pitch angle peak 
   tplot_names, pap_name, names = names
   IF NOT KEYWORD_SET(names) THEN find_pa_peak, pa_eflux_name, pa_name, pap_name, beta_name $
      , pa_count_line = pa_count_line, flux_threshold = flux_threshold, peak_pa_range = peak_pa_range, def_pap_factor = [1.1,1.4,1.7]
 
 ; filter pitch angle peak to beams by requiring continuity and close energy range
-  tplot_names, epcut_beam_name, names = names                      
-;  IF NOT KEYWORD_SET(names) THEN 
-  filter_beams, pap_name, epcut_name, erange_name, bx_name, x_gse_name, z_gsm_name $
-     , pap_et_name, pap_et_beam_name, epcut_beam_name, erange_beam_name
+  tplot_names, pap_beam_name, names = names                      
+  ;IF NOT KEYWORD_SET(names) THEN 
+  filter_beams, pap_name, epcut_name, erange_name, pap_beam_name, epcut_beam_name, erange_beam_name, diff_e = diff_e, diff_pa = diff_pa
 
 END 

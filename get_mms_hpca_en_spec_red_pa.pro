@@ -66,10 +66,9 @@ END
 PRO get_mms_hpca_en_spec_red_pa, sat, species, units, tplot_var_name, pa, no_convert_en=no_convert_en
 
   COMMON get_error, get_err_no, get_err_msg, default_verbose
-
-                                ;----------------------------------------------------------------------
-                                ; Read pre-processed data
-                                ;----------------------------------------------------------------------
+;----------------------------------------------------------------------
+; Read pre-processed data
+;----------------------------------------------------------------------
   sp_name = ['h1','he2','he1','o1']
 
   path = getenv('MMS' + STRING(sat, FORMAT='(i1.1)') + '_HPCA_SRVY_L2PA') + '/' + sp_name(species)

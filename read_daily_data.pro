@@ -4,11 +4,11 @@
 ; Inputs: jd_s, ndays, data_path
 ;
 ; Written by Jing Liao
-; Written on 04/21/2021
+; Written on 04/21/20211
 ;---------------------------------------------------------------
 FUNCTION read_daily_csv_into_matrix, jd_s, ndays, data_path
-  FOR iday = 0l, ndays-1 DO BEGIN             ; Loop trough all days   
-     caldat, jd_s + iday, month, day, year    ; find caledar date
+  FOR iday = 0l, ndays-1 DO BEGIN          ; Loop trough all days   
+     caldat, jd_s + iday, month, day, year ; find caledar date
      month_str = string(month, format = '(i2.2)')
      day_str = string(day, format = '(i2.2)')
      year_str = string(year, format = '(i4.4)')
@@ -103,6 +103,12 @@ FUNCTION clean_up_daily_data_matrix, data, header
   index_column = WHERE(header EQ 'Region', ct)
   index_row = WHERE(data(index_column,*) EQ 1, ct)
   IF ct GT 0 THEN data = data(*, index_row)
+
+;-- Distance larger than 100 Re is placeholder for error data
+  index_column = WHERE(header EQ 'DIST', ct)
+  index_row = WHERE(data(index_column, *) GT 100., ct )
+  IF ct GT 0 THEN data(index_column, index_row) = !VALUES.F_NAN
+
   RETURN, data
 END 
 
@@ -136,9 +142,9 @@ FUNCTION read_daily_data, time_start, time_end, tplot_path, data_path, read_from
   timespan, time_start, dt,  /SECONDS
 
   ts_str = time_struct(ts) 
-  te_str = time_struct(te)   ; time structure   
+  te_str = time_struct(te)      ; time structure   
   jd_s = julday(ts_str.month, ts_str.date, ts_str.year) 
-  jd_e = julday(te_str.month, te_str.date, te_str.year)  ; julian day
+  jd_e = julday(te_str.month, te_str.date, te_str.year) ; julian day
 
 ;  nyear = te_str.year-ts_str.year
 
@@ -159,18 +165,21 @@ FUNCTION read_daily_data, time_start, time_end, tplot_path, data_path, read_from
   
   PRINT, FINDFILE(fln_saved_tplot+'.tplot', COUNT = ct_tplot)
   IF ct_tplot GT 0 AND NOT  KEYWORD_SET(read_from_dat)  THEN BEGIN 
-     tplot_restore, filenames = fln_saved_tplot+'.tplot' 
-     get_data, 'data', data = saved_data
+     TPLOT_RESTORE, filenames = fln_saved_tplot+'.tplot' 
+     GET_DATA, 'data', data = saved_data
      header = saved_data.title
      data = saved_data.data
   ENDIF ELSE BEGIN
-     input_data = read_daily_csv(jd_s, ndays, data_path)
+     input_data = READ_DAILY_CSV(jd_s, ndays, data_path)
      data = input_data.data
      header = input_data.header
-   IF KEYWORD_SET(store_tplot) THEN BEGIN 
-        store_data, 'data', data = {data:data, title:header}
-        tplot_save, 'data', filename = fln_saved_tplot
-     ENDIF 
-  ENDELSE  
+     
+     IF KEYWORD_SET(store_tplot) THEN BEGIN 
+        STORE_DATA, 'data', data = {data:data, title:header}
+        SPAWN, 'mkdir -p '+ FILE_DIRNAME(fln_saved_tplot)
+        TPLOT_SAVE, 'data', filename = fln_saved_tplot
+        WRITE_CSV, fln_saved_tplot+'.csv', data, HEADER = header
+     ENDIF  
+  ENDELSE
   RETURN, data
 END

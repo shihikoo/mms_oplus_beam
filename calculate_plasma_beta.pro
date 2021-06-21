@@ -40,27 +40,31 @@ PRO calculate_plasma_beta, all_tplot_names, error_message=error_message
 
   IF error_message NE '' THEN RETURN
  
-  get_data, all_tplot_names.h1_pressure_name, data=h1_pressure_data
-  get_data, all_tplot_names.o1_pressure_name, data=o1_pressure_data
-  get_data, all_tplot_names.mag_pressure_name, data=mag_pressure_data
+  get_data, all_tplot_names.h1_pressure_name, data = h1_pressure_data
+  get_data, all_tplot_names.o1_pressure_name, data = o1_pressure_data
+  get_data, all_tplot_names.mag_pressure_name, data = mag_pressure_data
+  get_data, all_tplot_names.o1_density_name, data = o1_density_data
+  get_data, all_tplot_names.h1_density_name, data = h1_density_data
 
 ; The pressure data sometimes has -9e10 data, which is nan data. We
 ; are now handling this in average varible routine.
 ;  index = where(o1_pressure_data.y le -1e10,ct)
 ;  IF ct GT 0 THEN o1_pressure_data.y(index) = !VALUES.F_NAN
 
-  o1_pressure_data_int = interpol(o1_pressure_data.y, o1_pressure_data.x, h1_pressure_data.x)
-  mag_pressure_data_int = interpol(mag_pressure_data.y, mag_pressure_data.x, h1_pressure_data.x)
+;  o1_pressure_data_int = interpol(o1_pressure_data.y, o1_pressure_data.x, h1_pressure_data.x)
+;  mag_pressure_data_int = interpol(mag_pressure_data.y, mag_pressure_data.x, h1_pressure_data.x)
   
-  store_data, all_tplot_names.beta_name, data={x:h1_pressure_data.x , y:(h1_pressure_data.y + o1_pressure_data_int) / mag_pressure_data_int}
-
+  store_data, all_tplot_names.beta_name, data={x:h1_pressure_data.x , y:(h1_pressure_data.y + o1_pressure_data.y) / mag_pressure_data.y}
   options, all_tplot_names.beta_name, 'ytitle', 'Plasma Beta' 
-  ylim, all_tplot_names.beta_name, 1e-3, 1e1, 1
+  ylim, all_tplot_names.beta_name, 0.001, 10, 1
 
-  store_data, all_tplot_names.p_total_name, data={x:h1_pressure_data.x , y: h1_pressure_data.y + o1_pressure_data_int + mag_pressure_data_int}
+  store_data, all_tplot_names.p_total_name, data={x:h1_pressure_data.x , y: h1_pressure_data.y + o1_pressure_data.y + mag_pressure_data.y}
+  options, all_tplot_names.p_total_name, 'ytitle', 'Total Pressure' 
+  ylim, all_tplot_names.p_total_name, 0.1, 100, 1
 
-  options, all_tplot_names.beta_name, 'ytitle', 'Total Pressure' 
-  ylim, all_tplot_names.beta_name, 1e-3, 1e1, 1
+  store_data, all_tplot_names.density_ratio_name, data={x:h1_density_data.x , y: o1_density_data.y/h1_density_data.y}
+  options, all_tplot_names.density_ratio_name, 'ytitle', 'Density Ratio' 
+  ylim, all_tplot_names.density_ratio_name, 1e-3, 10., 1
   
 END 
 
