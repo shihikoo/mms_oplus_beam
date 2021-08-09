@@ -39,7 +39,10 @@ PRO make_o_beam_map, odata, header $
                      , coor_set = coor_set $
                      , property_map_set = property_map_set $
                      , property_map_type_set = property_map_type_set $
-                     , energy_set = energy_set
+                     , energy_set = energy_set $
+                     , imfBz_set = imfBz_set $
+                     , imfBy_set = imfBy_set $
+                     , swP_set = swP_set
    
 ;-- default keywords settings if keywords are not set --
   IF NOT KEYWORD_SET(grid) THEN grid_set = 2. & grid_str = STRING(grid, format = '(i2.2)')
@@ -54,8 +57,9 @@ PRO make_o_beam_map, odata, header $
   IF NOT KEYWORD_SET(property_map_type_set) THEN property_map_type_set = ['mean', 'median', 'minimum','maximum']
   IF NOT KEYWORD_SET(property_map_set) THEN property_map_set = [''] ;['energy', 'flux','pitch_angle','density','temperature','velocity']
   IF NOT KEYWORD_SET(sort_flag) THEN sort_flag = 1
-  IF NOT KEYWORD_SET(energy_set) THEN energy_filter = [[1., 4.e5]]
- 
+  IF NOT KEYWORD_SET(energy_set) THEN energy_set = [[1., 4.e5]]
+  IF NOT KEYWORD_SET(imfBz_set) THEN imfBz_set = [[-100,100]]
+  IF NOT KEYWORD_SET(swP_set) THEN swP_set = [[0,100]]
 ;-- time settings -- 
   get_timespan, interval
   ts_str = time_struct(interval(0)) &  te_str = time_struct(interval(1))
@@ -63,7 +67,7 @@ PRO make_o_beam_map, odata, header $
   te_date = string(te_str.year, format = '(i4.4)')+ string(te_str.month, format = '(i2.2)') + string(te_str.date, format = '(i2.2)')
 
 ;-- combine conditions --
-  condition_set = combine_condition_sets( storm_phase_set, substorm_phase_set, direction_set, region_map_set, coor_set, energy_set)
+  condition_set = combine_condition_sets( storm_phase_set, substorm_phase_set, direction_set, region_map_set, coor_set, energy_set, imfBz_set, imfBy_set, swP_set)
   
 ;-- Run plotting routine for different conditions
   FOR icondition = 0, N_ELEMENTS(condition_set(*,0))-1 DO BEGIN 
@@ -74,36 +78,40 @@ PRO make_o_beam_map, odata, header $
      region =  condition_set(icondition, 2)
      direction =  condition_set(icondition, 3)
      plot_axis =  condition_set(icondition, 4:6)
-     phase = storm_phase +'_' +substorm_phase
      energy_filter = condition_set(icondition, 7:8)
+     imfBz_filter = condition_set(icondition, 9:10)
+     swP_filter = condition_set(icondition, 11:12)
+     imfBy_filter = condition_set(icondition, 13:14)
      
-     load_condition_flags, data, storm_phase, substorm_phase, region, direction, flag_storm, flag_substorm, flag_region, flag_direction    
-
-     flag_condition = flag_storm * flag_substorm * flag_direction * flag_region * sort_flag
+     load_external_condition_flags, data, storm_phase, substorm_phase, region, flag_ext_condition
      
-     index = WHERE(data.en_para LT energy_filter[0] OR data.en_para GT energy_filter[1], ct)
-     IF  ct GT 0 THEN data.flag_para[index] = !VALUES.F_NAN
-     data.flag_para = data.flag_para * flag_condition
+     load_internal_condition_flags, data, direction, energy_filter, imfBz_filter, imfBy_filter, swP_filter, flag_int_condition_para, flag_int_condition_anti
      
-     index = WHERE(data.en_anti LT energy_filter[0] OR data.en_anti GT energy_filter[1], ct)
-     IF  ct GT 0 THEN data.flag_anti[index] = !VALUES.F_NAN
-     data.flag_anti = data.flag_anti * flag_condition
+     data.flag_para = data.flag_para * flag_int_condition_para * flag_ext_condition * sort_flag
+     data.flag_anti = data.flag_anti * flag_int_condition_anti * flag_ext_condition * sort_flag
      
      load_axis, data, plot_axis, data_pos, range, log    
      
-     main_path = plot_path + 'grid_' + grid_str + '/' + direction+'_' + STRING(energy_filter[0],format = '(i6.6)') + '_' + STRING(energy_filter[1], format = '(i6.6)') + '/'
-     path_ev = main_path + 'events/'
-     IF KEYWORD_SET(point_plot) THEN make_points_map, data_pos, data.flag_para, data.flag_anti, data.beta, data.mlt, range, log, path_ev, ts_date, te_date, plot_axis, grid, sort_title, phase, region, direction, ps_plot = ps_plot
+     ext_condition_str = storm_phase +'_'+ substorm_phase  +'_' + region +'_' + direction 
+     int_condition_str = 'en_' + STRTRIM(LONG(energy_filter[0]),2) + '_' + STRTRIM(LONG(energy_filter[1]),2) $
+                     + '_' + 'imfBz_' + STRTRIM(FIX(imfBz_filter[0]),2) + '_' + STRTRIM(FIX(imfBz_filter[1]),2) $
+                         + '_' + 'imfBy_' + STRTRIM(FIX(imfBy_filter[0]),2) + '_' + STRTRIM(FIX(imfBy_filter[1]),2) $
+                     + '_' + 'swP_' + STRTRIM(FIX(swP_filter[0]),2) + '_' + STRTRIM(FIX(swP_filter[1]),2) 
      
-     IF KEYWORD_SET(EVENTS_MAP) THEN make_events_map, data_pos, data.flag_para, data.flag_anti, path_ev, ts_date, te_date, plot_axis, sort_title, phase, region, direction, range, log, grid, slice_grid, filename, plot_2d, plot_slice, make_table, ps_plot = ps_plot
+     IF sort_title NE '' THEN ext_condition_str = sort_title + '_' + ext_condition_str
+
+     main_path = plot_path + 'grid_' + grid_str + '/'+  ext_condition_str + '/'+ int_condition_str +'/'
+     path_ev = main_path + 'events/'
+     IF KEYWORD_SET(point_plot) THEN make_points_map, data_pos, data.flag_para, data.flag_anti, data.beta, data.mlt, range, log, path_ev, ts_date, te_date, plot_axis, grid, ext_condition_str, int_condition_str, ps_plot = ps_plot
+     
+     IF KEYWORD_SET(EVENTS_MAP) THEN make_events_map, data_pos, data.flag_para, data.flag_anti, path_ev, ts_date, te_date, plot_axis, ext_condition_str, int_condition_str, range, log, grid, slice_grid, filename, plot_2d, plot_slice, make_table, ps_plot = ps_plot
      
      IF KEYWORD_SET(PROPERTY_MAP_SET)  THEN BEGIN 
         FOR ipmt = 0, n_elements(property_map_type_set)-1 DO BEGIN
            FOR ipp = 0, N_ELEMENTS(PROPERTY_MAP_SET)-1 DO  BEGIN 
               path_pp_main = main_path+property_map_set(ipp)+'/' 
              
-              make_property_map, data, data_pos, property_map_set(ipp), property_map_type_set(ipmt), data.flag_para, data.flag_anti, path_pp_main, ts_date, te_date, plot_axis $
-                                 , sort_title, phase, region, direction, range, log,grid, slice_grid, filename, plot_2d, plot_slice, make_table, ps_plot = ps_plot
+              make_property_map, data, data_pos, property_map_set(ipp), property_map_type_set(ipmt), data.flag_para, data.flag_anti, path_pp_main, ts_date, te_date, plot_axis,ext_condition_str, int_condition_str , range, log,grid, slice_grid, filename, plot_2d, plot_slice, make_table, ps_plot = ps_plot
            ENDFOR         
         ENDFOR     
      ENDIF             

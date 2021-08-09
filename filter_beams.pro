@@ -1,18 +1,19 @@
 ;----------------------------------------------------------------
-;Purpose:  Convert pitch angle plot to earth tail direction and then filter energy peak and erange data with beam duration.
+; Purpose:  Convert pitch angle plot to earth tail direction and then filter energy peak and erange data with beam duration.
 ;
-;Input: pap_name
-;       cpcut_name
-;       erange_name
-;       bx_name
-;       x_gse_name
-;       bz_gsm_name
-;       pap_beam_et_name
-;       epcut_beam_name
-;       erange_beam_name
+; Input: pap_name
+;        cpcut_name
+;        erange_name
+;        bx_name
+;        x_gse_name
+;        bz_gsm_name
+;        pap_beam_et_name
+;        epcut_beam_name
+;        erange_beam_name
 ;
-;Created by Jing Liao
-;Created on 03/16/2012
+; Created by Jing Liao
+; Created on 03/16/2012
+; Modified on 05/01/2021
 ;--------------------------------------------------------------------
 
 PRO filter_beams, pap_name, epcut_name, erange_name, pap_beam_name, epcut_beam_name, erange_beam_name, diff_e = diff_e, diff_pa = diff_pa
@@ -37,6 +38,7 @@ PRO filter_beams, pap_name, epcut_name, erange_name, pap_beam_name, epcut_beam_n
   npa = N_ELEMENTS(pa_pap(0, *)) 
   IF ~KEYWORD_SET(diff_e) THEN diff_e = 2  ; accepted energy bin difference 
   IF ~KEYWORD_SET(diff_pa) THEN diff_pa = 2 ; accepted pitch bin difference
+  IF ~KEYWORD_SET(diff_time) THEN diff_time = 1 ; beams are defined as beam before and after 1 times of average time. 
 
 ;-----------------------------------------------------------------------
 ;check for the beam. It requires beam to be equal or more than 3 time
@@ -50,7 +52,7 @@ PRO filter_beams, pap_name, epcut_name, erange_name, pap_beam_name, epcut_beam_n
 ;check energy (longer than 2 times of average_time)
   index_ep = INTARR(n_time)
   FOR k = 0, n_time-1 DO  index_ep(k) = where(round(energybins) EQ round(epcut_beam(k))) 
-  ind=where(index_ep eq -1,ct)
+  ind=where(index_ep eq -1, ct)
 ;if ct gt 0 then index_ep(ind)=-1 ; -100 as a flag for no energy peak or no beam
   ep_beam = index_ep
   ep_beam(*) = !values.f_nan
@@ -162,9 +164,11 @@ PRO filter_beams, pap_name, epcut_name, erange_name, pap_beam_name, epcut_beam_n
   gap = where(ep_beam lt 2, ct)
 ;put data with no beam into Nan
   IF ct GT 0 THEN BEGIN
-     index_ep(gap) = -1
+;     index_ep(gap) = -1
      flux_beam(gap, *) = !VALUES.F_NAN 
-  ENDIF  
+     epcut_beam(gap) = !VALUES.F_NAN
+     erange_beam(gap,*) = !VALUES.F_NAN
+  ENDIF
 
 ;-----------------------------------------------------------------------------
 ;save into pitch angle
@@ -174,9 +178,9 @@ PRO filter_beams, pap_name, epcut_name, erange_name, pap_beam_name, epcut_beam_n
   options, pap_beam_name, 'ytitle', 'Pitch Angle!C!CBeam'
 
   str = {x:time_avg, y:epcut_beam, energybins:energybins}
-  store_data, epcut_beam_name, data = str, dlim = {psym:0}
+  store_data, epcut_beam_name, data = str, dlim = {psym:-7}
 
   str = {x:time_avg, y:erange_beam, energybins:energybins}
-  store_data, erange_beam_name, data = str, dlim = {psym:0}
+  store_data, erange_beam_name, data = str, dlim = {psym:-7}
 
 END

@@ -1,4 +1,4 @@
-;-------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 ; Purpose: Identify O+ beam using from energy spec, pitch angle spec
 ;         and then make corresponding mom plot in page1 the whole procedure
 ;         plot in page2
@@ -16,7 +16,7 @@
 ;        There will also be two .log files
 ;
 ; Written by Jing Liao  03/10/2021
-;------------------------------------------------------------------------------------
+;-------------------------------------------------------------------------------
 
 PRO find_o_beam_mms, sc = sc, $
                      sp = sp, $
@@ -36,7 +36,8 @@ PRO find_o_beam_mms, sc = sc, $
                      plot_all_region = plot_all_region, $
                      flux_threshold = flux_threshold, $
                      diff_e = diff_e, $
-                     diff_pa = diff_pa 
+                     diff_pa = diff_pa, $
+                     dispersion_list = dispersion_list
 
 ;-----------------------------------------------------
 ; Check keywords  
@@ -85,7 +86,7 @@ PRO find_o_beam_mms, sc = sc, $
 
 ;------------------------------------------------------------------------
 ;Get the time interval from timespan
-;------------------------------------------------------------------------
+;--------------------------------------------retur----------------------------
   IF NOT KEYWORD_SET(t_s) OR NOT KEYWORD_SET(t_e) THEN BEGIN
      get_timespan, interval
      t_s = interval(0)  
@@ -127,9 +128,6 @@ PRO find_o_beam_mms, sc = sc, $
         tplot_restore, filenames = data_filename + '.tplot' 
         spawn,'gzip -9f '+data_filename+'.tplot'        
 
-        tplot_names, 'OMNI*delayed', names = names
-        if names(0) NE '' then store_data, delete = names
-        
         tplot_names, all_tplot_names.pap_beam_combine_name, names = names
         IF names(0) NE '' THEN BEGIN
            beam_name = names(0)
@@ -178,9 +176,9 @@ PRO find_o_beam_mms, sc = sc, $
      average_tplot_variable_with_given_time,all_tplot_names.moments_names, average_time, time_avg
   ENDIF 
 
-;---------------------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 ; Trim and average one tplot, and use that average time points to average all exisiting plots
-;---------------------------------------------------------------------------------------------  
+;------------------------------------------------------------------------------ 
 ;-- Validate and calculate total pressure & beta --  
   tplot_names, all_tplot_names.beta_name, names = names1
   tplot_names, all_tplot_names.density_ratio_name, names = names2
@@ -258,7 +256,7 @@ PRO find_o_beam_mms, sc = sc, $
 ;-------------------------------------------------------------------------------
 ; parallel   
   tplot_names, all_tplot_names.parallel_epcut_beam_name, names = names
-  IF NOT KEYWORD_SET(names(0)) THEN  identify_beams, [sc], [sp], all_tplot_names.diffflux_o1_parallel_name,  all_tplot_names.eflux_o1_parallel_name $
+ IF NOT KEYWORD_SET(names(0)) THEN identify_beams, [sc], [sp], all_tplot_names.diffflux_o1_parallel_name,  all_tplot_names.eflux_o1_parallel_name $
      ,  average_time, time_avg $ 
      ,  all_tplot_names.beta_name,  all_tplot_names.region_name $
      , t_s = adjusted_t_s, t_e= adjusted_t_e $
@@ -272,7 +270,7 @@ PRO find_o_beam_mms, sc = sc, $
   
 ; antiparallel
   tplot_names,  all_tplot_names.antiparallel_epcut_beam_name, names = names
-  IF NOT KEYWORD_SET(names) THEN identify_beams, [sc], [sp],  all_tplot_names.diffflux_o1_antiparallel_name,  all_tplot_names.eflux_o1_antiparallel_name $
+  IF NOT KEYWORD_SET(names) THEN  identify_beams, [sc], [sp],  all_tplot_names.diffflux_o1_antiparallel_name,  all_tplot_names.eflux_o1_antiparallel_name $
      ,  average_time, time_avg $
      ,  all_tplot_names.beta_name,  all_tplot_names.region_name $
      , t_s = adjustd_t_s, t_e= adjusted_t_e $
@@ -305,20 +303,17 @@ PRO find_o_beam_mms, sc = sc, $
 ; Calculate Moments for the beam and save them into tplot 
 ;----------------------------------------------------------------------
   tplot_names, all_tplot_names.parallel_epcut_beam_denergy_name, names = names
-;  IF NOT KEYWORD_SET(names) THEN
- calculate_denergy, all_tplot_names.diffflux_o1_parallel_name,all_tplot_names.parallel_epcut_beam_name, all_tplot_names.parallel_epcut_beam_denergy_name
+;  IF NOT KEYWORD_SET(names) THEN 
+calculate_denergy, all_tplot_names.diffflux_o1_parallel_name,all_tplot_names.parallel_epcut_beam_name, all_tplot_names.parallel_epcut_beam_denergy_name
   
   tplot_names, all_tplot_names.antiparallel_epcut_beam_denergy_name, names = names
-;  IF NOT KEYWORD_SET(names) THEN 
-calculate_denergy, all_tplot_names.diffflux_o1_antiparallel_name, all_tplot_names.antiparallel_epcut_beam_name, all_tplot_names.antiparallel_epcut_beam_denergy_name
+  IF NOT KEYWORD_SET(names) THEN calculate_denergy, all_tplot_names.diffflux_o1_antiparallel_name, all_tplot_names.antiparallel_epcut_beam_name, all_tplot_names.antiparallel_epcut_beam_denergy_name
 
   tplot_names,  all_tplot_names.parallel_beam_inverse_v_name, names = names
-;  IF NOT KEYWORD_SET(names) THEN 
-calculate_inverse_velocity, sp, all_tplot_names.parallel_epcut_beam_name, all_tplot_names.parallel_epcut_beam_denergy_readin_name, all_tplot_names.parallel_beam_inverse_v_name
+  IF NOT KEYWORD_SET(names) THEN calculate_inverse_velocity, sp, all_tplot_names.parallel_epcut_beam_name, all_tplot_names.parallel_epcut_beam_denergy_name, all_tplot_names.parallel_beam_inverse_v_name
 
   tplot_names,  all_tplot_names.antiparallel_beam_inverse_v_name, names = names
-;  IF NOT KEYWORD_SET(names) THEN 
-calculate_inverse_velocity, sp, all_tplot_names.antiparallel_epcut_beam_name, all_tplot_names.antiparallel_epcut_beam_denergy_readin_name, all_tplot_names.antiparallel_beam_inverse_v_name 
+  IF NOT KEYWORD_SET(names) THEN calculate_inverse_velocity, sp, all_tplot_names.antiparallel_epcut_beam_name, all_tplot_names.antiparallel_epcut_beam_denergy_name, all_tplot_names.antiparallel_beam_inverse_v_name 
 
 ;-----------------------------------------------------------------------
 ; Calculate convective electric field from Vperp of H+ and O+ and
@@ -333,8 +328,8 @@ calculate_inverse_velocity, sp, all_tplot_names.antiparallel_epcut_beam_name, al
 ;-----------------------------------------------------------------------
 ; Load solar wind data from OMNI
 ;----------------------------------------------------------------------
-  tplot_names, all_tplot_names.omni_tplot_names, names = names
-;  IF NOT KEYWORD_SET(names) THEN BEGIN
+  tplot_names, all_tplot_names.parallel_sw_p_name, names = names
+  IF NOT KEYWORD_SET(names) THEN BEGIN
      read_omni, ALL=1, HR = 1
  
      calculate_solarwind_delayed, all_tplot_names.parallel_epcut_beam_name $
@@ -374,29 +369,26 @@ calculate_inverse_velocity, sp, all_tplot_names.antiparallel_epcut_beam_name, al
                                      , all_tplot_names.antiparallel_sw_n_name $
                                      , all_tplot_names.antiparallel_sw_t_name $
                                      , all_tplot_names.antiparallel_sw_mack_number_name] 
-
+  
      tplot_names, all_tplot_names.omni_tplot_names, names = names
      average_tplot_variable_with_given_time, all_tplot_names.omni_tplot_names, average_time, time_avg
-;  ENDIF
+  ENDIF
 
 ;-----------------------------------------------------------------------
 ; Load storm data phase data and store phase flag into tplot variables
 ;----------------------------------------------------------------------
   tplot_names,  all_tplot_names.storm_phase_tplot_name, names = names
   IF NOT KEYWORD_SET(names) THEN find_storm_phase, time_avg, storm_phase_filename = 'data/storm_phase_2016_2017.csv', storm_phase_tplot_name = all_tplot_names.storm_phase_tplot_name
-
 ;-----------------------------------------------------------------------
 ; Load substorm data, and store substorm flag into tplot variables
 ;----------------------------------------------------------------------
   tplot_names,  all_tplot_names.substorm_phase_tplot_name, names = names
   IF NOT KEYWORD_SET(names) THEN find_substorm_phase, time_avg, substorm_phase_filename = 'data/substorm_list_2016_2017.csv', substorm_phase_tplot_name = all_tplot_names.substorm_phase_tplot_name
-
 ;---------------------------------------------------------------------
 ; Identify dispersion
 ;---------------------------------------------------------------------
   tplot_names,  all_tplot_names.parallel_dispersion_n_name, names = names
-;  IF NOT KEYWORD_SET(names) THEN  
-identify_dispersion $
+  IF NOT KEYWORD_SET(names) THEN  identify_dispersion $
      , all_tplot_names.parallel_epcut_beam_name $
      , all_tplot_names.parallel_dispersion_name $
      , all_tplot_names.parallel_beam_inverse_v_name $
@@ -408,11 +400,11 @@ identify_dispersion $
      , all_tplot_names.parallel_dispersion_inverse_v_fitting_status_name $
      , all_tplot_names.parallel_dispersion_inverse_v_fitting_dof_name $
      , all_tplot_names.parallel_dispersion_n_name $
-     , ps_plot = ps, output_folder = output_path
+     , ps_plot = ps, output_folder = output_path $
+     , dispersion_list = dispersion_list
 
   tplot_names, all_tplot_names.antiparallel_dispersion_n_name, names = names
-;  IF NOT KEYWORD_SET(names) THEN  
-identify_dispersion $
+  IF NOT KEYWORD_SET(names) THEN identify_dispersion $
      , all_tplot_names.antiparallel_epcut_beam_name $
      , all_tplot_names.antiparallel_dispersion_name $
      , all_tplot_names.antiparallel_beam_inverse_v_name $
@@ -424,7 +416,8 @@ identify_dispersion $
      , all_tplot_names.antiparallel_dispersion_inverse_v_fitting_status_name $
      , all_tplot_names.antiparallel_dispersion_inverse_v_fitting_dof_name $
      , all_tplot_names.antiparallel_dispersion_n_name $
-     , ps_plot = ps, output_folder = output_path
+     , ps_plot = ps, output_folder = output_path $
+    , dispersion_list = dispersion_list
 
 ;------------- -------------------------------------------------------
 ; Save tplot varialbes 

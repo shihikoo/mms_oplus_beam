@@ -64,7 +64,7 @@ PRO calculate_denergy, energy_spectra_name, epcut_name, denergy_name
   get_data, epcut_name, data = data
   epcut = data.y
 
-;  epcut_denergy = calculate_denergy_from_energy(energy, epcut)
+  epcut_denergy = calculate_denergy_from_energy(energy, epcut)
 
   epcut_denergy = read_in_denergy(epcut)
 

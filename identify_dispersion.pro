@@ -1,5 +1,5 @@
-PRO linear_regression, x, y, m, b, chisq, yerror = yerror, yfit = yfit, status = status, dof = dof, merror = merror, ps_plot = ps_plot, output_folder = output_folder
-
+PRO linear_regression, x, y, m, b, chisq, yerror = yerror, yfit = yfit, status = status, dof = dof, merror = merror, ps_plot = ps_plot, output_folder = output_folder, dispersion_list = dispersion_list
+; Set up time and time string for the plot
   t_s = min(x)
   t_e = max(x)
   ts_plot = time_string(t_s)
@@ -25,31 +25,18 @@ PRO linear_regression, x, y, m, b, chisq, yerror = yerror, yfit = yfit, status =
   m = p[1]
   berror = perror[0]
   merror = perror[1]
-  
-  IF KEYWORD_SET(ps_plot) THEN POPEN, fln,/land
-  plot, x, y, psym=7, xtickname = [time_string(x)], xticks = 4, xtitle = 't', ytitle='1/v', title='chisq:' + STRING(chisq, format='(d5.2)') +'  distance estimation: ' + STRING(1/m/6371., format='(d5.2)')+'  status: ' + STRING(status, format='(i1.1)') + ' dof: '+STRING(dof, format='(i1.1)'), symsize=2, yrange=[0,max(y+yerr)], xstyle = 1, xrange = [min(x)-100, max(x)+100]
-  
-  errplot, x, y - yerr, y + yerr
-  oplot, x, b+x*m, color = 2
-  oplot, x,  (b+berror)+x*(m+merror), color=3
-  oplot, x,  (b-berror)+x*(m-merror), color=3
-  print, berror
-  
-  IF KEYWORD_SET(ps_plot) THEN BEGIN 
-     PCLOSE 
-     spawn, 'mogrify -format png '+fln
-     spawn, 'rm -f '+fln
-  ENDIF ELSE stop
+
+  make_lm_plot, x, y, yerr, chisq, m, b, status, dof, berror, merror, ps_plot = ps_plot, fln = fln, dispersion_list = dispersion_list, only_manual = 1
   
 END
 
-PRO fit_dispersion, time_avg, inverse_v, start_index, end_index, estimated_distance, chisq, yfit, status,dof, estimation_error, inverse_v_error = inverse_v_error, ps_plot = ps_plot, output_folder = output_folder
+PRO fit_dispersion, time_avg, inverse_v, start_index, end_index, estimated_distance, chisq, yfit, status,dof, estimation_error, inverse_v_error = inverse_v_error, ps_plot = ps_plot, output_folder = output_folder, dispersion_list = dispersion_list
   
   x = time_avg[start_index:end_index]
   y = inverse_v[start_index:end_index]
   yerror = inverse_v_error[start_index:end_index, *]
   
-  linear_regression, x, y, m, b, this_chisq, yerror = yerror, yfit=this_yfit, status = this_status, dof = this_dof, merror = merror, ps_plot = ps_plot, output_folder = output_folder
+  linear_regression, x, y, m, b, this_chisq, yerror = yerror, yfit=this_yfit, status = this_status, dof = this_dof, merror = merror, ps_plot = ps_plot, output_folder = output_folder, dispersion_list = dispersion_list
 
   estimated_distance[start_index:end_index] = 1./m
   chisq[start_index:end_index] = this_chisq
@@ -60,7 +47,7 @@ PRO fit_dispersion, time_avg, inverse_v, start_index, end_index, estimated_dista
 
 END
 
-PRO identify_dispersion_for_data, time_avg, energy_peak, inverse_v, estimated_distance, chisq, yfit, status, dof, estimation_error, n_dispersions, continuous_time = continuous_time, inverse_v_error = inverse_v_error, ps_plot = ps_plot, output_folder = output_folder
+PRO identify_dispersion_for_data, time_avg, energy_peak, inverse_v, estimated_distance, chisq, yfit, status, dof, estimation_error, n_dispersions, continuous_time = continuous_time, inverse_v_error = inverse_v_error, ps_plot = ps_plot, output_folder = output_folder, dispersion_list = dispersion_list
   IF ~KEYWORD_SET(continuous_time) THEN continuous_time = 20. * 60.
   n_time = N_ELEMENTS(energy_peak)
 
@@ -72,12 +59,12 @@ PRO identify_dispersion_for_data, time_avg, energy_peak, inverse_v, estimated_di
   IF ct GT 0 THEN energy_peak_change_flag[index] = !VALUES.F_NAN
 
   energy_peak_change_flag = energy_peak_change_flag < 1
-
+  
   n = continuous_time/300.
   continuity_flag = FLTARR(n_time-n)
-
+  
   FOR icount = 0, n-2 DO continuity_flag = continuity_flag + energy_peak_change_flag[(icount):(n_time-1-n+icount)]
-
+  
   dispersion_flag = FLTARR(n_time)
   index = WHERE(continuity_flag GE n-2, ct)
   IF ct GT 0 THEN FOR icount = 0, n-1 DO dispersion_flag[index+icount] = 1
@@ -114,8 +101,8 @@ PRO identify_dispersion_for_data, time_avg, energy_peak, inverse_v, estimated_di
         WHILE start_index NE 0 DO BEGIN
            IF ~FINITE(inverse_v[itime]) THEN BEGIN  
               end_index = itime - 1
-              fit_dispersion, time_avg, inverse_v, start_index, end_index, estimated_distance, chisq, yfit, status, dof, estimation_error, inverse_v_error = inverse_v_error, ps_plot = ps_plot, output_folder = output_folder
-
+              fit_dispersion, time_avg, inverse_v, start_index, end_index, estimated_distance, chisq, yfit, status, dof, estimation_error, inverse_v_error = inverse_v_error, ps_plot = ps_plot, output_folder = output_folder, dispersion_list = dispersion_list
+              
               n_dispersions[start_index:end_index] = n_dispersion
 
               start_index = 0
@@ -123,7 +110,7 @@ PRO identify_dispersion_for_data, time_avg, energy_peak, inverse_v, estimated_di
            ENDIF ELSE BEGIN
               IF itime GT start_index AND inverse_v[itime] LT inverse_v[itime-1] THEN BEGIN 
                  end_index = itime - 1
-                 fit_dispersion, time_avg, inverse_v, start_index, end_index, estimated_distance, chisq, yfit, status, dof, estimation_error, inverse_v_error = inverse_v_error, ps_plot = ps_plot, output_folder = output_folder
+                 fit_dispersion, time_avg, inverse_v, start_index, end_index, estimated_distance, chisq, yfit, status, dof, estimation_error, inverse_v_error = inverse_v_error, ps_plot = ps_plot, output_folder = output_folder, dispersion_list = dispersion_list
 
                  n_dispersions[start_index:end_index] = n_dispersion
 
@@ -140,8 +127,8 @@ PRO identify_dispersion_for_data, time_avg, energy_peak, inverse_v, estimated_di
 END
 
 
-PRO identify_dispersion, epcut_beam_name, dispersion_name, beam_inverse_v_name, dispersion_inverse_v_name, estimated_dist_name, estimated_dist_error_name,  dispersion_inverse_v_fitting_name, dispersion_inverse_v_fitting_chisq_name, dispersion_inverse_v_fitting_status_name, dispersion_inverse_v_fitting_dof_name, dispersion_n_name,  ps_plot = ps_plot, output_folder = output_folder
-
+PRO identify_dispersion, epcut_beam_name, dispersion_name, beam_inverse_v_name, dispersion_inverse_v_name, estimated_dist_name, estimated_dist_error_name,  dispersion_inverse_v_fitting_name, dispersion_inverse_v_fitting_chisq_name, dispersion_inverse_v_fitting_status_name, dispersion_inverse_v_fitting_dof_name, dispersion_n_name,  ps_plot = ps_plot, output_folder = output_folder, dispersion_list = dispersion_list
+  
   earth_radius = 6371.
   continuous_time = 20. * 60
   
@@ -152,8 +139,8 @@ PRO identify_dispersion, epcut_beam_name, dispersion_name, beam_inverse_v_name, 
   get_data, beam_inverse_v_name, data = data
   beam_inverse_v = data.y
   inverse_v_error = data.dy
-
-  identify_dispersion_for_data, time_avg, epcut_beam, beam_inverse_v, estimated_dist, chisq, yfit, status, dof, estimation_error, n_dispersions, continuous_time = continuous_time, inverse_v_error = inverse_v_error, ps_plot = ps_plot, output_folder = output_folder
+  
+  identify_dispersion_for_data, time_avg, epcut_beam, beam_inverse_v, estimated_dist, chisq, yfit, status, dof, estimation_error, n_dispersions, continuous_time = continuous_time, inverse_v_error = inverse_v_error, ps_plot = ps_plot, output_folder = output_folder, dispersion_list = dispersion_list
   
   store_data, dispersion_name, data = {x:time_avg, y:epcut_beam}
 

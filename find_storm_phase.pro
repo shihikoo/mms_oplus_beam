@@ -2,8 +2,9 @@
 ; Purpose: Adding Storm phase information. 
 ; Description: Read storm phase from file and deceide the storm phase
 ; for each data
-; Inputs: time_avg
-; Keywords: storm_phase_filename, storm_phase_tplot_name
+; Inputs: time_avg - the array of time to check for the phase
+; Keywords: storm_phase_filename - the csv file of storm phases
+;         : storm_phase_tplot_name - save the result into a tplot variable
 ;
 ; Written by Jing Liao
 ; Written on 04/12/2021

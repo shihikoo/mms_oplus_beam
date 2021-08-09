@@ -18,7 +18,7 @@ FUNCTION read_daily_csv_into_matrix, jd_s, ndays, data_path
         idata_structured = READ_CSV(names(0), HEADER = header)
         nterm = N_ELEMENTS(header)
         n_avg = N_ELEMENTS(idata_structured.FIELD01)
-        idata = STRARR(nterm, n_avg)
+        idata = DBLARR(nterm, n_avg)
         FOR ifield = 1, nterm DO BEGIN
            str_element, idata_structured,'FIELD' $
                         + string(ifield,format='(i2.2)'), $
@@ -82,32 +82,40 @@ END
 ;Inputs: data, header
 ;Output: data
 ;---------------------------------------------------------------------------------------
-FUNCTION clean_up_daily_data_matrix, data, header
+FUNCTION clean_up_daily_data_matrix, data, header, ts, te
 ;-- convert all data into doubles
   data = DOUBLE(data)
 
+;-- keep only the data within the range
+  index_column = WHERE(header EQ 'Time', ct)
+  index_row = WHERE(data[index_column,*] GE ts and data[index_column,*] LE te, ct)
+  IF ct GT 0 THEN data = data[ *,index_row]
+
 ;-- set all infinite flag value to nan
   index_column = WHERE(header EQ 'Flag_para', ct)
-  index_row = WHERE( ~FINITE(data(index_column,*)), ct)
-  IF ct GT 0 THEN data(index_column,index_row) = !VALUES.F_NAN
+  index_row = WHERE( ~FINITE(data[index_column,*]), ct)
+  IF ct GT 0 THEN data[index_column,index_row] = !VALUES.F_NAN
+  
   index_column = WHERE(header EQ 'Flag_anti', ct)
-  index_row = WHERE( ~FINITE(data(index_column,*)), ct)
-  IF ct GT 0 THEN data(index_column,index_row) = !VALUES.F_NAN
+  index_row = WHERE( ~FINITE(data[index_column,*]), ct)
+  IF ct GT 0 THEN data[index_column, index_row] = !VALUES.F_NAN
 
 ;-- require beta is valid
   index_column = WHERE(header EQ 'Beta', ct)
-  index_row = WHERE(FINITE(data(index_column,*)), ct )
-  IF ct GT 0 THEN data = data(*,index_row)
+  index_row = WHERE(FINITE(data[index_column,*]), ct )
+  IF ct GT 0 THEN data = data[ *,index_row]
 
 ;-- region needs to be within magnetosphere
   index_column = WHERE(header EQ 'Region', ct)
-  index_row = WHERE(data(index_column,*) EQ 1, ct)
-  IF ct GT 0 THEN data = data(*, index_row)
+  index_row = WHERE(data[index_column,*] EQ 1, ct)
+  IF ct GT 0 THEN data = data[*, index_row]
 
 ;-- Distance larger than 100 Re is placeholder for error data
   index_column = WHERE(header EQ 'DIST', ct)
-  index_row = WHERE(data(index_column, *) GT 100., ct )
-  IF ct GT 0 THEN data(index_column, index_row) = !VALUES.F_NAN
+  index_row = WHERE(data[index_column, *] GT 100., ct )
+; This is a special index system. For some reason data[index_column,
+; index_row] gives errors
+  IF ct GT 0 THEN data[index_column, index_row, 0] = !VALUES.F_NAN
 
   RETURN, data
 END 
@@ -117,13 +125,15 @@ END
 ;Inputs: data, header
 ;Output: data
 ;---------------------------------------------------------------------------------------
-FUNCTION read_daily_csv, jd_s, ndays, data_path
+FUNCTION read_daily_csv, jd_s, ndays, data_path,ts,te
   raw_data = read_daily_csv_into_matrix(jd_s, ndays, data_path)
   data_matrix = raw_data.data
   header = raw_data.header
-  data_matrix = clean_up_daily_data_matrix(data_matrix, header)
+
+  data_matrix = clean_up_daily_data_matrix(data_matrix, header, ts, te)
 
   data = convert_daily_data_matrix(data_matrix, header)
+
   output =  {data:data,header:header}
   return,output
 END
@@ -146,8 +156,6 @@ FUNCTION read_daily_data, time_start, time_end, tplot_path, data_path, read_from
   jd_s = julday(ts_str.month, ts_str.date, ts_str.year) 
   jd_e = julday(te_str.month, te_str.date, te_str.year) ; julian day
 
-;  nyear = te_str.year-ts_str.year
-
   time_str = strcompress(ts_str.year, /remove_all) + string(ts_str.month, format = '(i2.2)') $
              + string(ts_str.date, format = '(i2.2)') + '_to_' $
              + strcompress(te_str.year, /remove_all)  +strcompress(te_str.month, /remove_all) $
@@ -167,19 +175,21 @@ FUNCTION read_daily_data, time_start, time_end, tplot_path, data_path, read_from
   IF ct_tplot GT 0 AND NOT  KEYWORD_SET(read_from_dat)  THEN BEGIN 
      TPLOT_RESTORE, filenames = fln_saved_tplot+'.tplot' 
      GET_DATA, 'data', data = saved_data
-     header = saved_data.title
      data = saved_data.data
   ENDIF ELSE BEGIN
-     input_data = READ_DAILY_CSV(jd_s, ndays, data_path)
+     input_data = READ_DAILY_CSV(jd_s, ndays, data_path,ts,te)
      data = input_data.data
-     header = input_data.header
-     
-     IF KEYWORD_SET(store_tplot) THEN BEGIN 
-        STORE_DATA, 'data', data = {data:data, title:header}
+
+     data = calculate_daily_data(data)
+
+     IF KEYWORD_SET(store_tplot) THEN BEGIN
+        STORE_DATA, 'data', data = {data:data}
         SPAWN, 'mkdir -p '+ FILE_DIRNAME(fln_saved_tplot)
         TPLOT_SAVE, 'data', filename = fln_saved_tplot
+        header = TAG_NAMES(data)
         WRITE_CSV, fln_saved_tplot+'.csv', data, HEADER = header
      ENDIF  
   ENDELSE
+
   RETURN, data
 END

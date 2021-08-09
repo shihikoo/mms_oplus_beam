@@ -28,7 +28,7 @@ PRO load_axis, data, plot_axis, data_pos, range, log
      ENDIF 
      IF PLOT_AXIS(i) EQ 'X_GSM' THEN BEGIN 
         data_pos(*, i) = data.gsm_x 
-        range(*, i) = [10, -25.] 
+        range(*, i) = [-25., 10] 
         log(i) = 0
      ENDIF 
      IF PLOT_AXIS(i) EQ 'Y_GSM' THEN BEGIN 
@@ -83,7 +83,7 @@ FUNCTION load_storm_phase_flag, data, storm_phase_name
   IF storm_phase_name EQ 'recovery' THEN storm_phase = 3
   IF storm_phase_name EQ 'storm_time' THEN storm_phase = [1,2,3]
   IF storm_phase_name EQ 'nonstorm_time' THEN storm_phase = 0
-  IF storm_phase_name EQ 'all_time' THEN storm_phase = [0,1,2,3,4,5]
+  IF storm_phase_name EQ 'all' THEN storm_phase = [0,1,2,3,4,5]
   IF storm_phase_name EQ 'prestorm' THEN storm_phase = 5
 
   FOR i = 0, N_ELEMENTS(storm_phase)-1 DO BEGIN
@@ -108,12 +108,7 @@ END
 FUNCTION load_substorm_phase_flag, data, substorm_phase_name
   IF substorm_phase_name EQ 'storm_time' THEN substorm_phase = [1]
   IF substorm_phase_name EQ 'nonstorm_time' THEN substorm_phase = [0]
-  IF substorm_phase_name EQ 'all_time' THEN substorm_phase = [0,1]
-  
-;  FOR i = 0, N_ELEMENTS(substorm_phase)-1 DO BEGIN
-;     IF i EQ 0 THEN flag_phase = data.substorm_phase EQ substorm_phase(i) $
-;     ELSE flag_phase = (flag_phase + (data.substorm_phase EQ substorm_phase(i))) GT 0 
-;  ENDFOR
+  IF substorm_phase_name EQ 'all' THEN substorm_phase = [0,1]
 
 ; flag_phase = FLOAT(flag_phase)
 ;  index = WHERE(flag_phase EQ 0, ct)
@@ -124,32 +119,13 @@ FUNCTION load_substorm_phase_flag, data, substorm_phase_name
 END 
 
 ;------------------------------------------------------
-; Purpose: load direction flag for the input direction
-; Inputs:  data, direction
-; Written by Jing Liao
-; Written on 05/10/2021
-;------------------------------------------------------
-FUNCTION load_direction_flag, data, direction
-  CASE direction OF
-     'para':  flag_direction = data.flag_para EQ 1 
-     'anti':  flag_direction = data.flag_anti EQ 1 
-     'both':  flag_direction = data.flag_para EQ 1 AND data.flag_anti EQ 1
-     'any' :  flag_direction = data.flag_para EQ 1 OR data.flag_anti EQ 1
-  ENDCASE
-
-  flag_direction = FLOAT(flag_direction)
-  RETURN, flag_direction
-
-END
-
-;------------------------------------------------------
 ; Purpose: load region flag for the input region
 ; Inputs:  data, region
 ; Written by Jing Liao
 ; Written on 05/10/2021
 ;------------------------------------------------------
 FUNCTION load_region_flag, data, region
-  
+
   CASE region OF
      'All'      : flag_region = data.time GT 0
      'Lobe'     : flag_region = (data.mlt GT 16 OR data.mlt LT 8) AND (data.beta LE 0.05)
@@ -173,12 +149,11 @@ END
 ; Written by Jing Liao
 ; Written on 05/12/21
 ;---------------------------------------------------------------
-PRO load_condition_flags, data, storm_phase, substorm_phase, region, direction, flag_storm, flag_substorm,flag_region,flag_direction
+PRO load_external_condition_flags, data, storm_phase, substorm_phase, region, flag_ext_condition
 
   flag_storm = load_storm_phase_flag(data, storm_phase)
   flag_substorm = load_substorm_phase_flag(data, substorm_phase)
-
   flag_region = load_region_flag(data, region)
-  flag_direction = load_direction_flag(data, direction) 
-
+  
+  flag_ext_condition = flag_storm * flag_substorm *  flag_region
 END

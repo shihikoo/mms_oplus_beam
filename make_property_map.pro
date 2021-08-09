@@ -143,10 +143,10 @@ END
 
 ;----------------------------------------------------
 ; Purpose: make 2d property map
-; Inputs: property_value, property_map_type, property_name, filepath, region, ts_date, te_date, plot_axis, sort_title, phase, x_axis, y_axis, x_range, y_range,filename,  property_v_log, property_v_range, property_unit
+; Inputs: property_value, property_map_type, property_name, filepath, ts_date, te_date, plot_axis, x_axis, y_axis, x_range, y_range,filename,  property_v_log, property_v_range, property_unit
 ; Keywords:ps_plot
 ;----------------------------------------------------
-PRO make_2d_property_map, property_value, property_map_type, property_name, filepath, region, direction, ts_date, te_date, plot_axis, sort_title, phase, x_axis, y_axis, x_range, y_range, xlog, ylog, filename,  property_v_log, property_v_range, property_unit, ps_plot = ps_plot
+PRO make_2d_property_map, property_value, property_map_type, property_name, filepath, ext_condition_str, int_condition_str, ts_date, te_date, plot_axis, x_axis, y_axis, x_range, y_range, xlog, ylog, filename,  property_v_log, property_v_range, property_unit, ps_plot = ps_plot
 
 ; filepath
   path_pp_2d = filepath+'2d/'
@@ -155,14 +155,14 @@ PRO make_2d_property_map, property_value, property_map_type, property_name, file
   property_map_2d = aggregate_property_value( property_value, property_map_type)
 
 ; draw heat map
-  filename = path_pp_2d+direction+'_'+property_map_type+'_'+property_name+'_'+phase+'_'+region+'_'+ ts_date+'_to_' + te_date+'_' + PLOT_AXIS(0)+'_vs_'+PLOT_AXIS(1) +'.ps'
-  title =  sort_title+' '+ direction+' '+phase+' O!U+!N beam!C' +property_map_type +' ' +PROPERTY_name +' in '+ region+'!Cfrom ' + ts_date+' TO ' +te_date
+  filename = path_pp_2d+ ext_condition_str + '_' + int_condition_str  +'_'+property_map_type+'_'+property_name + '_'  + '_'+ ts_date+'_to_' + te_date+'_' + PLOT_AXIS(0)+'_vs_'+PLOT_AXIS(1) +'.ps'
+  title = ext_condition_str+'!C'+int_condition_str + ' O!U+!N beam!C' +property_map_type +' ' +PROPERTY_name +'!Cfrom ' + ts_date+' TO ' +te_date
   make_heat_map, x_axis, y_axis, property_map_2d, filename, title, plot_axis, unit = property_unit, xrange = x_range, yrange = y_range, zrange= property_v_range, xlog = xlog, ylog = ylog, zlog = property_v_log, ps_plot = ps_plot
   
 END
 
 
-PRO make_slice_property_map, property_value, property_map_type, property_name, filepath, region, direction,ts_date, te_date, plot_axis, sort_title, phase, x_axis, y_axis, z_axis, z_cuttings, x_range, y_range, xlog, ylog, slice_grid,filename,  property_v_log, property_v_range, property_unit, ps_plot = ps_plot, slice_mlt = slice_mlt
+PRO make_slice_property_map, property_value, property_map_type, property_name, filepath, ext_condition_str, int_condition_str, ts_date, te_date, plot_axis, x_axis, y_axis, z_axis, z_cuttings, x_range, y_range, xlog, ylog, slice_grid,filename,  property_v_log, property_v_range, property_unit, ps_plot = ps_plot, slice_mlt = slice_mlt
   
   nz = N_ELEMENTS(z_axis)
   
@@ -177,8 +177,8 @@ PRO make_slice_property_map, property_value, property_map_type, property_name, f
      slice_block = [strcompress(STRING(z_cuttings(iz,0), format = '(f5.1)'),/remove_all), $
                     strcompress(STRING(z_cuttings(iz,1), format = '(f5.1)'),/remove_all)]
 
-     filename = path_pp_slice+direction+'_'+property_map_type+'_' + property_name+'_'+phase+'_'+region+'_' + ts_date+'_to_' + te_date+'_' + PLOT_AXIS(0)+'_vs_'+PLOT_AXIS(1) +'_at_' + plot_axis(2)+'_' +slice_block(0)+'_'+slice_block(1) +'.ps'
-     title = sort_title+' '+direction+' '+PHASE+' O!U+!N beam!C' +property_map_type +' '+ PROPERTY_name+' in ' +region +' at '+ plot_axis(2) + ':[ ' +slice_block(0)+','  +slice_block(1)+' ] '+ '!CFROM ' + ts_date  +' TO ' +te_date
+     filename = path_pp_slice+ ext_condition_str + '_' + int_condition_str  +'_'+property_map_type+'_' + property_name+'_'+'_' + ts_date+'_to_' + te_date+'_' + PLOT_AXIS(0)+'_vs_'+PLOT_AXIS(1) +'_at_' + plot_axis(2)+'_' +slice_block(0)+'_'+slice_block(1) +'.ps'
+     title = ext_condition_str+'!C'+int_condition_str +' O!U+!N beam!C' +property_map_type +' '+ PROPERTY_name+' at '+ plot_axis(2) + ':[ ' +slice_block(0)+','  +slice_block(1)+' ] '+ '!CFROM ' + ts_date  +' TO ' +te_date
      
      make_heat_map, x_axis, y_axis, property_map_slice, filename, title, plot_axis, unit = property_unit, xrange = x_range, yrange = y_range, zrange= property_v_range, xlog = xlog, ylog = ylog, zlog = property_v_log, ps_plot = ps_plot
   ENDFOR     
@@ -186,10 +186,10 @@ END
 
 ;------------------------------------------------------------------------------
 ; Purpose: make property map
-; Inputs: data, data_pos, property_name, property_map_type, flag, filepath, ts_date, te_date, plot_axis, sort_title, phase, region, x_range, y_range, z_range, grid, slice_grid, filename, plot_2d, plot_slice, make_table
+; Inputs: data, data_pos, property_name, property_map_type, flag, filepath, ts_date, te_date, plot_axis,  x_range, y_range, z_range, grid, slice_grid, filename, plot_2d, plot_slice, make_table
 ; Keywords: ps_plot 
 ;------------------------------------------------------------------------------
-PRO make_property_map, data, data_pos, property_name, property_map_type, flag_para, flag_anti, filepath, ts_date, te_date, plot_axis, sort_title, phase, region, direction, range, log, grid, slice_grid, filename, plot_2d, plot_slice, make_table, ps_plot = ps_plot
+PRO make_property_map, data, data_pos, property_name, property_map_type, flag_para, flag_anti, filepath, ts_date, te_date, plot_axis, ext_condition_str, int_condition_str, range, log, grid, slice_grid, filename, plot_2d, plot_slice, make_table, ps_plot = ps_plot
   
   X_RANGE = range(*, 0)
   Y_RANGE = range(*, 1)
@@ -218,10 +218,10 @@ PRO make_property_map, data, data_pos, property_name, property_map_type, flag_pa
   calculate_property_map, property_para, property_anti, data_pos, x_range, y_range, z_range, xlog,ylog, grid_x, grid_y, grid_z, flag_para, flag_anti, property_value, x_axis, y_axis, z_axis, x_cuttings, y_cuttings, z_cuttings, slice_mlt = slice_mlt
 
 ; Draw 2d maps
-  IF KEYWORD_SET(PLOT_2D) THEN make_2d_property_map, property_value, property_map_type,property_name,filepath, region, direction,ts_date, te_date, plot_axis, sort_title, phase, x_axis, y_axis, x_range, y_range, xlog, ylog, filename, property_v_log, property_v_range, property_unit, ps_plot=ps_plot
+  IF KEYWORD_SET(PLOT_2D) THEN make_2d_property_map, property_value, property_map_type,property_name,filepath, ext_condition_str, int_condition_str, ts_date, te_date, plot_axis, x_axis, y_axis, x_range, y_range, xlog, ylog, filename, property_v_log, property_v_range, property_unit, ps_plot=ps_plot
 
 ; Draw slice maps
-  IF KEYWORD_SET(PLOT_SLICE) THEN make_slice_property_map, property_value, property_map_type, property_name, filepath, region, direction, ts_date, te_date, plot_axis, sort_title, phase, x_axis, y_axis, z_axis, z_cuttings, x_range, y_range, xlog, ylog, slice_grid,filename,  property_v_log, property_v_range, property_unit, ps_plot=ps_plot, slice_mlt = slice_mlt
+  IF KEYWORD_SET(PLOT_SLICE) THEN make_slice_property_map, property_value, property_map_type, property_name, filepath, ext_condition_str, int_condition_str, ts_date, te_date, plot_axis, x_axis, y_axis, z_axis, z_cuttings, x_range, y_range, xlog, ylog, slice_grid,filename,  property_v_log, property_v_range, property_unit, ps_plot=ps_plot, slice_mlt = slice_mlt
   
 ; make historgram 
   IF KEYWORD_SET(make_table) THEN  stop

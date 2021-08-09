@@ -8,32 +8,9 @@
 
 PRO calculate_inverse_velocity, sp, epcut_beam_name, epcut_beam_denergy_name, inverse_v_name
 
-;-- Constants --
-  Avogadro_constant = 6.02214086e23 ; moe-1
-  electron_charge = 1.60217662e-19  ;coulombs
-; Ion mass in amu
-  CASE sp OF                      
-     0: BEGIN                                                  
-        ion_mass = 1.0                  
-        sp_str = 'h'                  
-     END                                      
-     1: BEGIN                                     
-        ion_mass = 4.002602/2. 
-        sp_str = 'he1'                     
-     END
-     2: BEGIN                                                          
-        ion_mass = 4.002602                  
-        sp_str = 'he2'                                
-     END
-     3: BEGIN                                            
-        ion_mass = 15.89                                                 
-        sp_str = 'o'                  
-     END                                  
-     4: BEGIN                                                              
-        ion_mass = 1./1837.                                   
-        sp_str = 'e'                                                       
-     END                                                                        
-  ENDCASE  
+  Avogadro_constant = 6.02214086e23
+  electron_charge = 1.60217662e-19 ;coulombs
+  IF sp EQ '3' THEN ion_mass = 15.98
 
 ;-- Calculation --
 ; read in energy
@@ -48,7 +25,8 @@ PRO calculate_inverse_velocity, sp, epcut_beam_name, epcut_beam_denergy_name, in
 ; amu divide by avogadro constant is mass in g, then divide 1e3 to get
 ; mass in kg Avogadro_constant 6.02214086e23
 ; divide by 1e3 in the end to get velocity in km/s
-  data_vel = sqrt(2.*data_energy*electron_charge/(ion_mass/Avogadro_constant/1e3))/1e3 ;4.577e7*sqrt(data_energy/1e3/AMU) 
+  calculate_velocity_from_energy, data_energy, sp, data_vel
+
   data_1_of_vel = 1/data_vel
 
   data_vel_low = sqrt(2.*(data_energy-data_denergy)*electron_charge/(ion_mass/Avogadro_constant/1e3))/1e3 

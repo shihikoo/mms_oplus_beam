@@ -4,7 +4,8 @@ pro polar_spec,r,angle, z,$
                r_range=r_range,angle_range=angle_range, zrange=zrange, $
                zlog=zlog, zticks=zticks,zticklen=zticklen,units_angle=units_angle,$
                ztitle=ztitle,title=title,xtitle=xtitle,ytitle=ytitle,$
-               charsize=charsize
+               charsize=charsize, label_charsize = label_charsize
+
 IF n_elements(SIZE(z,/dim)) ne 2 then begin 
     print,'z has to be an array of 2'
     stop
@@ -22,6 +23,8 @@ if not keyword_set(angle_range) then angle_range=[min(angle),max(angle)]*1.1
 if not keyword_set(zrange) then zrange=[min(z),max(z)]
 if not keyword_set(zrange) then zticks=0
 if not keyword_set(zticklen) then zticklen=0
+IF NOT KEYWORD_SET(charsize) THEN charsize = 1.2
+IF NOT KEYWORD_SET(label_charsize) THEN label_charsize = charsize
 
 if keyword_set(units_angle) then begin 
     if units_angle eq 1 then begin 
@@ -35,6 +38,7 @@ if keyword_set(units_angle) then begin
         angle_range= angle_range/24.*360./180.*!pi
     endif 
 endif else print,'angle is in unit: rad'
+
 nr = n_elements(r)
 nangle=n_elements(angle)
 index=sort(r)
@@ -89,10 +93,10 @@ for ir = 0, nr-1 do begin
         if finite(color_z) then polyfill,x,y,color= color_z
     endfor 
 endfor 
-xyouts,max(r_range),0,'0'
-xyouts,-(max(r_range)*1.05),0,'12'
-xyouts,0,(max(r_range)),'6'
-xyouts,0,-(max(r_range*1.05)),'18'
+xyouts,max(r_range),0,'0', charsize = label_charsize
+xyouts,-(max(r_range)*1.05),0,'12', charsize = label_charsize
+xyouts,0,(max(r_range)),'6', charsize = label_charsize
+xyouts,0,-(max(r_range*1.05)),'18', charsize = label_charsize
 if keyword_set(zlog) then zrange1=10.^zrange1
 draw_color_scale,range=zrange1,log=zlog,title=ztitle,charsize=charsize,yticks=zticks,ticklen=zticklen
 out:

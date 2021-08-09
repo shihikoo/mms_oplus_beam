@@ -70,12 +70,15 @@ PRO calculate_ratio_for_map, data_pos, x_range, y_range, z_range, x_log, y_log, 
   event_ratio = event_counts/total_counts    
 END 
 
-;-------------------------------------------------------------------------------
+;---------------------------------------------------------------------------------------------------------------
 ; Purpose: make 2d heat map of number of samples, events and ratio
-; Inputs:  total_counts, event_counts, event_ratio, filepath, region, ts_date, te_date, plot_axis, sort_title, storm_phase, x_axis, y_axis, x_range, y_range,filename, events_v_log, events_v_range, events_unit, samples_v_log, samples_v_range,samples_unit, ratio_v_log, ratio_v_range, ratio_unit
+; Inputs:  total_counts, event_counts, event_ratio, filepath, ts_date,
+; te_date, plot_axis,  x_axis, y_axis, x_range, y_range,filename,
+; events_v_log, events_v_range, events_unit
+; , samples_v_log, samples_v_range,samples_unit, ratio_v_log, ratio_v_range, ratio_unit
 ; 
-;-------------------------------------------------------------------------------
-PRO make_2d_heat_map, total_counts, event_counts, event_ratio, filepath, region, direction, ts_date, te_date, plot_axis, sort_title, phase, x_axis, y_axis, x_range, y_range, xlog, ylog, filename, events_v_log, events_v_range, events_unit, samples_v_log, samples_v_range,samples_unit, ratio_v_log, ratio_v_range, ratio_unit, ps_plot = ps_plot
+;---------------------------------------------------------------------------------------------------------
+PRO make_2d_heat_map, total_counts, event_counts, event_ratio, filepath,ext_condition_str, int_condition_str , ts_date, te_date, plot_axis, x_axis, y_axis, x_range, y_range, xlog, ylog, filename, events_v_log, events_v_range, events_unit, samples_v_log, samples_v_range,samples_unit, ratio_v_log, ratio_v_range, ratio_unit, ps_plot = ps_plot
   
 ;--- filepath ----
   path_2d = filepath+'2d/'
@@ -91,28 +94,28 @@ PRO make_2d_heat_map, total_counts, event_counts, event_ratio, filepath, region,
   event_ratio_2d = TOTAL(event_counts, 3, /nan)/TOTAL(total_counts, 3, /nan)
 
 ;-- draw heat map for samples
-  filename = path_2d + direction+'_' + region +'_samples_' + ts_date+'_to_' + te_date + '_' + PLOT_AXIS(0) + '_vs_'+PLOT_AXIS(1) +'.ps'
-  title = sort_title+' '+ direction+' '+ PHASE + ' O!U+!N BEAM SAMPLES in ' + region + '!Cfrom ' + ts_date+' to ' +te_date
+  filename = path_2d + ext_condition_str +'_'+ int_condition_str +'_samples_' + ts_date+'_to_' + te_date + '_' + PLOT_AXIS(0) + '_vs_'+PLOT_AXIS(1) +'.ps'
+  title = ext_condition_str+'!C'+int_condition_str +'Samples!Cfrom ' + ts_date+' to ' +te_date
   make_heat_map, x_axis, y_axis, total_counts_2d, filename, title, plot_axis, unit = samples_unit, xrange = x_range, yrange = y_range, zrange= samples_v_range, xlog = xlog, ylog =ylog, zlog = samples_v_log, ps_plot = ps_plot
   
 ;-- draw heat map for events                                              
-  filename = path_2d + direction+'_' + region +'_events_' + ts_date+'_to_' + te_date+'_' + PLOT_AXIS(0) + '_vs_'+PLOT_AXIS(1) +'.ps'
-  title = sort_title+' '+ direction +' ' + PHASE + ' O!U+!N BEAM EVENTS in ' + region + '!Cfrom ' + ts_date+' to ' +te_date
+  filename = path_2d + ext_condition_str +'_' + int_condition_str + '_events_' + ts_date+'_to_' + te_date+'_' + PLOT_AXIS(0) + '_vs_'+PLOT_AXIS(1) +'.ps'
+  title =ext_condition_str+'!C'+int_condition_str + ' O!U+!N Beam Events!Cfrom ' + ts_date+' to ' +te_date
   make_heat_map, x_axis, y_axis, event_counts_2d, filename, title, plot_axis, unit = events_unit, xrange = x_range, yrange = y_range, zrange = events_v_range, xlog=xlog, ylog = ylog, zlog = events_v_log, ps_plot = ps_plot
   
 ;-- draw heat map for event ratio  
-  filename = path_2d + direction+'_'+ region +'_ratio_' + ts_date+'_to_' + te_date+'_' + PLOT_AXIS(0) + '_vs_'+PLOT_AXIS(1) +'.ps'
-  title = sort_title+' '+ direction + ' ' + PHASE + ' O!U+!N BEAM RATIO in ' + region + '!Cfrom ' + ts_date+' to ' +te_date
+  filename = path_2d + ext_condition_str + '_' + int_condition_str + '_ratio_' + ts_date+'_to_' + te_date+'_' + PLOT_AXIS(0) + '_vs_'+PLOT_AXIS(1) +'.ps'
+  title = ext_condition_str+'!C'+int_condition_str + ' O!U+!N Beam Ratio!Cfrom ' + ts_date+' to ' +te_date
   make_heat_map, x_axis, y_axis, event_ratio_2d, filename, title, plot_axis, unit = ratio_unit, xrange = x_range, yrange = y_range, zrange = ratio_v_range, xlog= xlog, ylog = ylog, zlog = ratio_v_log, ps_plot = ps_plot
 
 END
 
-;----------------------------------------
+;------------------------------------------------------------------------------------------------------------------
 ; Purpose: make sliced heat map for samples, events and ratios for
 ; different z range
-; Inputs: total_counts, event_counts, event_ratio, filepath, region, 
-;----------------------------------------
-PRO make_slice_heat_map,  total_counts, event_counts, event_ratio, filepath, region, direction, ts_date, te_date, plot_axis, sort_title, phase, x_axis, y_axis, z_axis, z_cuttings, x_range, y_range, xlog, ylog, slice_grid,filename, events_v_log, events_v_range, events_unit, samples_v_log, samples_v_range,samples_unit, ratio_v_log, ratio_v_range, ratio_unit, ps_plot=ps_plot, slice_mlt = slice_mlt
+; Inputs: total_counts, event_counts, event_ratio, filepath 
+;------------------------------------------------------------------------------------------------------------------
+PRO make_slice_heat_map,  total_counts, event_counts, event_ratio, filepath,ext_condition_str, int_condition_str , ts_date, te_date, plot_axis, x_axis, y_axis, z_axis, z_cuttings, x_range, y_range, xlog, ylog, slice_grid,filename, events_v_log, events_v_range, events_unit, samples_v_log, samples_v_range,samples_unit, ratio_v_log, ratio_v_range, ratio_unit, ps_plot=ps_plot, slice_mlt = slice_mlt
 
   nz = N_ELEMENTS(z_axis)
 
@@ -134,24 +137,24 @@ PRO make_slice_heat_map,  total_counts, event_counts, event_ratio, filepath, reg
      if ct gt 0 then slice_total_counts(index) = !VALUES.F_NAN
      
 ;  samples
-     filename = path_slice+ direction+'_'+phase+'_'+region + '_samples_' + ts_date+'_to_' + te_date+'_' + PLOT_AXIS(0)+'_vs_' +PLOT_AXIS(1) +'_at_' + plot_axis(2)+'_' +slice_block(0)+'_'+slice_block(1) +'.ps'
-     title = sort_title+' '+direction+' '+phase+' O!U+!N BEAM SAMPLES in '+region +'!Cat ' + plot_axis(2) + ': [' +slice_block(0)+',' +slice_block(1)+']' + '!CFROM ' + ts_date+' TO '  +te_date
+     filename = path_slice + ext_condition_str + '_' + int_condition_str + '_samples_' + ts_date+'_to_' + te_date+'_' + PLOT_AXIS(0)+'_vs_' +PLOT_AXIS(1) +'_at_' + plot_axis(2)+'_' +slice_block(0)+'_'+slice_block(1) +'.ps'
+     title = ext_condition_str+'!C'+int_condition_str +' O!U+!N BEAM SAMPLES' +'!Cat ' + plot_axis(2) + ': [' +slice_block(0)+',' +slice_block(1)+']' + '!CFROM ' + ts_date+' TO '  +te_date
      make_heat_map, x_axis, y_axis, slice_total_counts, filename, title, plot_axis, unit = samples_unit, xrange = x_range, yrange = y_range, zrange= samples_v_range, xlog = xlog, ylog = ylog, zlog = samples_v_log, ps_plot = ps_plot
 
 ; events                                              
-     filename = path_slice+ direction+'_'+phase+'_'+region + '_events_' + ts_date+'_to_' + te_date+'_' + PLOT_AXIS(0)+'_vs_' +PLOT_AXIS(1) +'_at_' + plot_axis(2)+'_' + slice_block(0)+'_'+slice_block(1) +'.ps'
-     title = sort_title+' '+direction+' '+phase+' O!U+!N BEAM EVENTS in '+region +'!Cat ' + plot_axis(2) + ': [' +slice_block(0)+',' +slice_block(1)+']' + '!CFROM ' + ts_date+' TO '  +te_date
+     filename = path_slice + ext_condition_str + '_' + int_condition_str + '_events_' + ts_date+'_to_' + te_date+'_' + PLOT_AXIS(0)+'_vs_' +PLOT_AXIS(1) +'_at_' + plot_axis(2)+'_' + slice_block(0)+'_'+slice_block(1) +'.ps'
+     title = ext_condition_str+'!C'+int_condition_str +' O!U+!N BEAM EVENTS'+'!Cat ' + plot_axis(2) + ': [' +slice_block(0)+',' +slice_block(1)+']' + '!CFROM ' + ts_date+' TO '  +te_date
      make_heat_map, x_axis, y_axis, slice_event_counts, filename, title, plot_axis, unit = events_unit, xrange = x_range, yrange = y_range, zrange = events_v_range, xlog = xlog, ylog = ylog, zlog = events_v_log, ps_plot = ps_plot
 
 ; ratio  
-     filename =  path_slice+direction+'_'+phase+'_'+region+'_ratio_' + ts_date+'_to_' + te_date+'_' + PLOT_AXIS(0)+'_vs_' + PLOT_AXIS(1)+'_at_' + plot_axis(2)+'_' + slice_block(0)+'_'+slice_block(1) +'.ps'
-     title = sort_title+' '+direction+' '+phase+' O!U+!N BEAM RATIO in '+region +'!Cat ' + plot_axis(2) + ': [' +slice_block(0)+',' +slice_block(1)+']' + '!CFROM ' + ts_date +' TO ' +te_date
+     filename =  path_slice + ext_condition_str + '_' + int_condition_str + '_ratio_' + ts_date+'_to_' + te_date+'_' + PLOT_AXIS(0)+'_vs_' + PLOT_AXIS(1)+'_at_' + plot_axis(2)+'_' + slice_block(0)+'_'+slice_block(1) +'.ps'
+     title = ext_condition_str+'!C'+int_condition_str+' O!U+!N BEAM RATIO'+'!Cat ' + plot_axis(2) + ': [' +slice_block(0)+',' +slice_block(1)+']' + '!CFROM ' + ts_date +' TO ' +te_date
      make_heat_map, x_axis, y_axis, slice_event_ratio, filename, title, plot_axis , unit = ratio_unit, xrange = x_range, yrange = y_range, zrange = ratio_v_range, xlog = xlog, ylog = ylog, zlog = ratio_v_log, ps_plot = ps_plot
   ENDFOR    
 END
 
 
-PRO make_events_map, data_pos, flag_para, flag_anti, filepath, ts_date, te_date, plot_axis, sort_title, phase, region, direction, range, log, grid, slice_grid, filename, plot_2d, plot_slice, make_table, ps_plot = ps_plot
+PRO make_events_map, data_pos, flag_para, flag_anti, filepath, ts_date, te_date, plot_axis, ext_condition_str, int_condition_str,range, log, grid, slice_grid, filename, plot_2d, plot_slice, make_table, ps_plot = ps_plot
   X_RANGE = range(*, 0)
   Y_RANGE = range(*, 1)
   Z_RANGE = range(*, 2)
@@ -179,10 +182,10 @@ PRO make_events_map, data_pos, flag_para, flag_anti, filepath, ts_date, te_date,
   ratio_V_LOG = 0  & RATIO_V_RANGE = [0, 1.] & ratio_unit = 'Occurance Frequency'
 
 ; Draw 2d maps
-  IF KEYWORD_SET(PLOT_2D) THEN make_2d_heat_map, total_counts, event_counts, event_ratio, filepath, region, direction, ts_date, te_date, plot_axis, sort_title, phase, x_axis, y_axis,  x_range, y_range, xlog, ylog, filename, events_v_log, events_v_range, events_unit, samples_v_log, samples_v_range,samples_unit, ratio_v_log, ratio_v_range, ratio_unit, ps_plot = ps_plot
+  IF KEYWORD_SET(PLOT_2D) THEN make_2d_heat_map, total_counts, event_counts, event_ratio, filepath, ext_condition_str, int_condition_str, ts_date, te_date, plot_axis, x_axis, y_axis,  x_range, y_range, xlog, ylog, filename, events_v_log, events_v_range, events_unit, samples_v_log, samples_v_range,samples_unit, ratio_v_log, ratio_v_range, ratio_unit, ps_plot = ps_plot
 
 ; Draw slice maps
-  IF KEYWORD_SET(PLOT_SLICE) THEN make_slice_heat_map,  total_counts, event_counts, event_ratio, filepath, region, direction,ts_date, te_date, plot_axis, sort_title, phase, x_axis, y_axis, z_axis, z_cuttings, x_range, y_range, xlog, ylog, slice_grid,filename, events_v_log, events_v_range, events_unit, samples_v_log, samples_v_range,samples_unit, ratio_v_log, ratio_v_range, ratio_unit, ps_plot = ps_plot, slice_mlt = slice_mlt
+  IF KEYWORD_SET(PLOT_SLICE) THEN make_slice_heat_map, total_counts, event_counts, event_ratio, filepath, ext_condition_str, int_condition_str, ts_date, te_date, plot_axis, x_axis, y_axis, z_axis, z_cuttings, x_range, y_range, xlog, ylog, slice_grid,filename, events_v_log, events_v_range, events_unit, samples_v_log, samples_v_range,samples_unit, ratio_v_log, ratio_v_range, ratio_unit, ps_plot = ps_plot, slice_mlt = slice_mlt
   
   IF KEYWORD_SET(make_table) THEN  stop
 

@@ -19,7 +19,8 @@ PRO draw_heat_map, x_axis, y_axis, data, no_interp = no_interp, title = title, x
             , title:title, xtitle:xtitle, ytitle:ytitle, ztitle:ztitle $
             , xrange:xrange, yrange:yrange, xlog:xlog, ylog:ylog $
             , zticklen: -1, XSTYLE:1, ystyle: 1, charsize: 1.2 $
-            , position: [0.1, 0.1, 0.85, 0.85], zticks: 4}     
+            , xcharSIZE: 1.5, ycharsize: 1.5, zcharsize:1.5 $
+            , position: [0.12, 0.12, 0.8, 0.8], zticks: 4}     
   
   oplot, [0, 0, -100, 100], [-100, 100, 0, 0]
   
@@ -43,8 +44,8 @@ PRO draw_mlt_heat_map, x_axis, y_axis, data, title = title, xtitle = xtitle, yti
   polar_spec, y_axis, x_axis*norm_factor_mlt, data $
               , title = title, ztitle = ztitle $
               , r_range= r_range, zrange = zrange, zlog = zlog $
-              , charsize=1.2, zticklen = -1,zticks = 4 $ 
-              , xtitle = '', ytitle = ''           
+              , charsize = 1.5, zticklen = -1, zticks = 4 $ 
+              , xtitle = '', ytitle = '', label_charsize = 2
   
   r_grid = 10.
   mlt_grid = 30./180.*!PI
