@@ -10,9 +10,9 @@
 PRO find_pa_peak, pa_counts_name, pa_name, pap_name, beta_name, pa_count_line = pa_count_line,flux_threshold=flux_threshold, peak_pa_range = peak_pa_range, def_pap_factor = def_pap_factor
 
 ;-- Check keywords --
-  IF NOT keyword_set(flux_threshold) or n_elements(flux_threshold) ne 3 THEN flux_threshold = [0,0,0] ;[10,15,18]
+  IF NOT keyword_set(flux_threshold) or n_elements(flux_threshold) ne 3 THEN flux_threshold = [0,0,0] ;[0.1,0.15,0.2]
   IF NOT keyword_set(pa_count_line) THEN pa_count_line = 9/88.
-  IF NOT KEYWORD_SET(def_pap_factor) OR N_ELEMENTS(def_pap_factor) NE 3 THEN def_pap_factor = [1.1,2,3]
+  IF NOT KEYWORD_SET(def_pap_factor) OR N_ELEMENTS(def_pap_factor) NE 3 THEN def_pap_factor = [1.1,2,3] ;[3,2,1.1]
 ;-- Load data --
   get_data, pa_counts_name, data = data
   counts_pa = data.y            ;(*, 0:7)
@@ -28,6 +28,7 @@ PRO find_pa_peak, pa_counts_name, pa_name, pap_name, beta_name, pa_count_line = 
 
 ;-- set up defination of pitch angle for different magnetosphere regions, using plasma beta --
   def_pap = DBLARR(ntime)
+  def_pap_relative = DBLARR(ntime)
 ;  IF N_ELEMENTS(def) EQ 0 THEN BEGIN 
   get_data, beta_name, data = pb
   time_pb = pb.x
@@ -38,14 +39,17 @@ PRO find_pa_peak, pa_counts_name, pa_name, pap_name, beta_name, pa_count_line = 
 ;    FOR j = 0, npa-1 DO BEGIN               
      IF data_pb(i) LE 0.05 THEN BEGIN 
         def_pap(i) = total(flux_pa(i, *),/nan)*def_pap_factor(0)/n_valid_pa > flux_threshold(0)
+        def_pap_relative(i) = 1
      ENDIF  
      
      IF data_pb(i) GT 0.05 AND data_pb(i) LE 1 THEN BEGIN 
         def_pap(i) = total(flux_pa(i, *),/nan)*def_pap_factor(1)/n_valid_pa > flux_threshold(1)
+        def_pap_relative(i) = 1
      ENDIF  
      
      IF data_pb(i) GT 1 THEN BEGIN 
         def_pap(i) = total(flux_pa(i, *),/nan)*def_pap_factor(2)/n_valid_pa > flux_threshold(2)
+        def_pap_relative(i) = 1
      ENDIF       
 ;        ENDFOR   
   ENDFOR   
@@ -71,8 +75,8 @@ PRO find_pa_peak, pa_counts_name, pa_name, pap_name, beta_name, pa_count_line = 
 
   FOR i = 0, ntime-1 DO BEGIN 
      FOR j = 0, npa-1 DO BEGIN 
-        IF flux_pa(i, j) GE flux_pa(i, j-1 > 0) AND $
-           flux_pa(i, j) GE flux_pa(i, j+1 < (npa-1)) AND $
+        IF flux_pa(i, j) GE flux_pa(i, j-1 > 0)*  def_pap_relative(i) AND $
+           flux_pa(i, j) GE flux_pa(i, j+1 < (npa-1))* def_pap_relative(i) AND $
            flux_pa(i, j) GT def_pap(i) AND $
            counts_pa(i, j) GT pa_count_line $
         THEN BEGIN

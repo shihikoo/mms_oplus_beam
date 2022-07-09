@@ -47,7 +47,7 @@ PRO draw_mlt_heat_map, x_axis, y_axis, data, title = title, xtitle = xtitle, yti
               , charsize = 1.5, zticklen = -1, zticks = 4 $ 
               , xtitle = '', ytitle = '', label_charsize = 2
   
-  r_grid = 10.
+  r_grid = ABS(y_axis[1]-y_axis[0])
   mlt_grid = 30./180.*!PI
   full_mlt = 360./180.*!PI
 
@@ -80,7 +80,7 @@ PRO make_heat_map, x_axis, y_axis, data, filename, title, plot_axis, unit = unit
 
   IF KEYWORD_SET(ps_plot) THEN BEGIN   
      png_filename = STRMID(filename, 0, STRPOS(filename,'.ps')) + '.png'    
-     spawn, 'mogrify -format png '+ filename
+     spawn, 'mogrify -format png -alpha opaque -density 150 '+ filename
      spawn, 'mogrify -rotate -90 '+ png_filename 
      spawn, 'rm -f ' + filename  
   ENDIF 

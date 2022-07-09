@@ -1,8 +1,8 @@
 ;--------------------------------------------------------------------------
 ; Purpose: calculate sample counts, event counts and event ratio for map
-; Inputs: x_range, y_range, z_range, grid_x, grid_y, grid_z, total_counts,event_counts,event_ratio
+; Inputs: x_range, y_range, z_range, grid_x, grid_y, grid_z, total_counts,event_counts,event_ratio1
 ;--------------------------------------------------------------------------
-PRO calculate_ratio_for_map, data_pos, x_range, y_range, z_range, x_log, y_log, grid_x, grid_y, grid_z, flag_para, flag_anti, total_counts, event_counts, event_ratio, x_axis, y_axis, z_axis, x_cuttings, y_cuttings, z_cuttings, slice_mlt = slice_mlt
+PRO calculate_ratio_for_map, data_pos, x_range, y_range, z_range, x_log, y_log, grid_x, grid_y, grid_z, flag_para, flag_anti, total_counts, event_counts, event_ratio, x_axis, y_axis, z_axis, x_cuttings, y_cuttings, z_cuttings, slice_mlt = slice_mlt, threshold = threshold
   IF x_log EQ 1 THEN BEGIN 
      grid_x = grid_x/2.
      nx = CEIL(ABS(alog10(x_range(1)) - alog10(x_range(0)))/grid_x) 
@@ -66,6 +66,16 @@ PRO calculate_ratio_for_map, data_pos, x_range, y_range, z_range, x_log, y_log, 
          ENDFOR
       ENDFOR
   ENDFOR 
+
+  if keyword_set(threshold) then begin
+
+     index = where(total_counts le threshold, ct)
+     if ct gt 0 then begin
+        total_counts[index] = 0
+        event_counts[index] = 0
+     endif 
+
+  endif 
 
   event_ratio = event_counts/total_counts    
 END 
@@ -153,8 +163,7 @@ PRO make_slice_heat_map,  total_counts, event_counts, event_ratio, filepath,ext_
   ENDFOR    
 END
 
-
-PRO make_events_map, data_pos, flag_para, flag_anti, filepath, ts_date, te_date, plot_axis, ext_condition_str, int_condition_str,range, log, grid, slice_grid, filename, plot_2d, plot_slice, make_table, ps_plot = ps_plot
+PRO make_events_map, data_pos, flag_para, flag_anti, filepath, ts_date, te_date, plot_axis, ext_condition_str, int_condition_str,range, log, grid, slice_grid, filename, plot_2d, plot_slice, make_table, ps_plot = ps_plot, sample_v_range = sample_v_range,threshold = threshold
   X_RANGE = range(*, 0)
   Y_RANGE = range(*, 1)
   Z_RANGE = range(*, 2)
@@ -164,7 +173,7 @@ PRO make_events_map, data_pos, flag_para, flag_anti, filepath, ts_date, te_date,
 
 ; reset grid according to plot_axis
   IF PLOT_AXIS(0) EQ 'MLT' THEN BEGIN
-     grid_x = 0.5*grid & grid_y = 1.25*grid
+     grid_x = 0.5*grid & grid_y = 1.5*grid
   ENDIF ELSE BEGIN
      grid_x = grid & grid_y = grid
   ENDELSE
@@ -174,11 +183,13 @@ PRO make_events_map, data_pos, flag_para, flag_anti, filepath, ts_date, te_date,
   ENDIF 
  
 ; Calculation
-  calculate_ratio_for_map, data_pos, x_range, y_range, z_range, xlog, ylog, grid_x, grid_y, slice_grid, flag_para, flag_anti, total_counts, event_counts, event_ratio, x_axis, y_axis, z_axis, x_cuttings, y_cuttings, z_cuttings, slice_mlt = slice_mlt
+  calculate_ratio_for_map, data_pos, x_range, y_range, z_range, xlog, ylog, grid_x, grid_y, slice_grid, flag_para, flag_anti, total_counts, event_counts, event_ratio, x_axis, y_axis, z_axis, x_cuttings, y_cuttings, z_cuttings, slice_mlt = slice_mlt,threshold = threshold
 
 ; Graph settings
   EVENTS_V_LOG = 0 & EVENTS_V_RANGE = [1, 1000.] & events_unit = '# of events'
-  samples_v_log = 0 & samples_v_range = [1,1000.] &  samples_unit = '# of samples'
+  samples_v_log = 1 
+  if ~keyword_set(sample_v_range) then samples_v_range = [10,10000.] 
+  samples_unit = '# of samples'
   ratio_V_LOG = 0  & RATIO_V_RANGE = [0, 1.] & ratio_unit = 'Occurance Frequency'
 
 ; Draw 2d maps

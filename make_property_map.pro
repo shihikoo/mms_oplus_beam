@@ -4,7 +4,7 @@
 ; Written by Jing Liao
 ; Written on 05/12/2021
 ;----------------------------------------------------
-PRO calculate_property_map, property_para, property_anti, data_pos, x_range, y_range, z_range, x_log, y_log, grid_x, grid_y, grid_z, flag_para, flag_anti, property_value, x_axis, y_axis, z_axis, x_cuttings, y_cuttings, z_cuttings, slice_mlt = slice_mlt
+PRO calculate_property_map, property_para, property_anti, data_pos, x_range, y_range, z_range, x_log, y_log, grid_x, grid_y, grid_z, flag_para, flag_anti, property_value, x_axis, y_axis, z_axis, x_cuttings, y_cuttings, z_cuttings, slice_mlt = slice_mlt, threshold = threshold
 
   ntime = N_ELEMENTS(property_para)
   
@@ -59,7 +59,7 @@ PRO calculate_property_map, property_para, property_anti, data_pos, x_range, y_r
                                  data_pos(*,2) GE z_cuttings[iz,0] AND data_pos(*,2) LT z_cuttings[iz,1] AND $
                                  FINITE(flag_para), ct_para)
            ENDELSE 
-           IF ct_para GT 0 THEN property_value(index_para,0,ix,iy,iz) = property_para(index_para)
+           IF ct_para GT threshold THEN property_value(index_para,0,ix,iy,iz) = property_para(index_para)
            
            IF z_cuttings[iz,0] GT z_cuttings[iz,1] AND KEYWORD_SET(slice_mlt) THEN BEGIN 
               index_anti = where(data_pos(*,0) GE x_cuttings[ix,0] AND data_pos(*,0) LT x_cuttings[ix,1] AND $
@@ -73,10 +73,13 @@ PRO calculate_property_map, property_para, property_anti, data_pos, x_range, y_r
                                  data_pos(*,2) GE z_cuttings[iz,0] AND data_pos(*,2) LT z_cuttings[iz,1] AND $
                                  FINITE(flag_anti), ct_anti)
            ENDELSE 
-           IF ct_anti GT 0 THEN property_value(index_anti,1,ix,iy,iz) = property_anti(index_anti)
+           IF ct_anti GT threshold THEN property_value(index_anti,1,ix,iy,iz) = property_anti(index_anti)
         ENDFOR
      ENDFOR
   ENDFOR
+
+
+
 END
 
 ;----------------------------------------------------------
@@ -189,7 +192,7 @@ END
 ; Inputs: data, data_pos, property_name, property_map_type, flag, filepath, ts_date, te_date, plot_axis,  x_range, y_range, z_range, grid, slice_grid, filename, plot_2d, plot_slice, make_table
 ; Keywords: ps_plot 
 ;------------------------------------------------------------------------------
-PRO make_property_map, data, data_pos, property_name, property_map_type, flag_para, flag_anti, filepath, ts_date, te_date, plot_axis, ext_condition_str, int_condition_str, range, log, grid, slice_grid, filename, plot_2d, plot_slice, make_table, ps_plot = ps_plot
+PRO make_property_map, data, data_pos, property_name, property_map_type, flag_para, flag_anti, filepath, ts_date, te_date, plot_axis, ext_condition_str, int_condition_str, range, log, grid, slice_grid, filename, plot_2d, plot_slice, make_table, ps_plot = ps_plot, threshold = threshold
   
   X_RANGE = range(*, 0)
   Y_RANGE = range(*, 1)
@@ -215,7 +218,7 @@ PRO make_property_map, data, data_pos, property_name, property_map_type, flag_pa
   ENDIF 
 
 ; Calculation
-  calculate_property_map, property_para, property_anti, data_pos, x_range, y_range, z_range, xlog,ylog, grid_x, grid_y, grid_z, flag_para, flag_anti, property_value, x_axis, y_axis, z_axis, x_cuttings, y_cuttings, z_cuttings, slice_mlt = slice_mlt
+  calculate_property_map, property_para, property_anti, data_pos, x_range, y_range, z_range, xlog,ylog, grid_x, grid_y, grid_z, flag_para, flag_anti, property_value, x_axis, y_axis, z_axis, x_cuttings, y_cuttings, z_cuttings, slice_mlt = slice_mlt, threshold = threshold
 
 ; Draw 2d maps
   IF KEYWORD_SET(PLOT_2D) THEN make_2d_property_map, property_value, property_map_type,property_name,filepath, ext_condition_str, int_condition_str, ts_date, te_date, plot_axis, x_axis, y_axis, x_range, y_range, xlog, ylog, filename, property_v_log, property_v_range, property_unit, ps_plot=ps_plot

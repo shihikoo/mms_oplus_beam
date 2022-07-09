@@ -57,7 +57,7 @@ PRO draw_points_plot, data_pos, flag_para, flag_anti, filename = filename, title
   IF KEYWORD_SET(ps_plot) THEN popen, filename, /land 
 
   PLOT, [0, 0, -100, 100], [-100, 100, 0, 0] $
-        , title = title, xtitle = xtitle, ytitle = ytitle, xrange = xrange, yrange = yrange $
+        , title = title, xtitle = xtitle, ytitle = ytitle, xrange = xrange, yrange = yrange, xstyle = 1, ystyle = 1 $
         , charsize = 1.2, position = [0.15, 0.15, 0.85, 0.85], xlog = xlog, ylog = ylog, xcharsize = 2, ycharsize = 2
 
   if keyword_set(ps_plot) then psym_point_map=1 else psym_point_map=3
@@ -79,7 +79,8 @@ END
 PRO make_points_map, data_pos, flag_para, flag_anti, beta, mlt, range, log, path_ps, ts_date, te_date, plot_axis, grid,  ext_condition_str, int_condition_str, ps_plot = ps_plot
 
   xtitle = PLOT_AXIS(0) 
-  ytitle = PLOT_AXIS(1)   
+  ytitle = PLOT_AXIS(1)  
+   
   xrange = range(*,0)
   yrange = range(*,1)
   xlog = log(0)

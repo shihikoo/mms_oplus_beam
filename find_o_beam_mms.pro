@@ -1,4 +1,4 @@
-;------------------------------------------------------------------------------
+2;------------------------------------------------------------------------------
 ; Purpose: Identify O+ beam using from energy spec, pitch angle spec
 ;         and then make corresponding mom plot in page1 the whole procedure
 ;         plot in page2
@@ -32,13 +32,16 @@ PRO find_o_beam_mms, sc = sc, $
                      output_path = output_path, $
                      low_count_line = low_count_line, $
                      plot_low_count_filter =  plot_low_count_filter, $
+                     pa_count_line = pa_count_line, $
                      displaytime = displaytime, $
                      plot_all_region = plot_all_region, $
                      flux_threshold = flux_threshold, $
                      diff_e = diff_e, $
                      diff_pa = diff_pa, $
-                     dispersion_list = dispersion_list
-
+                     dispersion_list = dispersion_list, $
+                     subtraction = subtraction, $
+                     reduced = reduced
+  
 ;-----------------------------------------------------
 ; Check keywords  
 ;---------------------------------------------------
@@ -56,10 +59,12 @@ PRO find_o_beam_mms, sc = sc, $
 
 ; 800 is for eflux low count
   IF NOT keyword_set(low_count_line) then low_count_line = 800
-
+  
 ; 16 is number of pitch angular bins
-  IF NOT keyword_set(low_count_line) then pa_count_line = low_count_line/16. 
+  IF NOT keyword_set(pa_count_line) then pa_count_line = low_count_line/16. 
 
+  IF KEYWORD_SET(reduced) THEN  setenv,'MMS1_HPCA_SRVY_L2PA=/net/nfs/mimas/cluster14/data/mms/mms1/hpca/srvy/l2pa_reduced/'
+  
 ;--------------------------------------------------------------------
 ; Settings 
 ;-------------------------------------------------------------------- 
@@ -103,6 +108,9 @@ PRO find_o_beam_mms, sc = sc, $
   
   data_filename = output_path + 'tplot_daily/o_beam_' + date_s + '_' + time_s+'_to_'+date_e+'_'+time_e
   
+  low_count_filename_para = output_path + 'plots/low_count_filter/' + 'low_count_filter_'+ date_s + '_' + time_s+'_to_'+date_e+'_'+time_e +  '_para.ps'
+  low_count_filename_anti = output_path + 'plots/low_count_filter/' + 'low_count_filter_'+ date_s + '_' + time_s+'_to_'+date_e+'_'+time_e +  '_anti.ps'
+
   IF NOT KEYWORD_SET(log_filename) THEN log_filename = output_path + 'log.txt'
 
 ;-- We adjust the time to include two average_time before and after
@@ -110,9 +118,9 @@ PRO find_o_beam_mms, sc = sc, $
 ;   the time
   adjusted_t_s = t_s - average_time * 2 > time_double('2016-01-01')
   adjusted_t_e = t_e + average_time * 2 
-  adjusted_dt = adjusted_t_e - adjusted_t_s
+  adjusted_t_dt = adjusted_t_e - adjusted_t_s
 
-  timespan, adjusted_t_s,  adjusted_dt, /seconds
+  timespan, adjusted_t_s,  adjusted_t_dt, /seconds
 
 ;------------------------------------------------------------------------
 ;If beam_recalc is not set, then read the tplot varialbes of beam
@@ -148,9 +156,25 @@ PRO find_o_beam_mms, sc = sc, $
      ENDIF ELSE beam_found = 0
   ENDIF
 
-  IF NOT KEYWORD_SET(time_avg) THEN  time_avg = INDGEN(ROUND( adjusted_dt/average_time))*average_time + adjusted_t_s +average_time/2
+  IF NOT KEYWORD_SET(time_avg) THEN  time_avg = INDGEN(ROUND( adjusted_t_dt/average_time))*average_time + adjusted_t_s +average_time/2
 
   n_avg = N_ELEMENTS(time_avg)
+
+;-----------------------------------
+; delete the previouse tplot variables (temp)
+;----------------------------------
+  if keyword_set(subtraction) then begin 
+     tplot_names, '*subtracted*', names = names
+     if names(0) eq '' then begin
+        tplot_names, '*0_nflux_*', names = names
+        store_data, delete = names
+        tplot_names, 'PA*', names = names
+        store_data, delete = names
+        tplot_names, '*oplus*', names = names
+        store_data, delete = names
+     endif
+  endif 
+
 ;-----------------------------------------------------------------
 ;Load the tplot varibles
 ;----------------------------------------------------------------
@@ -158,8 +182,32 @@ PRO find_o_beam_mms, sc = sc, $
   tplot_names, all_tplot_names.ephemeris_names, names = names
   IF NOT KEYWORD_SET(names) THEN BEGIN
      get_mms_ephemeris, [sc], bmodel = bmodel  
+
+     tplot_names, all_tplot_names.ephemeris_names, names = names
+     if not keyword_set(names) then begin
+        bmodel = 't89d'
+        all_tplot_names = load_tplot_names(sc_str, bmodel, parallel_pa_range, antiparallel_pa_range)
+        get_mms_ephemeris, [sc], bmodel = bmodel  
+     endif 
+
      average_mlt_tplot_variable_with_given_time, all_tplot_names.mlt_name, average_time, time_avg
      average_tplot_variable_with_given_time, all_tplot_names.ephemeris_names, average_time, time_avg 
+  ENDIF 
+
+  tplot_names, all_tplot_names.ephemeris_names, names = names
+  IF ~KEYWORD_SET(names) THEN BEGIN
+     error_message = 'ephemeris data missing'
+
+     IF error_message NE ''  THEN BEGIN
+        IF KEYWORD_SET(store_tplot)  THEN  BEGIN             
+           tplot_save, filename = data_filename  
+           spawn,'gzip -9f '+data_filename+'.tplot'               
+        ENDIF   
+        
+        write_text_to_file, log_filename, TIME_STRING(t_s) + ' TO '+ TIME_STRING(t_e) + error_message, /APPEND
+        close, /all
+        RETURN 
+     ENDIF 
   ENDIF 
 
 ;-- Load Magnetic field--
@@ -182,8 +230,7 @@ PRO find_o_beam_mms, sc = sc, $
 ;-- Validate and calculate total pressure & beta --  
   tplot_names, all_tplot_names.beta_name, names = names1
   tplot_names, all_tplot_names.density_ratio_name, names = names2
-  IF ~KEYWORD_SET(names1) OR ~KEYWORD_SET(names2) THEN BEGIN
-     calculate_plasma_beta, all_tplot_names, error_message = error_message
+  IF ~KEYWORD_SET(names1) OR ~KEYWORD_SET(names2) THEN BEGIN     calculate_plasma_beta, all_tplot_names, error_message = error_message
 
      IF error_message NE ''  THEN BEGIN
         IF KEYWORD_SET(store_tplot)  THEN  BEGIN             
@@ -235,14 +282,18 @@ PRO find_o_beam_mms, sc = sc, $
 
 ;-- Load H+ pitch angle spectra
   tplot_names, all_tplot_names.diffflux_h1_pa_name, names = names
-  IF NOT KEYWORD_SET(names) THEN plot_mms_hpca_pa_spec, [sc], [0], 'DIFF FLUX', no_convert_en = 1, energy = [1.,5.e4]
-
+  IF NOT KEYWORD_SET(names) THEN plot_mms_hpca_pa_spec, [sc], [0], 'DIFF FLUX', no_convert_en = 1, energy = [1.,4.e4]
+  
+;-- Load O+ energy spectra --
+  tplot_names, all_tplot_names.diffflux_o1_name, names = names
+  IF NOT KEYWORD_SET(names) THEN plot_mms_hpca_en_spec, [sc], [3], 'DIFF FLUX',pa=[0,180]
+  
 ;-- Load O+ energy spectra - parallel --
   tplot_names, all_tplot_names.diffflux_o1_parallel_name, names =names
   IF NOT KEYWORD_SET(names) THEN plot_mms_hpca_en_spec, [sc], [sp], 'DIFF FLUX', pa = parallel_pa_range, energy = full_mms_energy_range
   
   tplot_names, all_tplot_names.eflux_o1_parallel_name, names = names
-  IF NOT KEYWORD_SET(names) THEN plot_mms_hpca_en_spec, [sc], [sp], 'EFLUX', pa = parallel_pa_range, 	energy = full_mms_energy_range
+  IF NOT KEYWORD_SET(names) THEN plot_mms_hpca_en_spec, [sc], [sp], 'EFLUX', pa = parallel_pa_range, energy = full_mms_energy_range
 
 ;-- Load O+ energy spectra - anti-parallel --
   tplot_names, all_tplot_names.diffflux_o1_antiparallel_name, names = names
@@ -251,37 +302,25 @@ PRO find_o_beam_mms, sc = sc, $
   tplot_names, all_tplot_names.eflux_o1_antiparallel_name, names = names
   IF NOT KEYWORD_SET(names) THEN plot_mms_hpca_en_spec, [sc], [sp], 'EFLUX', pa = antiparallel_pa_range, energy = full_mms_energy_range
 
-;------------------------------------------------------------------------------
-; Identify O+ beam for different directions or pitch angle ranges
-;-------------------------------------------------------------------------------
-; parallel   
-  tplot_names, all_tplot_names.parallel_epcut_beam_name, names = names
- IF NOT KEYWORD_SET(names(0)) THEN identify_beams, [sc], [sp], all_tplot_names.diffflux_o1_parallel_name,  all_tplot_names.eflux_o1_parallel_name $
-     ,  average_time, time_avg $ 
-     ,  all_tplot_names.beta_name,  all_tplot_names.region_name $
-     , t_s = adjusted_t_s, t_e= adjusted_t_e $
-     , pa_range = [0,90], peak_pa_range = parallel_pa_range $
-     , low_count_line = low_count_line, pa_count_line = pa_count_line, plot_low_count_filter = plot_low_count_filter, flux_threshold = flux_threshold $
-     , pa_name =  all_tplot_names.parallel_pa_name, pa_eflux_name =  all_tplot_names.parallel_pa_eflux_name $  
-     , pap_name =  all_tplot_names.parallel_pap_name $
-     , pap_beam_name =  all_tplot_names.parallel_pap_beam_name $
-     , epcut_beam_name = all_tplot_names.parallel_epcut_beam_name, erange_beam_name =  all_tplot_names.parallel_erange_beam_name $
-     , dlimf = dlimf, limf = limf, dlimc = dlimc, limc = limc, error_message = error_message, bin_size_pa = bin_size_pa, diff_e = diff_e, diff_pa = diff_pa
-  
-; antiparallel
-  tplot_names,  all_tplot_names.antiparallel_epcut_beam_name, names = names
-  IF NOT KEYWORD_SET(names) THEN  identify_beams, [sc], [sp],  all_tplot_names.diffflux_o1_antiparallel_name,  all_tplot_names.eflux_o1_antiparallel_name $
-     ,  average_time, time_avg $
-     ,  all_tplot_names.beta_name,  all_tplot_names.region_name $
-     , t_s = adjustd_t_s, t_e= adjusted_t_e $
-     , pa_range = [90,180], peak_pa_range = antiparallel_pa_range $
-     , low_count_line = low_count_line, pa_count_line = pa_count_line, plot_low_count_filter = plot_low_count_filter, flux_threshold = flux_threshold  $
-     , pa_name =  all_tplot_names.antiparallel_pa_name, pa_eflux_name = all_tplot_names.antiparallel_pa_eflux_name $
-     , pap_name =  all_tplot_names.antiparallel_pap_name $ 
-     , pap_beam_name =  all_tplot_names.antiparallel_pap_beam_name $
-     , epcut_beam_name =  all_tplot_names.antiparallel_epcut_beam_name, erange_beam_name =  all_tplot_names.antiparallel_erange_beam_name $
-     , dlimf = dlimf, limf = limf, dlimc = dlimc, limc = limc, error_message = error_message, bin_size_pa = bin_size_pa, diff_e = diff_e, diff_pa = diff_pa
+;-- Load O+ pitch angle spectra
+  tplot_names, all_tplot_names.diffflux_o1_pa_name, names = names
+  IF NOT KEYWORD_SET(names) THEN plot_mms_hpca_pa_spec, [sc], [sp], 'DIFF FLUX', no_convert_en = 1, energy = [1.,4.e4]
 
+  average_tplot_variable_with_given_time, all_tplot_names.diffflux_o1_pa_name, average_time, time_avg
+
+;------------------------------------------------------------------------------------------------------
+; preprocess energy spectra
+;---------------------------------------------------------------------------------------------------------
+  preprocess_enspec, [sc], [sp], all_tplot_names.diffflux_o1_parallel_name,  all_tplot_names.eflux_o1_parallel_name $
+                     ,  average_time, time_avg,   all_tplot_names.region_name $
+                     , t_s = adjusted_t_s, t_e= adjusted_t_e, error_message = error_message $
+                     , plot_low_count_filter = plot_low_count_filter, low_count_filename= low_count_filename_para 
+  
+  preprocess_enspec, [sc], [sp], all_tplot_names.diffflux_o1_antiparallel_name,  all_tplot_names.eflux_o1_antiparallel_name $
+                     ,  average_time, time_avg,  all_tplot_names.region_name $
+                     , t_s = adjusted_t_s, t_e= adjusted_t_e, error_message = error_message $
+                     , plot_low_count_filter = plot_low_count_filter, low_count_filename= low_count_filename_para
+  
   IF error_message NE ''  THEN BEGIN
      IF KEYWORD_SET(store_tplot)  THEN  BEGIN   
         tplot_save, filename = data_filename                                      
@@ -292,19 +331,77 @@ PRO find_o_beam_mms, sc = sc, $
      RETURN 
   ENDIF
 
+;------------------------------------------------------------------------------
+;Energy spectra subtraction
+;------------------------------------------------------------------------------
+  para_enspec_name = all_tplot_names.diffflux_o1_parallel_name
+  anti_enspec_name = all_tplot_names.diffflux_o1_antiparallel_name
+  
+  if keyword_set(subtraction) then begin
+     tplot_names,all_tplot_names.diffflux_o1_parallel_subtracted_name, names=names
+     if names(0) eq '' then energy_spectra_subtraction, all_tplot_names.diffflux_o1_parallel_name, all_tplot_names.diffflux_o1_antiparallel_name,  all_tplot_names.diffflux_o1_parallel_subtracted_name
+     tplot_names,all_tplot_names.diffflux_o1_antiparallel_subtracted_name, names=names
+     if names(0) eq '' then  energy_spectra_subtraction, all_tplot_names.diffflux_o1_antiparallel_name, all_tplot_names.diffflux_o1_parallel_name,  all_tplot_names.diffflux_o1_antiparallel_subtracted_name
+     
+     para_enspec_name = all_tplot_names.diffflux_o1_parallel_subtracted_name
+     anti_enspec_name = all_tplot_names.diffflux_o1_antiparallel_subtracted_name
+  endif
+
+; timespan,'2019-04-30/12',6,/hour
+;zlim,[122,127],0.1,100
+;tplot,[122,127]
+
+; stop
+;------------------------------------------------------------------------------
+; Identify O+ beam for different directions or pitch angle ranges
+;-------------------------------------------------------------------------------
+; parallel 
+  tplot_names, all_tplot_names.parallel_epcut_beam_name, names = names
+  IF NOT KEYWORD_SET(names(0)) THEN identify_beams, [sc], [sp],  para_enspec_name,  all_tplot_names.eflux_o1_parallel_name $
+     ,  average_time, time_avg $ 
+     ,  all_tplot_names.beta_name $
+     , t_s = adjusted_t_s, t_e= adjusted_t_e $
+     , pa_range = [0,90], peak_pa_range = parallel_pa_range $
+     , low_count_line = low_count_line, pa_count_line = pa_count_line $
+                                ;              , plot_low_count_filter = plot_low_count_filter, low_count_filename= low_count_filename_para $
+     , flux_threshold = flux_threshold , erange_name = all_tplot_names.parallel_erange_name, epcut_name = all_tplot_names.parallel_epcut_name $
+     , pa_name =  all_tplot_names.parallel_pa_name, pa_eflux_name =  all_tplot_names.parallel_pa_eflux_name $  
+     , pap_name =  all_tplot_names.parallel_pap_name $
+     , pap_beam_name =  all_tplot_names.parallel_pap_beam_name $
+     , epcut_beam_name = all_tplot_names.parallel_epcut_beam_name, erange_beam_name =  all_tplot_names.parallel_erange_beam_name $
+                                ; , dlimf = dlimf, limf = limf, dlimc = dlimc, limc = limc    , error_message = error_message
+     , bin_size_pa = bin_size_pa, diff_e = diff_e, diff_pa = diff_pa
+  
+; antiparallel
+  tplot_names,  all_tplot_names.antiparallel_epcut_beam_name, names = names
+  IF NOT KEYWORD_SET(names) THEN  identify_beams, [sc], [sp],anti_enspec_name ,  all_tplot_names.eflux_o1_antiparallel_name $
+     ,  average_time, time_avg $
+     ,  all_tplot_names.beta_name $
+     , t_s = adjustd_t_s, t_e= adjusted_t_e $
+     , pa_range = [90,180], peak_pa_range = antiparallel_pa_range $
+     , low_count_line = low_count_line, pa_count_line = pa_count_line $
+;, plot_low_count_filter = plot_low_count_filter, low_count_filename= low_count_filename_anti $
+     , flux_threshold = flux_threshold  , erange_name = all_tplot_names.antiparallel_erange_name, epcut_name = all_tplot_names.antiparallel_epcut_name $
+     , pa_name =  all_tplot_names.antiparallel_pa_name, pa_eflux_name = all_tplot_names.antiparallel_pa_eflux_name $
+     , pap_name =  all_tplot_names.antiparallel_pap_name $ 
+     , pap_beam_name =  all_tplot_names.antiparallel_pap_beam_name $
+     , epcut_beam_name =  all_tplot_names.antiparallel_epcut_beam_name, erange_beam_name =  all_tplot_names.antiparallel_erange_beam_name $
+                                ;  , dlimf = dlimf, limf = limf, dlimc = dlimc, limc = limc , error_message = error_message
+     , bin_size_pa = bin_size_pa, diff_e = diff_e, diff_pa = diff_pa
+;stop
 ;-- combine beam results --
   tplot_names,  all_tplot_names.pap_beam_combine_name, names=names
-  IF NOT KEYWORD_SET(names) THEN  combine_beam, all_tplot_names, start_time = adjusted_t_s, END_time = adjusted_t_e, average_time = average_time
+;  IF NOT KEYWORD_SET(names) THEN  
+  combine_beam, all_tplot_names, start_time = adjusted_t_s, END_time = adjusted_t_e, average_time = average_time
 
 ;-- write to log that beam is found --
   write_text_to_file, log_filename,  ts +' TO '+ te + '-------- Found O+ Beam------ '+ STRING((systime(/seconds) - running_time_s)/60.) + ' minitues used',/APPEND
-  
+
 ;-----------------------------------------------------------------------
 ; Calculate Moments for the beam and save them into tplot 
 ;----------------------------------------------------------------------
   tplot_names, all_tplot_names.parallel_epcut_beam_denergy_name, names = names
-;  IF NOT KEYWORD_SET(names) THEN 
-calculate_denergy, all_tplot_names.diffflux_o1_parallel_name,all_tplot_names.parallel_epcut_beam_name, all_tplot_names.parallel_epcut_beam_denergy_name
+  IF NOT KEYWORD_SET(names) THEN calculate_denergy, all_tplot_names.diffflux_o1_parallel_name,all_tplot_names.parallel_epcut_beam_name, all_tplot_names.parallel_epcut_beam_denergy_name
   
   tplot_names, all_tplot_names.antiparallel_epcut_beam_denergy_name, names = names
   IF NOT KEYWORD_SET(names) THEN calculate_denergy, all_tplot_names.diffflux_o1_antiparallel_name, all_tplot_names.antiparallel_epcut_beam_name, all_tplot_names.antiparallel_epcut_beam_denergy_name
@@ -329,11 +426,11 @@ calculate_denergy, all_tplot_names.diffflux_o1_parallel_name,all_tplot_names.par
 ; Load solar wind data from OMNI
 ;----------------------------------------------------------------------
   tplot_names, all_tplot_names.parallel_sw_p_name, names = names
+
   IF NOT KEYWORD_SET(names) THEN BEGIN
      read_omni, ALL=1, HR = 1
- 
-     calculate_solarwind_delayed, all_tplot_names.parallel_epcut_beam_name $
-                                  , all_tplot_names.dist_name $
+     
+     calculate_solarwind_delayed, all_tplot_names.parallel_epcut_beam_name, all_tplot_names.dist_name $
                                   , [all_tplot_names.imf_bx_name $
                                      , all_tplot_names.imf_by_gsm_name $
                                      , all_tplot_names.imf_bz_gsm_name $
@@ -342,43 +439,51 @@ calculate_denergy, all_tplot_names.diffflux_o1_parallel_name,all_tplot_names.par
                                      , all_tplot_names.sw_n_name $
                                      , all_tplot_names.sw_t_name $
                                      , all_tplot_names.sw_mack_number_name] $
-                                  , [  all_tplot_names.parallel_imf_bx_name $
-                                     , all_tplot_names.parallel_imf_by_gsm_name $
-                                     , all_tplot_names.parallel_imf_bz_gsm_name $
-                                     , all_tplot_names.parallel_sw_v_name $
-                                     , all_tplot_names.parallel_sw_p_name $
-                                     , all_tplot_names.parallel_sw_n_name $
-                                     , all_tplot_names.parallel_sw_t_name $
-                                     , all_tplot_names.parallel_sw_mack_number_name] 
+                                  , [  all_tplot_names.parallel_imf_bx_name, all_tplot_names.parallel_imf_by_gsm_name $
+                                       , all_tplot_names.parallel_imf_bz_gsm_name $
+                                       , all_tplot_names.parallel_sw_v_name $
+                                       , all_tplot_names.parallel_sw_p_name $
+                                       , all_tplot_names.parallel_sw_n_name $
+                                       , all_tplot_names.parallel_sw_t_name $
+                                       , all_tplot_names.parallel_sw_mack_number_name] 
      
-     calculate_solarwind_delayed, all_tplot_names.antiparallel_epcut_beam_name $
-                                  , all_tplot_names.dist_name $
+     calculate_solarwind_delayed, all_tplot_names.antiparallel_epcut_beam_name , all_tplot_names.dist_name $
                                   , [  all_tplot_names.imf_bx_name $
-                                     , all_tplot_names.imf_by_gsm_name $
-                                     , all_tplot_names.imf_bz_gsm_name $
-                                     , all_tplot_names.sw_v_name $
-                                     , all_tplot_names.sw_p_name $
-                                     , all_tplot_names.sw_n_name $
-                                     , all_tplot_names.sw_t_name $
-                                     , all_tplot_names.sw_mack_number_name] $
-                                  , [  all_tplot_names.antiparallel_imf_bx_name $
-                                     , all_tplot_names.antiparallel_imf_by_gsm_name $
-                                     , all_tplot_names.antiparallel_imf_bz_gsm_name $
-                                     , all_tplot_names.antiparallel_sw_v_name $
-                                     , all_tplot_names.antiparallel_sw_p_name $
-                                     , all_tplot_names.antiparallel_sw_n_name $
-                                     , all_tplot_names.antiparallel_sw_t_name $
-                                     , all_tplot_names.antiparallel_sw_mack_number_name] 
-  
+                                       , all_tplot_names.imf_by_gsm_name $
+                                       , all_tplot_names.imf_bz_gsm_name $
+                                       , all_tplot_names.sw_v_name $
+                                       , all_tplot_names.sw_p_name $
+                                       , all_tplot_names.sw_n_name $
+                                       , all_tplot_names.sw_t_name $
+                                       , all_tplot_names.sw_mack_number_name] $
+                                  , [  all_tplot_names.antiparallel_imf_bx_name , all_tplot_names.antiparallel_imf_by_gsm_name $
+                                       , all_tplot_names.antiparallel_imf_bz_gsm_name $
+                                       , all_tplot_names.antiparallel_sw_v_name $
+                                       , all_tplot_names.antiparallel_sw_p_name $
+                                       , all_tplot_names.antiparallel_sw_n_name $
+                                       , all_tplot_names.antiparallel_sw_t_name $
+                                       , all_tplot_names.antiparallel_sw_mack_number_name] 
+     
      tplot_names, all_tplot_names.omni_tplot_names, names = names
      average_tplot_variable_with_given_time, all_tplot_names.omni_tplot_names, average_time, time_avg
   ENDIF
+;-----------------------------------------------------------------------
+; Load solar wind data from OMNI
+;----------------------------------------------------------------------
+  tplot_names, all_tplot_names.kp_name, names = names
 
+  IF NOT KEYWORD_SET(names) THEN BEGIN
+     read_omni, ALL=1
+     get_data,  all_tplot_names.kp_name, data = data,dlim=dlim,lim=lim
+     data_kp = INTERPOL(data.y, data.x, time_avg,/NAN)/10.
+     store_data, all_tplot_names.kp_name,data={x:time_avg, y:data_kp, dlim:dlim,lim:lim}
+  ENDIF
+  
 ;-----------------------------------------------------------------------
 ; Load storm data phase data and store phase flag into tplot variables
 ;----------------------------------------------------------------------
   tplot_names,  all_tplot_names.storm_phase_tplot_name, names = names
-  IF NOT KEYWORD_SET(names) THEN find_storm_phase, time_avg, storm_phase_filename = 'data/storm_phase_2016_2017.csv', storm_phase_tplot_name = all_tplot_names.storm_phase_tplot_name
+  IF NOT KEYWORD_SET(names) THEN find_storm_phase, time_avg, storm_phase_filename = 'data/storm_phase_list.csv', storm_phase_tplot_name = all_tplot_names.storm_phase_tplot_name
 ;-----------------------------------------------------------------------
 ; Load substorm data, and store substorm flag into tplot variables
 ;----------------------------------------------------------------------
@@ -388,7 +493,7 @@ calculate_denergy, all_tplot_names.diffflux_o1_parallel_name,all_tplot_names.par
 ; Identify dispersion
 ;---------------------------------------------------------------------
   tplot_names,  all_tplot_names.parallel_dispersion_n_name, names = names
-  IF NOT KEYWORD_SET(names) THEN  identify_dispersion $
+  IF NOT KEYWORD_SET(names) THEN  identify_dispersion, 'PARA' $
      , all_tplot_names.parallel_epcut_beam_name $
      , all_tplot_names.parallel_dispersion_name $
      , all_tplot_names.parallel_beam_inverse_v_name $
@@ -400,11 +505,12 @@ calculate_denergy, all_tplot_names.diffflux_o1_parallel_name,all_tplot_names.par
      , all_tplot_names.parallel_dispersion_inverse_v_fitting_status_name $
      , all_tplot_names.parallel_dispersion_inverse_v_fitting_dof_name $
      , all_tplot_names.parallel_dispersion_n_name $
-     , ps_plot = ps, output_folder = output_path $
-     , dispersion_list = dispersion_list
+     , all_tplot_names.parallel_epcut_name $
+     , ps_plot = ps, idl_plot = idl_plot, output_folder = output_path $
+     , dispersion_list = dispersion_list, dispersion_inverse_v_fitting_rsquare_name =  all_tplot_names.parallel_dispersion_inverse_v_fitting_rsquare_name
 
   tplot_names, all_tplot_names.antiparallel_dispersion_n_name, names = names
-  IF NOT KEYWORD_SET(names) THEN identify_dispersion $
+  IF NOT KEYWORD_SET(names) THEN   identify_dispersion, 'ANTI' $
      , all_tplot_names.antiparallel_epcut_beam_name $
      , all_tplot_names.antiparallel_dispersion_name $
      , all_tplot_names.antiparallel_beam_inverse_v_name $
@@ -416,8 +522,9 @@ calculate_denergy, all_tplot_names.diffflux_o1_parallel_name,all_tplot_names.par
      , all_tplot_names.antiparallel_dispersion_inverse_v_fitting_status_name $
      , all_tplot_names.antiparallel_dispersion_inverse_v_fitting_dof_name $
      , all_tplot_names.antiparallel_dispersion_n_name $
-     , ps_plot = ps, output_folder = output_path $
-    , dispersion_list = dispersion_list
+     , all_tplot_names.antiparallel_epcut_name $
+     , ps_plot = ps, idl_plot = idl_plot, output_folder = output_path $
+     , dispersion_list = dispersion_list, dispersion_inverse_v_fitting_rsquare_name =  all_tplot_names.antiparallel_dispersion_inverse_v_fitting_rsquare_name
 
 ;------------- -------------------------------------------------------
 ; Save tplot varialbes 

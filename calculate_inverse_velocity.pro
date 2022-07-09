@@ -8,9 +8,9 @@
 
 PRO calculate_inverse_velocity, sp, epcut_beam_name, epcut_beam_denergy_name, inverse_v_name
 
-  Avogadro_constant = 6.02214086e23
-  electron_charge = 1.60217662e-19 ;coulombs
-  IF sp EQ '3' THEN ion_mass = 15.98
+;  Avogadro_constant = 6.02214086e23
+;  electron_charge = 1.60217662e-19 ;coulombs
+;  IF sp EQ '3' THEN ion_mass = 15.98
 
 ;-- Calculation --
 ; read in energy
@@ -29,8 +29,12 @@ PRO calculate_inverse_velocity, sp, epcut_beam_name, epcut_beam_denergy_name, in
 
   data_1_of_vel = 1/data_vel
 
-  data_vel_low = sqrt(2.*(data_energy-data_denergy)*electron_charge/(ion_mass/Avogadro_constant/1e3))/1e3 
-  data_vel_high = sqrt(2.*(data_energy+data_denergy)*electron_charge/(ion_mass/Avogadro_constant/1e3))/1e3   
+  calculate_velocity_from_energy, data_energy-data_denergy, 3, data_vel_low
+  calculate_velocity_from_energy, data_energy+data_denergy, 3, data_vel_high
+ 
+;  data_vel_low = sqrt(2.*(data_energy-data_denergy)*electron_charge/(ion_mass/Avogadro_constant/1e3))/1e3 
+
+;  data_vel_high = sqrt(2.*(data_energy+data_denergy)*electron_charge/(ion_mass/Avogadro_constant/1e3))/1e3   
 
 ; inverse change the low / high direction  
   data_1_of_vel_low = -1./data_vel_high + data_1_of_vel

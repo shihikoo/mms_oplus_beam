@@ -5,7 +5,7 @@ PRO calculate_velocity_from_energy, energy, sp, vel
 ; Ion mass in amu
   CASE sp OF                      
      0: BEGIN                                                  
-        ion_mass = 1.0                  
+        ion_mass = 1.0              
         sp_str = 'h'                  
      END                                      
      1: BEGIN                                     

@@ -1,5 +1,6 @@
 ;----------------------------------------------------------------
-; Purpose:  Convert pitch angle plot to earth tail direction and then filter energy peak and erange data with beam duration.
+; Purpose:  Convert pitch angle plot to earth tail direction and then
+; filter energy peak and erange data with beam duration (continuity check)
 ;
 ; Input: pap_name
 ;        cpcut_name
@@ -33,9 +34,9 @@ PRO filter_beams, pap_name, epcut_name, erange_name, pap_beam_name, epcut_beam_n
 
   get_data, erange_name, data = data
   energy_range = data.y
-
+  
   n_time = N_ELEMENTS(time_avg)
-  npa = N_ELEMENTS(pa_pap(0, *)) 
+  npa = N_ELEMENTS(pa_pap(0, *))
   IF ~KEYWORD_SET(diff_e) THEN diff_e = 2  ; accepted energy bin difference 
   IF ~KEYWORD_SET(diff_pa) THEN diff_pa = 2 ; accepted pitch bin difference
   IF ~KEYWORD_SET(diff_time) THEN diff_time = 1 ; beams are defined as beam before and after 1 times of average time. 

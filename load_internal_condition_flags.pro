@@ -34,6 +34,11 @@ PRO load_swP_flag, data, swP_filter, swP_flag_para, swP_flag_anti
   swP_flag_anti = load_flag(data.sw_P_anti, swP_filter,/set_nan)
 END
 
+PRO load_swV_flag, data, swV_filter, swV_flag_para, swV_flag_anti  
+  swV_flag_para = load_flag(abs(data.sw_V_para), swV_filter,/set_nan)
+  swV_flag_anti = load_flag(abs(data.sw_V_anti), swV_filter,/set_nan)
+END
+
 PRO load_direction_flag, data, direction, direction_flag_para, direction_flag_anti
   ndata = N_ELEMENTS(data.Time)
   direction_flag_para = DBLARR(ndata)
@@ -44,12 +49,12 @@ PRO load_direction_flag, data, direction, direction_flag_para, direction_flag_an
      direction_flag_anti[*] = 0
   ENDIF 
   
-  IF direction EQ 'anti' THEN BEGIN 
+  IF direction EQ 'both' THEN BEGIN 
      direction_flag_para[*] = data.flag_para EQ 1 AND data.flag_anti EQ 1
      direction_flag_anti[*] = data.flag_para EQ 1 AND data.flag_anti EQ 1
   ENDIF 
 
-  IF direction EQ 'both' THEN BEGIN 
+  IF direction EQ 'anti' THEN BEGIN 
      direction_flag_para[*] = 0 
      direction_flag_anti[*] = 1
   ENDIF 
@@ -59,9 +64,21 @@ PRO load_direction_flag, data, direction, direction_flag_para, direction_flag_an
      direction_flag_anti[*] = 1
   ENDIF
 
+  if direction eq 'outflow' then begin
+     direction_flag_para = 0
+     direction_flag_anti = 0
+     
+     index = where((data.gsm_x gt -1 and data.gsm_z le 0) or (data.gsm_x le -1 and data.bx_gsm le 0), ct)
+     direction_flag_para[index] = 1    
+
+     index = where((data.gsm_x gt -1 and data.gsm_z gt 0) or (data.gsm_x le -1 and data.bx_gsm gt 0), ct)
+     direction_flag_anti[index] = 1
+
+  endif
+
   direction_flag_para = FLOAT(direction_flag_para)
   direction_flag_anti = FLOAT(direction_flag_anti)
-
+; stop
  END
 
 ;----------------------------------------------------------------
@@ -72,15 +89,16 @@ PRO load_direction_flag, data, direction, direction_flag_para, direction_flag_an
 ; solar wind conditions are considered internal conditions here
 ;----------------------------------------------------------------
 
-PRO load_internal_condition_flags, data, direction, energy_filter, imfBz_filter, imfBy_filter, swP_filter, flag_int_condition_para, flag_int_condition_anti
+PRO load_internal_condition_flags, data, direction, energy_filter, imfBz_filter, imfBy_filter, swP_filter,swV_filter, flag_int_condition_para, flag_int_condition_anti
  
  load_energy_flag, data, energy_filter, energy_flag_para, energy_flag_anti
  load_imfBz_flag, data, imfBz_filter, imfBz_flag_para, imfBz_flag_anti
  load_imfBy_flag, data, imfBy_filter, imfBy_flag_para, imfBy_flag_anti
  load_swP_flag, data, swP_filter, swP_flag_para, swP_flag_anti
+ load_swV_flag, data, swV_filter, swV_flag_para, swV_flag_anti
  load_direction_flag, data, direction, direction_flag_para, direction_flag_anti
  
- flag_int_condition_para = direction_flag_para * energy_flag_para * imfBz_flag_para * swP_flag_para * imfBy_flag_para
- flag_int_condition_anti = direction_flag_anti * energy_flag_anti * imfBz_flag_anti * swP_flag_anti * imfBy_flag_anti
+ flag_int_condition_para = direction_flag_para * energy_flag_para * imfBz_flag_para * swP_flag_para * imfBy_flag_para *  swV_flag_para
+ flag_int_condition_anti = direction_flag_anti * energy_flag_anti * imfBz_flag_anti * swP_flag_anti * imfBy_flag_anti *  swV_flag_anti
 
 END

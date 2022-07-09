@@ -1,4 +1,4 @@
-;-------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 ; Purpose: Identify O+ beam over the given time period
 ;          Routine divide the given period into calculation time period, and run
 ;          the find O+ beam routine for it
@@ -23,32 +23,43 @@
 ; Written by Jing Liao  03/10/2021
 ;-------------------------------------------------------------------------------
 
-PRO plot_o_beam_day_mms, time_start = time_start, time_end = time_end, stop = stop, beam_recalc = beam_recalc, store_tplot = store_tplot, ps = ps, save_data = save_data, idl_plot = idl_plot, diff_e = diff_e, diff_pa = diff_pa
+PRO plot_o_beam_day_mms, time_start = time_start, time_end = time_end, stop = stop, beam_recalc = beam_recalc, store_tplot = store_tplot, ps = ps, save_data = save_data, idl_plot = idl_plot, diff_e = diff_e, diff_pa = diff_pa, time_duration = time_duration, subtraction = subtraction, reduced = reduced
 ;---------------------------------------------------------------
-; Handle keywords
+; Handle keyword
 ;--------------------------------------------------------------
   IF NOT keyword_set(sc) THEN sc = 1 ; set the satallite number   
   IF NOT keyword_set(sp) THEN sp = 3 ; set the species, 0: H+, 3: O+
   IF NOT keyword_set(time_start) THEN  time_start = '2016-01-01/00:00:00'
-  IF NOT keyword_set(time_end) THEN time_end = '2018-01-01/00:00:00'
+
+  IF KEYWORD_SET(time_duration) AND KEYWORD_SET(time_end) THEN BEGIN
+     PRINT, 'Cannot have time_end and time_duration at the same time.'
+     STOP
+  ENDIF ELSE IF (NOT keyword_set(time_end)) AND NOT (keyword_set(time_duration)) THEN BEGIN
+     time_end = '2021-01-01/00:00:00'
+  ENDIF ELSE IF NOT KEYWORD_SET(time_end) AND keyword_set(time_duration) THEN time_end = time_string(time_double(time_start) + time_duration*24.*3600.) ; second
+  
 ;------------------------------------------------------------------
 ; Settings for running process
 ;-----------------------------------------------------------------
   dt = time_double(time_end)-time_double(time_start)
   
   calc_time = 24.* 60. * 60. < dt ; in seconds
-  display_time = 6. * 60 * 60 < dt ; in seconds
+  display_time = 4. * 60 * 60 < dt ; in seconds
   average_time = 2 * 60         ; in seconds 
+
 ;----------------------------------------------------
 ; Set up folders and log filenames
 ;-----------------------------------------------------
-  output_path = 'output/'
-  IF average_time EQ 120 THEN output_path = 'output_2min/'
-
-  IF KEYWORD_SET(diff_pa) THEN IF diff_pa EQ 1 THEN  output_path = 'output_pa1/'
+  output_path = 'output'
+  IF average_time EQ 120 THEN output_path = output_path + '_2min'
+  IF KEYWORD_SET(diff_pa) THEN IF diff_pa EQ 1 THEN  output_path = output_path + '_pa1'
+  if keyword_set(subtraction) then output_path = output_path + '_subtraction'
+  if keyword_set(reduced) then output_path = output_path + '_reduced'
+  output_path = output_path + '/'
+  
   tplot_path = output_path + 'tplot_daily/'
   log_path = output_path + 'log/'
-
+  
   spawn, 'mkdir -p '+ tplot_path
   spawn, 'mkdir -p '+ output_path+'data/'
   spawn, 'mkdir -p '+ output_path+'plots/'
@@ -81,14 +92,17 @@ PRO plot_o_beam_day_mms, time_start = time_start, time_end = time_end, stop = st
                       , store_tplot = store_tplot $
                       , beam_recalc = beam_recalc $      
                       , output_path = output_path $
+                      , low_count_line = low_count_line $
                       , plot_low_count_filter =  plot_low_count_filter $  
                       , displaytime = display_time $
                       , plot_all = plot_all $
                       , flux_threshold=flux_threshold $
                       , diff_e = diff_e $
-                      , diff_pa = diff_pa
+                      , diff_pa = diff_pa $
+                      , subtraction = subtraction $
+                      , reduced = reduced
   ENDFOR   
 ; write [END] in the logs 
   write_text_to_file, log_filename, '[END]', /APPEND
-  print, time_start, time_end
+  print,time_start, time_end
 END 

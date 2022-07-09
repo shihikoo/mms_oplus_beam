@@ -6,13 +6,19 @@
 ; Written by Jing Liao
 ; Written on 04/21/20211
 ;---------------------------------------------------------------
-FUNCTION read_daily_csv_into_matrix, jd_s, ndays, data_path
+FUNCTION read_daily_csv_into_matrix, jd_s, ndays, data_path, avoid_compression_time = avoid_compression_time, avoid_2019 = avoid_2019
   FOR iday = 0l, ndays-1 DO BEGIN          ; Loop trough all days   
      caldat, jd_s + iday, month, day, year ; find caledar date
+   
      month_str = string(month, format = '(i2.2)')
      day_str = string(day, format = '(i2.2)')
      year_str = string(year, format = '(i4.4)')
      fln = data_path + 'storm_o_beam_'+year_str+month_str+day_str  +'.csv'
+
+     start_date_double = time_double(year_str+'-'+month_str+'-'+day_str)
+     if keyword_set(avoid_compression_time) and start_date_double ge time_double('2019-04-17') and start_date_double le time_double('2019-08-17') then continue
+     if keyword_set(avoid_2019) and start_date_double ge time_double('2019-01-01') and start_date_double le time_double('2019-12-31') then continue
+     
      names = FINDFILE(fln, count = ct)
      IF ct EQ 1 THEN BEGIN
         idata_structured = READ_CSV(names(0), HEADER = header)
@@ -125,8 +131,8 @@ END
 ;Inputs: data, header
 ;Output: data
 ;---------------------------------------------------------------------------------------
-FUNCTION read_daily_csv, jd_s, ndays, data_path,ts,te
-  raw_data = read_daily_csv_into_matrix(jd_s, ndays, data_path)
+FUNCTION read_daily_csv, jd_s, ndays, data_path,ts,te, avoid_compression_time = avoid_compression_time, avoid_2019 = avoid_2019
+  raw_data = read_daily_csv_into_matrix(jd_s, ndays, data_path, avoid_compression_time = avoid_compression_time, avoid_2019 = avoid_2019)
   data_matrix = raw_data.data
   header = raw_data.header
 
@@ -144,7 +150,7 @@ END
 ; Created by Jing Liao
 ; Created on 04/13/2021
 ;---------------------------------------------------------------------------------------------------------
-FUNCTION read_daily_data, time_start, time_end, tplot_path, data_path, read_from_dat = read_from_dat,store_tplot=store_tplot
+FUNCTION read_daily_data, time_start, time_end, tplot_path, data_path, read_from_dat = read_from_dat,store_tplot=store_tplot, avoid_compression_time = avoid_compression_time, avoid_2019 = avoid_2019
 
 ;--- set the time info ---
   ts = time_double(time_start) &  te = time_double(time_end) & dt = te-ts
@@ -177,7 +183,7 @@ FUNCTION read_daily_data, time_start, time_end, tplot_path, data_path, read_from
      GET_DATA, 'data', data = saved_data
      data = saved_data.data
   ENDIF ELSE BEGIN
-     input_data = READ_DAILY_CSV(jd_s, ndays, data_path,ts,te)
+     input_data = READ_DAILY_CSV(jd_s, ndays, data_path,ts,te, avoid_compression_time = avoid_compression_time , avoid_2019 = avoid_2019)
      data = input_data.data
 
      data = calculate_daily_data(data)

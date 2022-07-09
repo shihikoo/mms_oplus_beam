@@ -7,7 +7,7 @@ FUNCTION calculate_field_line_length, datetime_str, xgsm, ygsm, zgsm, model = mo
 
   geopack_recalc, year, month, date, hour, minute, second, tilt = tilt, /date
 
-  IF model EQ 't89' THEN parmod = [kp+1] ELSE parmod = [pdyn, Dst, imfBy, imfBz, 0., 0., tilt, xgsm, ygsm, zgsm]
+  IF model EQ 't89' THEN parmod = [(kp+1)<7.] ELSE parmod = [pdyn, Dst, imfBy, imfBz, 0., 0., tilt, xgsm, ygsm, zgsm]
   IF model EQ 't89' THEN t89 = 1 
   IF model EQ 't96' THEN t96 = 1
   IF model EQ 't01' THEN t01 = 1

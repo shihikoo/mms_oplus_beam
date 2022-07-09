@@ -4,7 +4,7 @@
 ; Written by Jing Liao
 ; Written on 05/10/2021
 ;------------------------------------------------
-PRO load_axis, data, plot_axis, data_pos, range, log
+PRO load_axis, data, plot_axis, data_pos, range, log, range_input = range_input
   ntime = N_ELEMENTS(data.time)
   data_pos = DBLARR(ntime, 3) 
   range = FLTARR(2, 3)
@@ -13,7 +13,7 @@ PRO load_axis, data, plot_axis, data_pos, range, log
   FOR i = 0, 2 DO BEGIN 
      IF PLOT_AXIS(i) EQ 'X_GSE' THEN BEGIN 
         data_pos(*, i) = data.gse_x
-        range(*, i) = [15., -25.] 
+        range(*, i) = [15., -25.]
         log(i) = 0
      ENDIF 
      IF PLOT_AXIS(i) EQ 'Y_GSE' THEN BEGIN 
@@ -27,18 +27,20 @@ PRO load_axis, data, plot_axis, data_pos, range, log
         log(i) = 0
      ENDIF 
      IF PLOT_AXIS(i) EQ 'X_GSM' THEN BEGIN 
-        data_pos(*, i) = data.gsm_x 
-        range(*, i) = [-25., 10] 
+        data_pos(*, i) = data.gsm_x ;
+;        range(*, i) = [-30., 10.] 
+        range(*,i) = [-30., 10.]
         log(i) = 0
      ENDIF 
      IF PLOT_AXIS(i) EQ 'Y_GSM' THEN BEGIN 
         data_pos(*, i) = data.gsm_y
-        range(*, i) = [-25., 25.]
+;          range(*, i) = [-20., 20.]
+        range(*, i) = [-20, 20.]
         log(i) = 0
      ENDIF 
      IF PLOT_AXIS(i) EQ 'Z_GSM' THEN BEGIN 
-        data_pos(*, i) = data.gsm_z 
-        range(*, i) = [-25., 25.]
+        data_pos(*, i) = data.gsm_z
+        range(*, i) = [-20., 20.] 
         log(i) = 0
      ENDIF 
      IF PLOT_AXIS(i) EQ 'MLT' THEN BEGIN 
@@ -48,7 +50,7 @@ PRO load_axis, data, plot_axis, data_pos, range, log
      ENDIF 
      IF PLOT_AXIS(i) EQ 'ILAT' THEN BEGIN 
         data_pos(*, i) = ABS(data.ilat)
-        range(*, i) = [0.,40.] 
+        range(*, i) = [0.,40.]  
         log(i) = 0
      ENDIF 
      IF PLOT_AXIS(i) EQ 'DIST' THEN BEGIN 
@@ -67,6 +69,8 @@ PRO load_axis, data, plot_axis, data_pos, range, log
         log(i) = 1
      ENDIF 
 
+     if keyword_set(range_input) then range(*,2) = range_input
+     
      PRINT, '    '+PLOT_AXIS(i)+'     '
   ENDFOR   
 END
@@ -127,12 +131,13 @@ END
 FUNCTION load_region_flag, data, region
 
   CASE region OF
-     'All'      : flag_region = data.time GT 0
+     'all'      : flag_region = data.time GT 0
      'Lobe'     : flag_region = (data.mlt GT 16 OR data.mlt LT 8) AND (data.beta LE 0.05)
      'BL'       : flag_region = (data.mlt GT 16 OR data.mlt LT 8) AND (data.beta LE 1 AND data.beta GT 0.05)
      'PS'       : flag_region = (data.mlt GT 16 OR data.mlt LT 8) AND (data.beta GT 1)
      'Dayside'  : flag_region = (data.mlt GE 8) and (data.mlt LE 16)      
-     'BetaLE005': flag_regionn = data.beta LE 0.05
+     'BetaLE005': flag_region = data.beta LE 0.05
+     'Tail'     : flag_region = (data.mlt GT 16) OR (data.mlt LT 8)
   ENDCASE
   
   flag_region = FLOAT(flag_region)

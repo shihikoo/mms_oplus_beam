@@ -14,7 +14,9 @@ FUNCTION calculate_B_model, datetime_str, xgsm, ygsm, zgsm, model = model, kp = 
   geopack_igrf_gsm, xgsm, ygsm, zgsm, bx0, by0, bz0
 
   IF model EQ 't89' THEN BEGIN
-     parmod = kp + 1
+; t89 is quiet model and parmod needs to be [1,7], we use 7 for all kp
+; > 6
+     parmod = (kp + 1) < 7.
      geopack_t89, parmod, xgsm, ygsm, zgsm, dbx, dby, dbz, tilt = tilt 
   ENDIF 
 

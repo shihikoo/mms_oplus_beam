@@ -40,6 +40,11 @@ PRO find_energy_range_from_enspec, enspec_name, epcut_name, erange_name
      IF ct GT 0 THEN BEGIN 
         energy_peak(iii) = energy(iii, index(0))
         energy_range(iii, *) = [energy(iii, (index(0)+1) < (n_energybins_good-1)), energy(iii, (index(0)-1) > 0)]
+
+; code for filter the peak with good peak or not. Not in use
+;        if ((index(0)+1) < (n_energybins_good-1)) ne index(0) and energy_peak(iii)/energy_range(iii,0) lt 2 then good_energy_peak_flag = 0 else good_energy_peak_flag = 1
+;        if ((index(0)-1) > 0) ne index(0) and energy_peak(iii)/energy_range(iii,1) lt 2 then good_energy_peak_flag = 0 else good_energy_peak_flag = 1
+
  ; divide by 16. because in codif sometimes, there are 32 bins       
         i_f = index(0)-round(n_energybins/16.) > 0
         WHILE i_f GT 0 DO BEGIN
@@ -66,12 +71,12 @@ PRO find_energy_range_from_enspec, enspec_name, epcut_name, erange_name
      ENDELSE 
   ENDFOR  
 
- epcut_name = enspec_name+'_epcut'
+; epcut_name = enspec_name+'_epcut'
  str = {x: time, y: energy_peak, energybins: energybins }
  store_data, epcut_name, data = str, dlim = {psym: -3}
      
- erange_name = enspec_name+'_erange'
+; erange_name = enspec_name+'_erange'
  str = {x: time, y: energy_range, energybins: energybins }
  store_data, erange_name, data = str, dlim = {psym: -3}
-
+;stop
 END

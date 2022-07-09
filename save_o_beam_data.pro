@@ -27,9 +27,9 @@ PRO save_o_beam_data, date_s, date_e, output_path, all_tplot_names
               , 'SW_v_anti', 'SW_p_anti', 'SW_n_anti', 'SW_t_anti','alfven_mack_anti' $
 
               , 'Storm_phase', 'Substorm_phase' $
-              , 'n_dispersion_para', 'estimated_distance_para', 'dis_fitting_chisq_para' $
+              , 'n_dispersion_para', 'estimated_distance_para', 'dis_fitting_chisq_para', 'dis_fitting_rsquare_para' $
               , 'dis_fitting_status_para', 'dis_fitting_dof_para', 'dis_fitting_sigma_para' $
-              , 'n_dispersion_anti', 'estimated_distance_anti', 'dis_fitting_chisq_anti' $
+              , 'n_dispersion_anti', 'estimated_distance_anti', 'dis_fitting_chisq_anti', 'dis_fitting_rsquare_anti' $
               , 'dis_fitting_status_anti', 'dis_fitting_dof_anti', 'dis_fitting_sigma_anti' $
               , 'Flag_para', 'Pa_para', 'Flux_para' , 'Eflux_para' $
               , 'Flag_anti', 'Pa_anti', 'Flux_anti' , 'Eflux_anti' $
@@ -81,12 +81,14 @@ PRO save_o_beam_data, date_s, date_e, output_path, all_tplot_names
                           , all_tplot_names.parallel_dispersion_n_name $
                           , all_tplot_names.parallel_dispersion_estimated_distance_name $
                           , all_tplot_names.parallel_dispersion_inverse_v_fitting_chisq_name $
+  , all_tplot_names.parallel_dispersion_inverse_v_fitting_rsquare_name $
                           , all_tplot_names.parallel_dispersion_inverse_v_fitting_status_name $
                           , all_tplot_names.parallel_dispersion_inverse_v_fitting_dof_name $
                           , all_tplot_names.parallel_dispersion_inverse_v_fitting_sigma_name $
                           , all_tplot_names.antiparallel_dispersion_n_name $
                           , all_tplot_names.antiparallel_dispersion_estimated_distance_name $
                           , all_tplot_names.antiparallel_dispersion_inverse_v_fitting_chisq_name $
+ , all_tplot_names.antiparallel_dispersion_inverse_v_fitting_rsquare_name $
                           , all_tplot_names.antiparallel_dispersion_inverse_v_fitting_status_name $
                           , all_tplot_names.antiparallel_dispersion_inverse_v_fitting_dof_name $
                           , all_tplot_names.antiparallel_dispersion_inverse_v_fitting_sigma_name $
