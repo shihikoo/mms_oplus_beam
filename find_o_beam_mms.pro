@@ -1,9 +1,9 @@
-2;------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 ; Purpose: Identify O+ beam using from energy spec, pitch angle spec
 ;         and then make corresponding mom plot in page1 the whole procedure
 ;         plot in page2
 ;       
-; Keywords: sc           : Cluster no. if not set the default is 1
+; Keywords: sc           : Cluste no. if not set the default is 1
 ;           sp           :
 ;           t_s          :
 ;           t_e          : 
@@ -36,6 +36,7 @@ PRO find_o_beam_mms, sc = sc, $
                      displaytime = displaytime, $
                      plot_all_region = plot_all_region, $
                      flux_threshold = flux_threshold, $
+                     def_pap_factor = def_pap_factor, $
                      diff_e = diff_e, $
                      diff_pa = diff_pa, $
                      dispersion_list = dispersion_list, $
@@ -56,7 +57,8 @@ PRO find_o_beam_mms, sc = sc, $
   average_time = FLOAT(average_time)
 
   IF NOT KEYWORD_SET(flux_threshold) THEN flux_threshold = [0,0,0]
-
+  IF NOT KEYWORD_SET(def_pap_factor) THEN def_pap_factor = [1,1,1]
+  
 ; 800 is for eflux low count
   IF NOT keyword_set(low_count_line) then low_count_line = 800
   
@@ -165,7 +167,7 @@ PRO find_o_beam_mms, sc = sc, $
 ;----------------------------------
   if keyword_set(subtraction) then begin 
      tplot_names, '*subtracted*', names = names
-     if names(0) eq '' then begin
+     if not keyword_set(names)  then begin
         tplot_names, '*0_nflux_*', names = names
         store_data, delete = names
         tplot_names, 'PA*', names = names
@@ -273,21 +275,31 @@ PRO find_o_beam_mms, sc = sc, $
 ;-- Load H+ energy spectra --
   tplot_names, all_tplot_names.diffflux_h1_name, names = names
   IF NOT KEYWORD_SET(names) THEN plot_mms_hpca_en_spec, [sc], [0], 'DIFF FLUX',pa=[0,180]
-  tplot_names, all_tplot_names.diffflux_h1_para_name, names = names
-  IF NOT KEYWORD_SET(names) THEN plot_mms_hpca_en_spec, [sc], [0], 'DIFF FLUX',pa=[0,30]
-  tplot_names, all_tplot_names.diffflux_h1_perp_name, names = names
-  IF NOT KEYWORD_SET(names) THEN plot_mms_hpca_en_spec, [sc], [0], 'DIFF FLUX',pa=[75,105]
-  tplot_names, all_tplot_names.diffflux_h1_anti_name, names = names
-  IF NOT KEYWORD_SET(names) THEN plot_mms_hpca_en_spec, [sc], [0], 'DIFF FLUX',pa=[150,180]
+  
+    tplot_names, all_tplot_names.eflux_h1_name, names = names
+  IF NOT KEYWORD_SET(names) THEN plot_mms_hpca_en_spec, [sc], [0], 'EFLUX',pa=[0,180]
+
+ ; tplot_names, all_tplot_names.diffflux_h1_para_name, names = names
+ ; IF NOT KEYWORD_SET(names) THEN plot_mms_hpca_en_spec, [sc], [0], 'DIFF FLUX',pa=[0,30]
+ ; tplot_names, all_tplot_names.diffflux_h1_perp_name, names = names
+ ; IF NOT KEYWORD_SET(names) THEN plot_mms_hpca_en_spec, [sc], [0], 'DIFF FLUX',pa=[75,105]
+ ; tplot_names, all_tplot_names.diffflux_h1_anti_name, names = names
+ ; IF NOT KEYWORD_SET(names) THEN plot_mms_hpca_en_spec, [sc], [0], 'DIFF FLUX',pa=[150,180]
 
 ;-- Load H+ pitch angle spectra
   tplot_names, all_tplot_names.diffflux_h1_pa_name, names = names
   IF NOT KEYWORD_SET(names) THEN plot_mms_hpca_pa_spec, [sc], [0], 'DIFF FLUX', no_convert_en = 1, energy = [1.,4.e4]
   
+  tplot_names, all_tplot_names.eflux_h1_pa_name, names = names
+  IF NOT KEYWORD_SET(names) THEN plot_mms_hpca_pa_spec, [sc], [0], 'EFLUX', no_convert_en = 1, energy = [1.,4.e4]
+
 ;-- Load O+ energy spectra --
   tplot_names, all_tplot_names.diffflux_o1_name, names = names
   IF NOT KEYWORD_SET(names) THEN plot_mms_hpca_en_spec, [sc], [3], 'DIFF FLUX',pa=[0,180]
   
+  tplot_names, all_tplot_names.eflux_o1_name, names = names
+  IF NOT KEYWORD_SET(names) THEN plot_mms_hpca_en_spec, [sc], [3], 'EFLUX',pa=[0,180]
+
 ;-- Load O+ energy spectra - parallel --
   tplot_names, all_tplot_names.diffflux_o1_parallel_name, names =names
   IF NOT KEYWORD_SET(names) THEN plot_mms_hpca_en_spec, [sc], [sp], 'DIFF FLUX', pa = parallel_pa_range, energy = full_mms_energy_range
@@ -306,7 +318,14 @@ PRO find_o_beam_mms, sc = sc, $
   tplot_names, all_tplot_names.diffflux_o1_pa_name, names = names
   IF NOT KEYWORD_SET(names) THEN plot_mms_hpca_pa_spec, [sc], [sp], 'DIFF FLUX', no_convert_en = 1, energy = [1.,4.e4]
 
+  tplot_names, all_tplot_names.eflux_o1_pa_name, names = names
+  IF NOT KEYWORD_SET(names) THEN plot_mms_hpca_pa_spec, [sc], [sp], 'EFLUX', no_convert_en = 1, energy = [1.,4.e4]
+
+  average_tplot_variable_with_given_time, all_tplot_names.diffflux_h1_name, average_time, time_avg
+  average_tplot_variable_with_given_time, all_tplot_names.eflux_h1_name, average_time, time_avg
   average_tplot_variable_with_given_time, all_tplot_names.diffflux_o1_pa_name, average_time, time_avg
+  average_tplot_variable_with_given_time, all_tplot_names.eflux_h1_pa_name, average_time, time_avg
+  average_tplot_variable_with_given_time, all_tplot_names.eflux_o1_pa_name, average_time, time_avg
 
 ;------------------------------------------------------------------------------------------------------
 ; preprocess energy spectra
@@ -347,42 +366,40 @@ PRO find_o_beam_mms, sc = sc, $
      anti_enspec_name = all_tplot_names.diffflux_o1_antiparallel_subtracted_name
   endif
 
-; timespan,'2019-04-30/12',6,/hour
-;zlim,[122,127],0.1,100
-;tplot,[122,127]
-
-; stop
 ;------------------------------------------------------------------------------
 ; Identify O+ beam for different directions or pitch angle ranges
 ;-------------------------------------------------------------------------------
 ; parallel 
-  tplot_names, all_tplot_names.parallel_epcut_beam_name, names = names
-  IF NOT KEYWORD_SET(names(0)) THEN identify_beams, [sc], [sp],  para_enspec_name,  all_tplot_names.eflux_o1_parallel_name $
+  ;tplot_names, all_tplot_names.parallel_epcut_beam_name, names = names
+  ;IF NOT KEYWORD_SET(names(0)) THEN
+  identify_beams, [sc], [sp],  para_enspec_name,  all_tplot_names.eflux_o1_parallel_name $
      ,  average_time, time_avg $ 
      ,  all_tplot_names.beta_name $
      , t_s = adjusted_t_s, t_e= adjusted_t_e $
      , pa_range = [0,90], peak_pa_range = parallel_pa_range $
-     , low_count_line = low_count_line, pa_count_line = pa_count_line $
-                                ;              , plot_low_count_filter = plot_low_count_filter, low_count_filename= low_count_filename_para $
-     , flux_threshold = flux_threshold , erange_name = all_tplot_names.parallel_erange_name, epcut_name = all_tplot_names.parallel_epcut_name $
-     , pa_name =  all_tplot_names.parallel_pa_name, pa_eflux_name =  all_tplot_names.parallel_pa_eflux_name $  
+     , low_count_line = low_count_line, pa_count_line = pa_count_line $                        
+     , flux_threshold = flux_threshold , def_pap_factor = def_pap_factor $
+     , erange_name = all_tplot_names.parallel_erange_name, epcut_name = all_tplot_names.parallel_epcut_name $
+     , pa_name =  all_tplot_names.parallel_pa_name, pa_eflux_name =  all_tplot_names.parallel_pa_eflux_name $
+     , pa_h_name =  all_tplot_names.parallel_pa_h_name, pa_eflux_h_name =  all_tplot_names.parallel_pa_eflux_h_name $ 
      , pap_name =  all_tplot_names.parallel_pap_name $
      , pap_beam_name =  all_tplot_names.parallel_pap_beam_name $
      , epcut_beam_name = all_tplot_names.parallel_epcut_beam_name, erange_beam_name =  all_tplot_names.parallel_erange_beam_name $
-                                ; , dlimf = dlimf, limf = limf, dlimc = dlimc, limc = limc    , error_message = error_message
      , bin_size_pa = bin_size_pa, diff_e = diff_e, diff_pa = diff_pa
   
 ; antiparallel
-  tplot_names,  all_tplot_names.antiparallel_epcut_beam_name, names = names
-  IF NOT KEYWORD_SET(names) THEN  identify_beams, [sc], [sp],anti_enspec_name ,  all_tplot_names.eflux_o1_antiparallel_name $
+;  tplot_names,  all_tplot_names.antiparallel_epcut_beam_name, names = names
+;  IF NOT KEYWORD_SET(names) THEN
+  identify_beams, [sc], [sp],anti_enspec_name ,  all_tplot_names.eflux_o1_antiparallel_name $
      ,  average_time, time_avg $
      ,  all_tplot_names.beta_name $
      , t_s = adjustd_t_s, t_e= adjusted_t_e $
      , pa_range = [90,180], peak_pa_range = antiparallel_pa_range $
      , low_count_line = low_count_line, pa_count_line = pa_count_line $
-;, plot_low_count_filter = plot_low_count_filter, low_count_filename= low_count_filename_anti $
-     , flux_threshold = flux_threshold  , erange_name = all_tplot_names.antiparallel_erange_name, epcut_name = all_tplot_names.antiparallel_epcut_name $
+     , flux_threshold = flux_threshold, def_pap_factor = def_pap_factor $
+     , erange_name = all_tplot_names.antiparallel_erange_name, epcut_name = all_tplot_names.antiparallel_epcut_name $
      , pa_name =  all_tplot_names.antiparallel_pa_name, pa_eflux_name = all_tplot_names.antiparallel_pa_eflux_name $
+     , pa_h_name =  all_tplot_names.antiparallel_pa_h_name, pa_eflux_h_name = all_tplot_names.antiparallel_pa_eflux_h_name $
      , pap_name =  all_tplot_names.antiparallel_pap_name $ 
      , pap_beam_name =  all_tplot_names.antiparallel_pap_beam_name $
      , epcut_beam_name =  all_tplot_names.antiparallel_epcut_beam_name, erange_beam_name =  all_tplot_names.antiparallel_erange_beam_name $

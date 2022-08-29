@@ -100,7 +100,7 @@ PRO make_points_map, data_pos, flag_para, flag_anti, beta, mlt, range, log, path
   
   IF KEYWORD_SET(ps_plot) THEN BEGIN 
      png_filename = STRMID(filename, 0, STRPOS(filename,'.ps')) + '.png'  
-     spawn, 'mogrify -format png '+ filename
+     spawn, 'mogrify -format png -alpha opaque -density 150'+ filename
      spawn, 'mogrify -rotate -90 '+ png_filename
      spawn, 'rm -f ' + filename      
   ENDIF 

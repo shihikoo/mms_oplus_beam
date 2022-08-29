@@ -143,5 +143,5 @@ PRO plot_pa_spec_around_energy_peak_mms, sat, specie, units_name, epcut_name, er
 
 ;set the timespan as before 
   timespan, interval(0), interval(1)-interval(0), /SECONDS
-
+;stop
 END

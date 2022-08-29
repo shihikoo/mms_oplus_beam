@@ -45,7 +45,7 @@ PRO find_energy_range_from_enspec, enspec_name, epcut_name, erange_name
 ;        if ((index(0)+1) < (n_energybins_good-1)) ne index(0) and energy_peak(iii)/energy_range(iii,0) lt 2 then good_energy_peak_flag = 0 else good_energy_peak_flag = 1
 ;        if ((index(0)-1) > 0) ne index(0) and energy_peak(iii)/energy_range(iii,1) lt 2 then good_energy_peak_flag = 0 else good_energy_peak_flag = 1
 
- ; divide by 16. because in codif sometimes, there are 32 bins       
+; divide by 16. because in codif sometimes, there are 32 bins       
         i_f = index(0)-round(n_energybins/16.) > 0
         WHILE i_f GT 0 DO BEGIN
            IF flux(iii, index(0))/flux(iii, i_f) LE 10. THEN BEGIN  

@@ -498,21 +498,34 @@ PRO make_o_beam_tplots, sc_str, t_s, t_e, t_dt, output_path, all_tplot_names, di
            popen, fln, /port
         ENDIF         
      
-        options, all_tplot_names.diffflux_h1_pa_name, 'ytitle', 'H!U+!N!CPA'   
+        options, all_tplot_names.diffflux_h1_pa_name, 'ytitle', 'H!U+!N!CPA'
+        options,  all_tplot_names.parallel_pa_h_name, 'ytitle', 'H+'
+        options,  all_tplot_names.parallel_pa_eflux_name, 'ytitle', 'O+!Ceflux'
+        options,  all_tplot_names.parallel_pa_eflux_h_name, 'ytitle', 'H+!Ceflux'
+        
         options, all_tplot_names.parallel_epcut_beam_name,'thick', 5
         options, all_tplot_names.antiparallel_epcut_beam_name,'thick', 5
            
         ylim, all_tplot_names.diffflux_o1_parallel_name,  1., 4e4, 1
         ylim, all_tplot_names.diffflux_o1_antiparallel_name, 1., 4e4, 1
+        zlim, [ all_tplot_names.parallel_pa_h_name, all_tplot_names.antiparallel_pa_h_name],10,1e4
+        zlim,[ all_tplot_names.parallel_pa_eflux_name, all_tplot_names.antiparallel_pa_eflux_name],1e3,1e6
+        zlim,[   all_tplot_names.parallel_pa_eflux_h_name,  all_tplot_names.antiparallel_pa_eflux_h_name ],1e6,1e9
         
         tplot_names, all_tplot_names.diffflux_o1_parallel_subtracted_name , names = names
         if keyword_set(names) then begin
            tplot, [all_tplot_names.beta_name, all_tplot_names.diffflux_h1_name, all_tplot_names.diffflux_h1_pa_name $
                    , all_tplot_names.diffflux_o1_name,  all_tplot_names.diffflux_o1_pa_name $
                    , all_tplot_names.diffflux_o1_parallel_subtracted_name $
-                   , all_tplot_names.diffflux_o1_antiparallel_subtracted_name $
                    , all_tplot_names.parallel_pa_name $
+                   , all_tplot_names.parallel_pa_h_name $
+                   , all_tplot_names.parallel_pa_eflux_name $
+                   , all_tplot_names.parallel_pa_eflux_h_name $
+                   , all_tplot_names.diffflux_o1_antiparallel_subtracted_name $
                    , all_tplot_names.antiparallel_pa_name $
+                   , all_tplot_names.antiparallel_pa_h_name $
+                   , all_tplot_names.antiparallel_pa_eflux_name $
+                   , all_tplot_names.antiparallel_pa_eflux_h_name $
                   ], var_label = var_label
            
      ;      tplot_panel, v = all_tplot_names.h1_density_name, o = all_tplot_names.o1_density_name
@@ -522,10 +535,16 @@ PRO make_o_beam_tplots, sc_str, t_s, t_e, t_dt, output_path, all_tplot_names, di
            tplot, [all_tplot_names.beta_name, all_tplot_names.diffflux_h1_name, all_tplot_names.diffflux_h1_pa_name $
                    , all_tplot_names.diffflux_o1_name,  all_tplot_names.diffflux_o1_pa_name $
                    , all_tplot_names.diffflux_o1_parallel_name $
+                   , all_tplot_names.parallel_pa_name $
+                   , all_tplot_names.parallel_pa_h_name $
+                    , all_tplot_names.parallel_pa_eflux_name $
+                   , all_tplot_names.parallel_pa_eflux_h_name $
                    , all_tplot_names.diffflux_o1_antiparallel_name $
     ;               , all_tplot_names.diffflux_o1_pa_name $
-                   , all_tplot_names.parallel_pa_name $
                    , all_tplot_names.antiparallel_pa_name $
+                   , all_tplot_names.antiparallel_pa_h_name $
+                     , all_tplot_names.antiparallel_pa_eflux_name $
+                   , all_tplot_names.antiparallel_pa_eflux_h_name $
                   ], var_label = var_label
            
    ;        tplot_panel, v = all_tplot_names.h1_density_name, o = all_tplot_names.o1_density_name
@@ -536,7 +555,7 @@ PRO make_o_beam_tplots, sc_str, t_s, t_e, t_dt, output_path, all_tplot_names, di
         yline, all_tplot_names.beta_name, offset = 0.05, col = 2
         yline, all_tplot_names.beta_name, offset = 1, col = 2
         
-        index = WHERE( dispersion_list_start_time GE t_s+idisplay*displaytime AND  dispersion_list_start_time LE t_s+(idisplay+1)*displaytime, ct)
+        index = WHERE(dispersion_list_start_time GE t_s+idisplay*displaytime AND  dispersion_list_start_time LE t_s+(idisplay+1)*displaytime, ct)
         FOR ii = 0, ct-1 DO BEGIN 
            iindex = index[ii]
            timebar, dispersion_list_start_time[index[ii]], color = 2
