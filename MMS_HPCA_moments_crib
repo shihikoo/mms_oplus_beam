@@ -1,0 +1,4 @@
+;+++++++++++++++ plot O+ beam with MMS +++++++++++++++++++++++++++++
+
+
+plot_o_beam_day_mms, ps=1, store_tplot =1, save_data =1, time_start='2016-09-25', time_duration = 1

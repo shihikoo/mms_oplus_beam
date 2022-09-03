@@ -41,8 +41,8 @@ PRO find_o_beam_mms, sc = sc, $
                      diff_pa = diff_pa, $
                      dispersion_list = dispersion_list, $
                      subtraction = subtraction, $
-                     reduced = reduced
-  
+                     reduced = reduced $
+                     , multi_peak = multi_peak
 ;-----------------------------------------------------
 ; Check keywords  
 ;---------------------------------------------------
@@ -376,7 +376,7 @@ PRO find_o_beam_mms, sc = sc, $
      ,  average_time, time_avg $ 
      ,  all_tplot_names.beta_name $
      , t_s = adjusted_t_s, t_e= adjusted_t_e $
-     , pa_range = [0,90], peak_pa_range = parallel_pa_range $
+     , peak_pa_range = parallel_pa_range $
      , low_count_line = low_count_line, pa_count_line = pa_count_line $                        
      , flux_threshold = flux_threshold , def_pap_factor = def_pap_factor $
      , erange_name = all_tplot_names.parallel_erange_name, epcut_name = all_tplot_names.parallel_epcut_name $
@@ -385,7 +385,7 @@ PRO find_o_beam_mms, sc = sc, $
      , pap_name =  all_tplot_names.parallel_pap_name $
      , pap_beam_name =  all_tplot_names.parallel_pap_beam_name $
      , epcut_beam_name = all_tplot_names.parallel_epcut_beam_name, erange_beam_name =  all_tplot_names.parallel_erange_beam_name $
-     , bin_size_pa = bin_size_pa, diff_e = diff_e, diff_pa = diff_pa
+     , bin_size_pa = bin_size_pa, diff_e = diff_e, diff_pa = diff_pa, multi_peak = multi_peak
   
 ; antiparallel
 ;  tplot_names,  all_tplot_names.antiparallel_epcut_beam_name, names = names
@@ -394,7 +394,7 @@ PRO find_o_beam_mms, sc = sc, $
      ,  average_time, time_avg $
      ,  all_tplot_names.beta_name $
      , t_s = adjustd_t_s, t_e= adjusted_t_e $
-     , pa_range = [90,180], peak_pa_range = antiparallel_pa_range $
+     , peak_pa_range = antiparallel_pa_range $
      , low_count_line = low_count_line, pa_count_line = pa_count_line $
      , flux_threshold = flux_threshold, def_pap_factor = def_pap_factor $
      , erange_name = all_tplot_names.antiparallel_erange_name, epcut_name = all_tplot_names.antiparallel_epcut_name $
@@ -404,7 +404,7 @@ PRO find_o_beam_mms, sc = sc, $
      , pap_beam_name =  all_tplot_names.antiparallel_pap_beam_name $
      , epcut_beam_name =  all_tplot_names.antiparallel_epcut_beam_name, erange_beam_name =  all_tplot_names.antiparallel_erange_beam_name $
                                 ;  , dlimf = dlimf, limf = limf, dlimc = dlimc, limc = limc , error_message = error_message
-     , bin_size_pa = bin_size_pa, diff_e = diff_e, diff_pa = diff_pa
+     , bin_size_pa = bin_size_pa, diff_e = diff_e, diff_pa = diff_pa, multi_peak = multi_peak
 ;stop
 ;-- combine beam results --
   tplot_names,  all_tplot_names.pap_beam_combine_name, names=names
@@ -559,7 +559,7 @@ PRO find_o_beam_mms, sc = sc, $
 ;--------------------------------------------------------------
 ; Overview plots
 ;--------------------------------------------------------------
-  make_o_beam_tplots, sc_str, t_s, t_e, t_dt, output_path, all_tplot_names, displaytime = displaytime, ps = ps, idl_plot = idl_plot
+  if keyword_set(multi_peak) then make_o_beam_tplots_multi, sc_str, t_s, t_e, t_dt, output_path, all_tplot_names, displaytime = displaytime, ps = ps, idl_plot = idl_plot else   make_o_beam_tplots, sc_str, t_s, t_e, t_dt, output_path, all_tplot_names, displaytime = displaytime, ps = ps, idl_plot = idl_plot
 
 ;----------------------------------------------------------------
 ; Print, running_time_s
@@ -571,7 +571,7 @@ PRO find_o_beam_mms, sc = sc, $
 ;--------------------------------------    
   IF keyword_set(save_data) THEN  BEGIN
      time_trim_tplot_variable, '*', t_s, t_e
-     save_o_beam_data, date_s, date_e, output_path, all_tplot_names
+     if keyword_set(multi_peak) then save_o_beam_data_multi, date_s, date_e, output_path, all_tplot_names else save_o_beam_data, date_s, date_e, output_path, all_tplot_names
   ENDIF 
 
   close, /all

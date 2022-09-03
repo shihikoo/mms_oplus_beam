@@ -1,4 +1,6 @@
 PRO average_data_y, data, tag, average_time,time_avg, y_avg=y_avg, yfound=yfound
+  n_avg = N_ELEMENTS(time_avg)
+  
   str_element, data, tag, value, SUCCESS=yfound
   IF yfound EQ 0 THEN RETURN
   
@@ -9,16 +11,18 @@ PRO average_data_y, data, tag, average_time,time_avg, y_avg=y_avg, yfound=yfound
 
   size_y = SIZE(data_y)  
   dim_y = size_y(0)
-  IF dim_y GT 2 THEN RETURN 
-  IF dim_y EQ 1 THEN n_v = 1 ELSE n_v = size_y(2)
+  IF dim_y GT 3 THEN RETURN
+  IF dim_y EQ 3 THEN y_avg = DBLARR(n_avg, size_y(2), size_y(3))
+  IF dim_y EQ 2 THEN y_avg = DBLARR(n_avg, size_y(2)) 
+  IF dim_y EQ 1 THEN y_avg = DBLARR(n_avg)
 
-  n_avg = N_ELEMENTS(time_avg)
-  y_avg = DBLARR(n_avg, n_v)
-  
+;  stop
 ; calculate mean of the data for time points
   FOR itime = 0l, n_avg-1 DO BEGIN
+     IF dim_y EQ 3 THEN index = where(data.x GE time_avg(itime)-average_time/2 AND data.x LT time_avg(itime)+average_time/2 AND TOTAL(TOTAL(data_y,2,/NAN),2,/NAN) NE 0, ct)
      IF dim_y EQ 2 THEN index = where(data.x GE time_avg(itime)-average_time/2 AND data.x LT time_avg(itime)+average_time/2 AND TOTAL(data_y,2,/NAN) NE 0, ct)
      IF dim_y EQ 1 THEN index = where(data.x GE time_avg(itime)-average_time/2 AND data.x LT time_avg(itime)+average_time/2 AND TOTAL(data_y, /NAN) NE 0, ct)
+     
      IF ct GT 0 AND TOTAL(ABS(data_y(index, *)) GE 0,/NAN) GT 0  THEN BEGIN
         IF KEYWORD_SET(sum_up) THEN  BEGIN
            y_avg(itime, *) = TOTAL(data_y(index, *),1, /NAN)
@@ -27,7 +31,7 @@ PRO average_data_y, data, tag, average_time,time_avg, y_avg=y_avg, yfound=yfound
         ENDELSE
      ENDIF ELSE y_avg(itime, *) = !VALUES.F_NAN
   ENDFOR
-
+;stop
 END   
 
 ;+
@@ -87,7 +91,7 @@ PRO average_tplot_variable_with_given_time, var, average_time, time_avg, NEW_NAM
      get_data, var_names(iv), data=data, dlim=dlim, lim=lim
 
      average_data_y,data,'Y', average_time, time_avg, y_avg = y_avg, yfound = yfound
-
+     
      IF yfound EQ 0 THEN BEGIN
         PRINT, 'data.y is not found'
         RETURN
@@ -116,6 +120,9 @@ PRO average_tplot_variable_with_given_time, var, average_time, time_avg, NEW_NAM
      IF vfound EQ 1 AND dyfound EQ 0 THEN datastr = {x:time_avg, y:y_avg, v:v_avg}
      IF vfound EQ 0 AND dyfound EQ 1 THEN datastr = {x:time_avg, y:y_avg, dy:dy_avg}
      IF vfound EQ 1 AND dyfound EQ 1 THEN datastr = {x:time_avg, y:y_avg, v:v_avg, dy:dy_avg}
+
+     str_element, data, 'pabins', value, SUCCESS=ebfound
+     IF ebfound EQ 1 THEN datastr = {x: time_avg, y:y_avg, v:v_avg, pabins:data.pabins}
      
      str_element, data, 'energybins', value, SUCCESS=ebfound
      IF ebfound EQ 1 THEN datastr = {x: time_avg, y:y_avg, energybins:data.energybins}

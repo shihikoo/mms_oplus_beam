@@ -10,13 +10,13 @@ PRO time_trim_tplot_variable, tplot_name, t_s, t_e
         IF KEYWORD_SET(xfound) THEN data_x = value(index) 
         
         str_element, data, 'Y', value, SUCCESS=yfound
-        IF KEYWORD_SET(yfound) THEN data_y = value(index, *)
+        IF KEYWORD_SET(yfound) THEN data_y = value(index, *, *)
         
         str_element, data, 'V', value, SUCCESS=vfound
-        IF KEYWORD_SET(vfound) THEN data_v = value(index, *)  
+        IF KEYWORD_SET(vfound) THEN data_v = value(index, *, *)  
         
         str_element, data, 'dY', value, SUCCESS=dyfound
-        IF KEYWORD_SET(dyfound) THEN data_dy = value(index, *)
+        IF KEYWORD_SET(dyfound) THEN data_dy = value(index, *,*)
      ENDIF ELSE BEGIN
         data_x = !VALUES.F_NAN
         data_y = !VALUES.F_NAN
