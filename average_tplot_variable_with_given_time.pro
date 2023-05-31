@@ -15,8 +15,8 @@ PRO average_data_y, data, tag, average_time,time_avg, y_avg=y_avg, yfound=yfound
   IF dim_y EQ 3 THEN y_avg = DBLARR(n_avg, size_y(2), size_y(3))
   IF dim_y EQ 2 THEN y_avg = DBLARR(n_avg, size_y(2)) 
   IF dim_y EQ 1 THEN y_avg = DBLARR(n_avg)
-
-;  stop
+  if dim_y eq 0 then y_avg = DBLARR(n_avg)
+   
 ; calculate mean of the data for time points
   FOR itime = 0l, n_avg-1 DO BEGIN
      IF dim_y EQ 3 THEN index = where(data.x GE time_avg(itime)-average_time/2 AND data.x LT time_avg(itime)+average_time/2 AND TOTAL(TOTAL(data_y,2,/NAN),2,/NAN) NE 0, ct)

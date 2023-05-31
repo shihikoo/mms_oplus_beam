@@ -4,10 +4,10 @@
 ; Inputs: data, property_name, property_para, property_anti,
 ; property_v_log, property_v_range, property_unit
 ;-----------------------------------------------------------------------
-PRO load_property_data, data, property_name,property_para, property_anti, property_v_log, property_v_range, property_unit
+PRO load_property_data, data, property_name,property_para, property_anti, property_v_log, property_v_range, property_unit, property_map_type = property_map_type
 
 ; -- Settings for graphing --
-  energy_V_LOG = 1 & ENERGY_V_RANGE = [10, 10000.] & energy_unit = 'eV'
+  energy_V_LOG = 1 & ENERGY_V_RANGE = [10, 4000.] & energy_unit = 'eV' & median_ENERGY_V_RANGE = [40,4000]   & minimum_ENERGY_V_RANGE   =[10,1000]
   flux_V_LOG = 1 & FLUX_V_RANGE = [1., 100.] & flux_unit = '1/cm!U-3!N-s-sr-(eV/e)'
   eflux_V_LOG = 1 & EFLUX_V_RANGE = [1000.,10000.] & eflux_unit = 'eV/cm!U-3!N-s-sr(eV/e)'
   density_v_log = 1 &  density_v_range = [0.0001, 0.01] & density_unit = 'cm!U-3'
@@ -37,8 +37,12 @@ PRO load_property_data, data, property_name,property_para, property_anti, proper
   ENDIF
   IF property_name EQ 'energy' THEN BEGIN 
      property_para = data.en_para & property_anti = data.en_anti
-     PROPERTY_V_LOG = ENERGY_V_LOG & PROPERTY_V_RANGE = ENERGY_V_RANGE 
+     PROPERTY_V_LOG = ENERGY_V_LOG & 
      property_unit = energy_unit
+     if property_map_type eq 'median' then  PROPERTY_V_RANGE = median_ENERGY_V_RANGE     $
+     else if property_map_type eq 'minimum' then PROPERTY_V_RANGE = minimum_ENERGY_V_RANGE $
+     else PROPERTY_V_RANGE = ENERGY_V_RANGE
+     
   ENDIF 
   IF property_name EQ 'energy_v' THEN BEGIN 
      property_para = data.energy_v_para & property_anti = data.energy_v_anti

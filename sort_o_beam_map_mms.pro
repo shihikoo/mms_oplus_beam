@@ -37,9 +37,10 @@ PRO sort_o_beam_map_mms, ps_plot = ps_plot, read_from_dat = read_from_dat, store
   IF NOT KEYWORD_SET(time_start) THEN time_start = '2016-01-01/00:00:00' 
   IF NOT KEYWORD_SET(time_end) THEN time_end = '2020-12-31/23:59:59'
 
+ ; main_path = 'output_2min_multi_subtraction_flux0.100.150.20_pap3.01.81.2'
   main_path = 'output_2min/'
   IF KEYWORD_SET(subtraction) THEN main_path = 'output_2min_subtraction/'
-  IF KEYWORD_SET(reduced) THEN main_path = 'output_2min_reduced/'
+  IF KEYWORD_SET(reduced) THEN main_path = 'output_2min_reduced/' 
   
   data_path = main_path + 'data/'
   if keyword_set(avoid_compression_time)  then begin 

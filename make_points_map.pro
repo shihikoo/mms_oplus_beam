@@ -27,7 +27,7 @@ PRO draw_mlt_points_plot, data_pos, flag_para, flag_anti, filename = filename, t
 
 ; plot data with beams
   oplot, data_pos_ilat*(ABS(flag_para) GT 0 OR ABS(flag_anti) GT 0), data_pos_mlt*(ABS(flag_para) GT 0 OR ABS(flag_anti) GT 0), psym = psym_point_map, color = 2, /polar
-
+  
 ; legend         
 ;  xyouts, la_x+7, la_y+4.5*grid, 'no events', color = 2
 ;  xyouts, la_x+7, la_y, 'beam events', color = 2, charsize = 2
@@ -100,9 +100,9 @@ PRO make_points_map, data_pos, flag_para, flag_anti, beta, mlt, range, log, path
   
   IF KEYWORD_SET(ps_plot) THEN BEGIN 
      png_filename = STRMID(filename, 0, STRPOS(filename,'.ps')) + '.png'  
-     spawn, 'mogrify -format png -alpha opaque -density 150'+ filename
+     spawn, 'mogrify -format png -alpha opaque -density 150 '+ filename
      spawn, 'mogrify -rotate -90 '+ png_filename
-     spawn, 'rm -f ' + filename      
+;     spawn, 'rm -f ' + filename      
   ENDIF 
 
 END  

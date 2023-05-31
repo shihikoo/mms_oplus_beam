@@ -121,7 +121,7 @@ PRO plot_energy_spectra, time_start = time_start, time_end = time_end, stop = st
               fln = ps_folder + 'o_beam'+ date_s_plot + '_' + time_s_plot + '_to_'+  date_e_plot + '_' + time_e_plot + '_example.ps' 
               popen, fln, /port
            ENDIF         
-           zlim, [all_tplot_names.diffflux_h1_name, all_tplot_names.diffflux_h1_pa_name],100,10000
+           zlim, [all_tplot_names.diffflux_h1_name, all_tplot_names.diffflux_h1_pa_name],10,1000
            zlim, [all_tplot_names.diffflux_o1_name, all_tplot_names.diffflux_o1_pa_name],0.1,100
 
            ylim, [all_tplot_names.diffflux_h1_name, all_tplot_names.diffflux_o1_name],  1, 50000

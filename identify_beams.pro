@@ -24,17 +24,17 @@
 ;-----------------------------------------------------------------------
 
 PRO identify_beams, sat, specie, flux_name, counts_name,  average_time, time_avg  $  
-                    , beta_name $
+                    , region_name $
                     , t_s = t_s, t_e = t_e $
                     , peak_pa_range = peak_pa_range $
                     , low_count_line = low_count_line, pa_count_line = pa_count_line, flux_threshold = flux_threshold, def_pap_factor = def_pap_factor $
                     , epcut_name = epcut_name, erange_name = erange_name $
                     , pa_name = pa_name, pa_eflux_name = pa_eflux_name $
                     , pa_h_name = pa_h_name, pa_eflux_h_name = pa_eflux_h_name $
-                    , pap_name = pap_name, pap_beam_name = pap_beam_name $
+                    , pap_name = pap_name, pap_beam_name = pap_beam_name,pap_range_name = pap_range_name, int_flux_name = int_flux_name $
                     , epcut_beam_name = epcut_beam_name, erange_beam_name = erange_beam_name $
                                 ; , dlimf = dlimf, limf = limf, dlimc = dlimc, limc = limc, error_message = error_message
-                    , bin_size_pa = bin_size_pa, diff_e = diff_e, diff_pa = diff_pa, multi_peak = multi_peak
+                    , bin_size_pa = bin_size_pa, diff_e = diff_e, diff_pa = diff_pa, multi_peak = multi_peak, remove_bidirectional_pa = remove_bidirectional_pa
 ;----------------------------------------
 ; Keywords handling
 ;---------------------------------------
@@ -53,7 +53,7 @@ PRO identify_beams, sat, specie, flux_name, counts_name,  average_time, time_avg
   IF NOT KEYWORD_SET(peak_pa_range) THEN peak_pa_range = [0,180]
   flux_avg_name = flux_name     ;+'_AVG'+at_str
   counts_avg_name = counts_name ;+'_AVG'+at_str
-
+  
 ;-------------------------------------------------------------------
 ; find the evergy range and energy peak from average energy spectra
 ;-------------------------------------------------------------------
@@ -65,7 +65,8 @@ PRO identify_beams, sat, specie, flux_name, counts_name,  average_time, time_avg
      ENDIF 
 ; plot pitch angle in 'DIFF FLUX' with routine plot_pa_spec_around_energy_peak 
      tplot_names, pa_name, names = names
-     IF NOT KEYWORD_SET(names)  THEN plot_pa_spec_around_energy_peak_mms_multi, sat, specie, 'DIFF FLUX' $
+;     IF NOT KEYWORD_SET(names)  THEN 
+plot_pa_spec_around_energy_peak_mms_multi, sat, specie, 'DIFF FLUX' $
         , epcut_name, erange_name, pa_name = pa_name $
         , average_time = average_time, bin_size_pa = bin_size_pa
 
@@ -89,14 +90,21 @@ PRO identify_beams, sat, specie, flux_name, counts_name,  average_time, time_avg
      
 ; find pitch angle peak 
      tplot_names, pap_name, names = names
-     IF NOT KEYWORD_SET(names) THEN  find_pa_peak_multi, pa_eflux_name, pa_name, pap_name, beta_name, peak_pa_range = peak_pa_range $
-        , pa_count_line = pa_count_line, flux_threshold = flux_threshold,  def_pap_factor = def_pap_factor ; [1.1,1.4,1.7] ;[3,2,1.1]
+     ;IF NOT KEYWORD_SET(names) THEN $
+        find_pa_peak_multi, pa_eflux_name, pa_name, pap_name, region_name, peak_pa_range = peak_pa_range $
+        , pa_count_line = pa_count_line, flux_threshold = flux_threshold, remove_bidirectional_pa = remove_bidirectional_pa,  def_pap_factor = def_pap_factor ; [1.1,1.4,1.7] ;[3,2,1.1]
 
 ; filter pitch angle peak to beams by requiring continuity and close
 ; energy range
      tplot_names, pap_beam_name, names = names                      
-     IF NOT KEYWORD_SET(names) THEN filter_beams_multi, pap_name, epcut_name, erange_name, pap_beam_name, epcut_beam_name, erange_beam_name, diff_e = diff_e, diff_pa = diff_pa
+   ;  IF NOT KEYWORD_SET(names) THEN $
+        filter_beams_multi, pap_name, epcut_name, erange_name, pap_beam_name, epcut_beam_name, erange_beam_name, diff_e = diff_e, diff_pa = diff_pa
 
+; find the pitch angle range around the pitch angle
+     tplot_names, pap_range_name, names = names
+ ;    IF NOT KEYWORD_SET(names) THEN $
+        find_pa_range_multi, pa_name, pap_beam_name, flux_avg_name, pap_range_name, int_flux_name
+     
   endif else begin
 
      tplot_names, erange_name, names = names
@@ -129,7 +137,7 @@ PRO identify_beams, sat, specie, flux_name, counts_name,  average_time, time_avg
      
 ; find pitch angle peak 
      tplot_names, pap_name, names = names
-     IF NOT KEYWORD_SET(names) THEN  find_pa_peak, pa_eflux_name, pa_name, pap_name, beta_name, peak_pa_range = peak_pa_range $
+     IF NOT KEYWORD_SET(names) THEN  find_pa_peak, pa_eflux_name, pa_name, pap_name, region_name, peak_pa_range = peak_pa_range $
         , pa_count_line = pa_count_line, flux_threshold = flux_threshold,  def_pap_factor = def_pap_factor ; [1.1,1.4,1.7] ;[3,2,1.1]
 
 ; filter pitch angle peak to beams by requiring continuity and close

@@ -23,7 +23,7 @@
 ; Written by Jing Liao  03/10/2021
 ;-------------------------------------------------------------------------------
 
-PRO plot_o_beam_test_mms, stop = stop, beam_recalc = beam_recalc, store_tplot = store_tplot, ps = ps, save_data = save_data, idl_plot = idl_plot, diff_e = diff_e, diff_pa = diff_pa, subtraction = subtraction, reduced = reduced, itest_days = itest_days, flux_threshold = flux_threshold, def_pap_factor = def_pap_factor, average_time = average_time, multi_peak = multi_peak
+PRO plot_o_beam_test_mms, stop = stop, beam_recalc = beam_recalc, store_tplot = store_tplot, ps = ps, save_data = save_data, idl_plot = idl_plot, diff_e = diff_e, diff_pa = diff_pa, subtraction = subtraction, reduced = reduced, itest_days = itest_days, flux_threshold = flux_threshold, def_pap_factor = def_pap_factor, average_time = average_time, multi_peak = multi_peak, remove_bidirectional_pa = remove_bidirational_pa
 ;---------------------------------------------------------------
 ; Handle keyword
 ;--------------------------------------------------------------
@@ -68,6 +68,8 @@ PRO plot_o_beam_test_mms, stop = stop, beam_recalc = beam_recalc, store_tplot = 
   IF KEYWORD_SET(diff_en) THEN IF diff_en EQ 1 THEN  output_path = output_path + '_en1'
   if keyword_set(subtraction) then output_path = output_path + '_subtraction'
   if keyword_set(reduced) then output_path = output_path + '_reduced'
+  if keyword_set(remove_bidirational_pa) then output_path = output_path + '_removebi'
+  
   if flux_threshold_str ne '' then output_path = output_path + flux_threshold_str
   if def_pap_factor_str ne '' then output_path = output_path+def_pap_factor_str
   
@@ -115,7 +117,8 @@ PRO plot_o_beam_test_mms, stop = stop, beam_recalc = beam_recalc, store_tplot = 
                       , diff_pa = diff_pa  $
                       , subtraction = subtraction $
                       , reduced = reduced $
-                      , multi_peak = multi_peak
+                      , multi_peak = multi_peak $
+                      , remove_bidirectional_pa = remove_bidirational_pa
 
      if keyword_set(stop) then stop
   ENDFOR   

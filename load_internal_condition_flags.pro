@@ -65,20 +65,20 @@ PRO load_direction_flag, data, direction, direction_flag_para, direction_flag_an
   ENDIF
 
   if direction eq 'outflow' then begin
-     direction_flag_para = 0
-     direction_flag_anti = 0
+     direction_flag_para[*] = 0
+     direction_flag_anti[*] = 0
      
      index = where((data.gsm_x gt -1 and data.gsm_z le 0) or (data.gsm_x le -1 and data.bx_gsm le 0), ct)
-     direction_flag_para[index] = 1    
+     if ct gt 0 then direction_flag_para[index] = 1    
 
      index = where((data.gsm_x gt -1 and data.gsm_z gt 0) or (data.gsm_x le -1 and data.bx_gsm gt 0), ct)
-     direction_flag_anti[index] = 1
+     if ct gt 0 then direction_flag_anti[index] = 1
 
   endif
 
   direction_flag_para = FLOAT(direction_flag_para)
   direction_flag_anti = FLOAT(direction_flag_anti)
-; stop
+ 
  END
 
 ;----------------------------------------------------------------

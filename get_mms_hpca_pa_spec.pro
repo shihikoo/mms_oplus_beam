@@ -200,14 +200,13 @@ PRO get_mms_hpca_pa_spec, sat, species, units, tplot_var_name, energy=energy, no
   ENDFOR
 
   en_idx = WHERE(data.v1 GE energy(0) AND data.v1 LE energy(1), ien_idx)
-
+;stop
 ;  if ien_idx EQ 0 then stop
   if ien_idx eq 1 then begin
      store_data, tplot_var_name, data={x:data.x, y:REFORM(data.y(*,en_idx,*)), v:data.v2, dv:dpa}, dlim=dlim, lim=lim
   endif else begin
      store_data, tplot_var_name, data={x:data.x, y:REFORM(MEAN(data.y(*,en_idx,*), DIM=2, /NaN)), v:data.v2, dv:dpa}, dlim=dlim, lim=lim
   endelse
-
 
                                 ;----------------------------------------------------------------------
                                 ; Convert the energy spectra from 63 energies to 16

@@ -4,7 +4,7 @@
 ; Written by Jing Liao
 ; Written on 05/12/2021
 ;----------------------------------------------------
-PRO calculate_property_map, property_para, property_anti, data_pos, x_range, y_range, z_range, x_log, y_log, grid_x, grid_y, grid_z, flag_para, flag_anti, property_value, x_axis, y_axis, z_axis, x_cuttings, y_cuttings, z_cuttings, slice_mlt = slice_mlt, threshold = threshold
+PRO calculate_property_map, property_para, property_anti, data_pos, x_range, y_range, z_range, x_log, y_log, grid_x, grid_y, grid_z, flag_para, flag_anti, property_value, x_axis, y_axis, z_axis, x_cuttings, y_cuttings, z_cuttings, slice_mlt = slice_mlt
 
   ntime = N_ELEMENTS(property_para)
   
@@ -46,39 +46,40 @@ PRO calculate_property_map, property_para, property_anti, data_pos, x_range, y_r
   
   FOR ix = 0, n_elements(x_axis)-1 DO BEGIN
      FOR iy = 0, n_elements(y_axis)-1 DO BEGIN
-        FOR iz = 0, n_elements(z_axis)-1 DO BEGIN
-           IF z_cuttings[iz,0] GT z_cuttings[iz,1] AND KEYWORD_SET(slice_mlt) THEN BEGIN 
+        FOR iz = 0, n_elements(z_axis)-1 DO BEGIN           
+           IF z_cuttings[iz,0] GT z_cuttings[iz,1] AND KEYWORD_SET(slice_mlt) THEN BEGIN
               index_para = where(data_pos(*,0) GE x_cuttings[ix,0] AND data_pos(*,0) LT x_cuttings[ix,1] AND $
                                  data_pos(*,1) GE y_cuttings[iy,0] AND data_pos(*,1) LT y_cuttings[iy,1] AND $
                                  ((data_pos(*,2) GE z_cuttings[iz,0] AND data_pos(*,2) LT 24.) $
                                   OR  (data_pos(*,2) GE 0 AND data_pos(*,2) LT z_cuttings[iz,1])) AND $
-                                 FINITE(flag_para), ct_para)
+                                 ABS(flag_para) ge 1, ct_para)  ;FINITE(flag_para), ct_para)
            ENDIF ELSE BEGIN
               index_para = where(data_pos(*,0) GE x_cuttings[ix,0] AND data_pos(*,0) LT x_cuttings[ix,1] AND $
                                  data_pos(*,1) GE y_cuttings[iy,0] AND data_pos(*,1) LT y_cuttings[iy,1] AND $
                                  data_pos(*,2) GE z_cuttings[iz,0] AND data_pos(*,2) LT z_cuttings[iz,1] AND $
-                                 FINITE(flag_para), ct_para)
-           ENDELSE 
-           IF ct_para GT threshold THEN property_value(index_para,0,ix,iy,iz) = property_para(index_para)
+                                 ABS(flag_para) ge 1, ct_para) ;FINITE(flag_para), ct_para)
+           ENDELSE           
+           
+           IF ct_para gt 1 THEN property_value(index_para,0,ix,iy,iz) = property_para(index_para)
            
            IF z_cuttings[iz,0] GT z_cuttings[iz,1] AND KEYWORD_SET(slice_mlt) THEN BEGIN 
               index_anti = where(data_pos(*,0) GE x_cuttings[ix,0] AND data_pos(*,0) LT x_cuttings[ix,1] AND $
                                  data_pos(*,1) GE y_cuttings[iy,0] AND data_pos(*,1) LT y_cuttings[iy,1] AND $
                                  ((data_pos(*,2) GE z_cuttings[iz,0] AND data_pos(*,2) LT 24.) $
                                   OR  (data_pos(*,2) GE 0 AND data_pos(*,2) LT z_cuttings[iz,1])) AND $
-                                 FINITE(flag_anti), ct_anti)
+                                 ABS(flag_anti) ge 1, ct_anti)  ;FINITE(flag_anti), ct_anti)
            ENDIF ELSE BEGIN
               index_anti = where(data_pos(*,0) GE x_cuttings[ix,0] AND data_pos(*,0) LT x_cuttings[ix,1] AND $
                                  data_pos(*,1) GE y_cuttings[iy,0] AND data_pos(*,1) LT y_cuttings[iy,1] AND $
                                  data_pos(*,2) GE z_cuttings[iz,0] AND data_pos(*,2) LT z_cuttings[iz,1] AND $
-                                 FINITE(flag_anti), ct_anti)
+                                 ABS(flag_anti) ge 1, ct_anti)  ;FINITE(flag_anti), ct_anti)
            ENDELSE 
-           IF ct_anti GT threshold THEN property_value(index_anti,1,ix,iy,iz) = property_anti(index_anti)
+           IF ct_anti gt 1 THEN property_value(index_anti,1,ix,iy,iz) = property_anti(index_anti)
+
+;           if total(property_anti(index_anti) eq 0) eq 1 or total(property_para(index_para) eq 0) eq 1 then stop         
         ENDFOR
      ENDFOR
   ENDFOR
-
-
 
 END
 
@@ -86,7 +87,7 @@ END
 ; Purpose: calculate property map based on type required
 ; Inputs: property_value, property_map_type
 ;------------------------------------------------------------
-FUNCTION aggregate_property_value, property_value, property_map_type
+FUNCTION aggregate_property_value, property_value, property_map_type, threshold = threshold, total_counts = total_counts
   IF size(property_value, /n_dim) NE 4 AND size(property_value, /n_dim) NE 5 THEN stop
   IF size(property_value, /n_dim) EQ 5 THEN BEGIN 
      nx = n_elements(property_value(0, 0, *, 0, 0))
@@ -96,18 +97,18 @@ FUNCTION aggregate_property_value, property_value, property_map_type
      ny = n_elements(property_value(0, 0, 0, *))
   ENDELSE
   property_result = REPLICATE(!VALUES.F_NAN, nx, ny)
-
+  
 ;-------- mean
   IF property_map_type EQ 'mean' THEN BEGIN
      IF size(property_value, /n_dim) EQ 5  THEN BEGIN
         property_result = TOTAL(TOTAL(TOTAL(property_value, 2, /NAN), 1, /NAN), 3, /NAN)/ $
-                          TOTAL(TOTAL(TOTAL(property_value GE 0, 2, /NAN), 1, /NAN), 3, /NAN) 
+                          TOTAL(TOTAL(TOTAL(ABS(property_value) GE 0, 2, /NAN), 1, /NAN), 3, /NAN)
      ENDIF ELSE BEGIN
         property_result = TOTAL(TOTAL(property_value, 2, /NAN), 1, /NAN)/ $
-                          TOTAL(TOTAL(property_value GE 0, 2, /NAN), 1, /NAN)
+                          TOTAL(TOTAL(ABS(property_value) GE 0, 2, /NAN), 1, /NAN)
      ENDELSE 
   ENDIF 
-
+  
 ;-------- median
   IF property_map_type EQ 'median' THEN BEGIN
      FOR ix = 0, nx-1 DO BEGIN
@@ -115,7 +116,7 @@ FUNCTION aggregate_property_value, property_value, property_map_type
            IF size(property_value, /n_dim) EQ 5 THEN dummy = property_value(*, *, ix, iy, *) ELSE  dummy = property_value(*, *, ix, iy)
            index = where(finite(dummy), ct)
            IF ct GT 0 THEN dummy = dummy(index)
-           property_result(ix, iy) = MEDIAN(dummy)
+           property_result(ix, iy) = MEDIAN(dummy,/even)
         ENDFOR
      ENDFOR
   ENDIF 
@@ -138,24 +139,26 @@ FUNCTION aggregate_property_value, property_value, property_map_type
            property_result(ix, iy) = MAX(dummy,/NAN)
         ENDFOR
      ENDFOR
-  ENDIF 
+  ENDIF
+ 
+  index = where(total_counts le threshold,ct)
+  if ct gt 0 then property_result[index] = !VALUES.F_NAN
 
   return, property_result
 END 
-
 
 ;----------------------------------------------------
 ; Purpose: make 2d property map
 ; Inputs: property_value, property_map_type, property_name, filepath, ts_date, te_date, plot_axis, x_axis, y_axis, x_range, y_range,filename,  property_v_log, property_v_range, property_unit
 ; Keywords:ps_plot
 ;----------------------------------------------------
-PRO make_2d_property_map, property_value, property_map_type, property_name, filepath, ext_condition_str, int_condition_str, ts_date, te_date, plot_axis, x_axis, y_axis, x_range, y_range, xlog, ylog, filename,  property_v_log, property_v_range, property_unit, ps_plot = ps_plot
+PRO make_2d_property_map, property_value, property_map_type, property_name, filepath, ext_condition_str, int_condition_str, ts_date, te_date, plot_axis, x_axis, y_axis, x_range, y_range, xlog, ylog, filename,  property_v_log, property_v_range, property_unit, ps_plot = ps_plot, threshold = threshold, total_counts = total_counts
 
 ; filepath
   path_pp_2d = filepath+'2d/'
 
 ; calculation
-  property_map_2d = aggregate_property_value( property_value, property_map_type)
+  property_map_2d = aggregate_property_value( property_value, property_map_type, threshold = threshold, total_counts = TOTAL(total_counts,3,/nan))
 
 ; draw heat map
   filename = path_pp_2d+ ext_condition_str + '_' + int_condition_str  +'_'+property_map_type+'_'+property_name + '_'  + '_'+ ts_date+'_to_' + te_date+'_' + PLOT_AXIS(0)+'_vs_'+PLOT_AXIS(1) +'.ps'
@@ -165,7 +168,7 @@ PRO make_2d_property_map, property_value, property_map_type, property_name, file
 END
 
 
-PRO make_slice_property_map, property_value, property_map_type, property_name, filepath, ext_condition_str, int_condition_str, ts_date, te_date, plot_axis, x_axis, y_axis, z_axis, z_cuttings, x_range, y_range, xlog, ylog, slice_grid,filename,  property_v_log, property_v_range, property_unit, ps_plot = ps_plot, slice_mlt = slice_mlt
+PRO make_slice_property_map, property_value, property_map_type, property_name, filepath, ext_condition_str, int_condition_str, ts_date, te_date, plot_axis, x_axis, y_axis, z_axis, z_cuttings, x_range, y_range, xlog, ylog, slice_grid,filename,  property_v_log, property_v_range, property_unit, ps_plot = ps_plot, slice_mlt = slice_mlt, threshold = threshold, total_counts = total_counts
   
   nz = N_ELEMENTS(z_axis)
   
@@ -174,7 +177,7 @@ PRO make_slice_property_map, property_value, property_map_type, property_name, f
 
   FOR iz = 0, nz-1 DO BEGIN 
 ; calculation
-     property_map_slice = aggregate_property_value(property_value(*, *, *, *, iz), property_map_type)
+     property_map_slice = aggregate_property_value(property_value[*, *, *, *, iz], property_map_type, threshold = threshold, total_counts = total_counts[*,*,iz])
 
 ; draw the plot
      slice_block = [strcompress(STRING(z_cuttings(iz,0), format = '(f5.1)'),/remove_all), $
@@ -192,7 +195,7 @@ END
 ; Inputs: data, data_pos, property_name, property_map_type, flag, filepath, ts_date, te_date, plot_axis,  x_range, y_range, z_range, grid, slice_grid, filename, plot_2d, plot_slice, make_table
 ; Keywords: ps_plot 
 ;------------------------------------------------------------------------------
-PRO make_property_map, data, data_pos, property_name, property_map_type, flag_para, flag_anti, filepath, ts_date, te_date, plot_axis, ext_condition_str, int_condition_str, range, log, grid, slice_grid, filename, plot_2d, plot_slice, make_table, ps_plot = ps_plot, threshold = threshold
+PRO make_property_map, data, data_pos, property_name, property_map_type, flag_para, flag_anti, filepath, ts_date, te_date, plot_axis, ext_condition_str, int_condition_str, range, log, grid, slice_grid, filename, plot_2d, plot_slice, make_table, ps_plot = ps_plot, threshold = threshold, total_counts = total_counts
   
   X_RANGE = range(*, 0)
   Y_RANGE = range(*, 1)
@@ -202,8 +205,8 @@ PRO make_property_map, data, data_pos, property_name, property_map_type, flag_pa
   ylog = log(1)
 
 ; load property data and property graphing settings
-  load_property_data, data, property_name, property_para, property_anti, property_v_log, property_v_range, property_unit      
-
+  load_property_data, data, property_name, property_para, property_anti, property_v_log, property_v_range, property_unit, property_map_type = property_map_type
+  
 ; reset grid according to plot_axis
   IF PLOT_AXIS(0) EQ 'MLT' THEN BEGIN
      grid_x = 0.5*grid & grid_y = 1.25*grid
@@ -213,18 +216,17 @@ PRO make_property_map, data, data_pos, property_name, property_map_type, flag_pa
   grid_z = slice_grid
   
   IF PLOT_AXIS(2) EQ 'MLT' THEN BEGIN
-     slice_mlt = 1     
-
+     slice_mlt = 1
   ENDIF 
 
 ; Calculation
-  calculate_property_map, property_para, property_anti, data_pos, x_range, y_range, z_range, xlog,ylog, grid_x, grid_y, grid_z, flag_para, flag_anti, property_value, x_axis, y_axis, z_axis, x_cuttings, y_cuttings, z_cuttings, slice_mlt = slice_mlt, threshold = threshold
+  calculate_property_map, property_para, property_anti, data_pos, x_range, y_range, z_range, xlog,ylog, grid_x, grid_y, grid_z, flag_para, flag_anti, property_value, x_axis, y_axis, z_axis, x_cuttings, y_cuttings, z_cuttings, slice_mlt = slice_mlt
 
 ; Draw 2d maps
-  IF KEYWORD_SET(PLOT_2D) THEN make_2d_property_map, property_value, property_map_type,property_name,filepath, ext_condition_str, int_condition_str, ts_date, te_date, plot_axis, x_axis, y_axis, x_range, y_range, xlog, ylog, filename, property_v_log, property_v_range, property_unit, ps_plot=ps_plot
+  IF KEYWORD_SET(PLOT_2D) THEN make_2d_property_map, property_value, property_map_type,property_name,filepath, ext_condition_str, int_condition_str, ts_date, te_date, plot_axis, x_axis, y_axis, x_range, y_range, xlog, ylog, filename, property_v_log, property_v_range, property_unit, ps_plot=ps_plot, threshold = threshold, total_counts = total_counts
 
 ; Draw slice maps
-  IF KEYWORD_SET(PLOT_SLICE) THEN make_slice_property_map, property_value, property_map_type, property_name, filepath, ext_condition_str, int_condition_str, ts_date, te_date, plot_axis, x_axis, y_axis, z_axis, z_cuttings, x_range, y_range, xlog, ylog, slice_grid,filename,  property_v_log, property_v_range, property_unit, ps_plot=ps_plot, slice_mlt = slice_mlt
+  IF KEYWORD_SET(PLOT_SLICE) THEN make_slice_property_map, property_value, property_map_type, property_name, filepath, ext_condition_str, int_condition_str, ts_date, te_date, plot_axis, x_axis, y_axis, z_axis, z_cuttings, x_range, y_range, xlog, ylog, slice_grid,filename,  property_v_log, property_v_range, property_unit, ps_plot=ps_plot, slice_mlt = slice_mlt, threshold = threshold, total_counts = total_counts
   
 ; make historgram 
   IF KEYWORD_SET(make_table) THEN  stop

@@ -2,7 +2,7 @@
 ;
 ;Procedure: add_tt2000_offset
 ;
-;Purpose:
+;Purpose:1
 ;  Takes TDAS double timestamp and offsets date(s) using the data in the CDF 3.4(or later) leap second config file.
 ;  Like time_string and time_double, it is vectorized and accepts array inputs of arbitrary dimensions
 ; 
@@ -57,21 +57,25 @@ function add_tt2000_offset,dates,subtract=subtract,offsets=offsets
     message,'Error. !CDF_LEAP_SECONDS, must be defined.  Try calling cdf_leap_second_init'
   endif
 
-; Jing: set up an handling to copy local CDFLeapSeconds.txt to the data location.
-  if ~file_test(!cdf_leap_seconds.local_data_dir+'CDFLeapSeconds.txt') then spawn, 'cp -f ~/data/misc/CDFLeapSeconds.txt ' + !cdf_leap_seconds.local_data_dir+'CDFLeapSeconds.txt'
+; Jing: set up an handling to copy local CDFLeapSeconds.txt to the
+; data location.
+;  while ~is_struct(leap_data)
+  if ~file_test(!cdf_leap_seconds.local_data_dir+'CDFLeapSeconds.txt') then spawn, '/bin/cp -rf ~/CDFLeapSeconds.txt ' + !cdf_leap_seconds.local_data_dir+'CDFLeapSeconds.txt'
 
   leap_data = read_asc(!cdf_leap_seconds.local_data_dir+'CDFLeapSeconds.txt')
-    
-  if ~is_struct(leap_data) then begin
-      ; reload the leap second file if there's trouble loading it
-      dprint, dlevel = 0, 'Error, couldn''t find a valid CDFLeapSeconds.txt file; re-downloading from cdf.gsfc.nasa.gov...'
-stop
-      file_delete, !cdf_leap_seconds.local_data_dir+'CDFLeapSeconds.txt',/ALLOW_NONEXISTENT ;Jing: add allow_nonexistent keyword
 
+  if ~is_struct(leap_data) then begin
+stop
+;     leap_data = read_asc(!cdf_leap_seconds.local_data_dir+'/CDFLeapSeconds.txt')
+      ; reload the leap second file if there's trouble loading it
+      dprint, dlevel = 0, 'Error, couldn''t find a valid CDFLeapSeconds.txt file; re-downloading from cdf.gsfc.nasa.gov...'     
+      if ~file_test(!cdf_leap_seconds.local_data_dir+'CDFLeapSeconds.txt') then  file_delete, !cdf_leap_seconds.local_data_dir+'/CDFLeapSeconds.txt'
+     
       cdf_leap_second_init, /reset
       return, add_tt2000_offset(dates,subtract=subtract,offsets=offsets)
   endif
-  
+;endwhile  
+
   leap_dates= time_double(strtrim(leap_data.(0),2)+'-'+strtrim(leap_data.(1),2)+'-'+strtrim(leap_data.(2),2)+'/00:00:00')
   leap_offsets=leap_data.(3)
   

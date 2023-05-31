@@ -68,9 +68,13 @@ FUNCTION load_tplot_names, sc_str, bmodel, parallel_pa_range,  antiparallel_pa_r
                     diffflux_h1_anti_name: 'mms'+sc_str+'_hpca_hplus_eflux_pa_red_150_180_nflux' , $
                     diffflux_o1_parallel_name: 'mms'+sc_str+'_hpca_oplus_eflux_pa_red_'+parallel_pa_low_str+'_' + parallel_pa_high_str+'_nflux' , $
                     diffflux_o1_parallel_subtracted_name: 'mms'+sc_str+'_hpca_oplus_eflux_pa_red_'+parallel_pa_low_str+'_' + parallel_pa_high_str+'_nflux_subtracted' , $
+                    int_diffflux_o1_parallel_subtracted_name: 'mms'+sc_str+'_hpca_oplus_eflux_pa_red_'+parallel_pa_low_str+'_' + parallel_pa_high_str+'_nflux_subtracted_int' , $
+                    
                     eflux_o1_parallel_name: 'mms'+sc_str+'_hpca_oplus_eflux_pa_red_'+parallel_pa_low_str+'_'+parallel_pa_high_str, $                    
                     diffflux_o1_antiparallel_name: 'mms'+sc_str+'_hpca_oplus_eflux_pa_red_'+antiparallel_pa_low_str+'_'+antiparallel_pa_high_str+'_nflux', $
                     diffflux_o1_antiparallel_subtracted_name: 'mms'+sc_str+'_hpca_oplus_eflux_pa_red_'+antiparallel_pa_low_str+'_'+antiparallel_pa_high_str+'_nflux_subtracted', $
+                    int_diffflux_o1_antiparallel_subtracted_name: 'mms'+sc_str+'_hpca_oplus_eflux_pa_red_'+antiparallel_pa_low_str+'_'+antiparallel_pa_high_str+'_nflux_subtracted_int', $
+                    
                     eflux_o1_antiparallel_name: 'mms'+sc_str+'_hpca_oplus_eflux_pa_red_'+antiparallel_pa_low_str+'_'+antiparallel_pa_high_str,$
                     parallel_epcut_name: 'mms' + sc_str + '_hpca_oplus_eflux_pa_red_'+parallel_pa_low_str +'_'+ parallel_pa_high_str +'_nflux_epcut', $
                     parallel_erange_name: 'mms' + sc_str + '_hpca_oplus_eflux_pa_red_'+parallel_pa_low_str +'_'+ parallel_pa_high_str +'_nflux_erange'  , $
@@ -83,6 +87,7 @@ FUNCTION load_tplot_names, sc_str, bmodel, parallel_pa_range,  antiparallel_pa_r
                     
                     parallel_pap_name: 'PAs' + sc_str + '_hpca_oplus_eflux_pa_re_nfluxa_red_'+parallel_pa_low_str +'_'+ parallel_pa_high_str +'_nflux'+'_PAP',$
                     parallel_pap_beam_name:  'PAs' + sc_str + '_hpca_oplus_eflux_pa_re_nfluxa_red_'+parallel_pa_low_str +'_'+ parallel_pa_high_str +'_nflux' + '_PAP_beam',$
+                    parallel_pap_range_name:  'PAs' + sc_str + '_hpca_oplus_eflux_pa_re_nfluxa_red_'+parallel_pa_low_str +'_'+ parallel_pa_high_str +'_nflux' + '_PAP_range',$
                     parallel_epcut_beam_name: 'mms' + sc_str + '_hpca_oplus_eflux_pa_red_'+parallel_pa_low_str +'_'+ parallel_pa_high_str +'_nflux_epcut_beam',$
                     parallel_epcut_beam_denergy_name: 'mms' + sc_str + '_hpca_oplus_eflux_pa_red_'+parallel_pa_low_str +'_'+ parallel_pa_high_str +'_nflux_epcut_beam_denergy',$
 ;                    parallel_epcut_beam_denergy_readin_name: 'mms' + sc_str + '_hpca_oplus_eflux_pa_red_'+parallel_pa_low_str +'_'+ parallel_pa_high_str +'_nflux_epcut_beam_denergy_readin',$
@@ -92,8 +97,10 @@ FUNCTION load_tplot_names, sc_str, bmodel, parallel_pa_range,  antiparallel_pa_r
                     antiparallel_pa_eflux_name: 'PAs' + sc_str + '_hpca_oplus_eflux_pa_rea_red_'+ antiparallel_pa_low_str  + '_' + antiparallel_pa_high_str+'_nflux',$
                     antiparallel_pa_h_name: 'PAs' + sc_str + '_hpca_hplus_eflux_pa_re_nfluxa_red_'+ antiparallel_pa_low_str  + '_' + antiparallel_pa_high_str + '_nflux',$
                     antiparallel_pa_eflux_h_name: 'PAs' + sc_str + '_hpca_hplus_eflux_pa_rea_red_'+ antiparallel_pa_low_str  + '_' + antiparallel_pa_high_str+'_nflux',$
+                    
                     antiparallel_pap_name: 'PAs' + sc_str + '_hpca_oplus_eflux_pa_re_nfluxa_red_'+ antiparallel_pa_low_str  + '_' + antiparallel_pa_high_str + '_nflux_PAP',$
                     antiparallel_pap_beam_name: 'PAs' + sc_str + '_hpca_oplus_eflux_pa_re_nfluxa_red_'+ antiparallel_pa_low_str  + '_' + antiparallel_pa_high_str + '_nflux_PAP_beam',$
+                    antiparallel_pap_range_name: 'PAs' + sc_str + '_hpca_oplus_eflux_pa_re_nfluxa_red_'+ antiparallel_pa_low_str  + '_' + antiparallel_pa_high_str + '_nflux_PAP_range',$
                     antiparallel_epcut_beam_name: 'mms' + sc_str + '_hpca_oplus_eflux_pa_red_' + antiparallel_pa_low_str + '_' + antiparallel_pa_high_str +'_nflux_epcut_beam',$
                     antiparallel_epcut_beam_denergy_name: 'mms' + sc_str + '_hpca_oplus_eflux_pa_red_' + antiparallel_pa_low_str + '_' + antiparallel_pa_high_str +'_nflux_epcut_beam_denergy',$
 ;                    antiparallel_epcut_beam_denergy_readin_name: 'mms' + sc_str + '_hpca_oplus_eflux_pa_red_' + antiparallel_pa_low_str + '_' + antiparallel_pa_high_str +'_nflux_epcut_beam_denergy_readin',$
@@ -113,6 +120,7 @@ FUNCTION load_tplot_names, sc_str, bmodel, parallel_pa_range,  antiparallel_pa_r
                     ae_name: 'OMNI_HR_AE_Index' , $
 ;                    kp_name: 'MMS'+sc_str+'_EPHEM_'+bmodel+'_Kp', $
                     kp_name: 'Kp_Index', $
+                    f107_name: 'F10_7_Index', $
                     storm_phase_tplot_name:  'storm_phase' , $
                     substorm_phase_tplot_name: 'substorm_phase', $                    
                     parallel_beam_inverse_v_name: 'mms' + sc_str + '_hpca_oplus_eflux_pa_red_'+parallel_pa_low_str +'_'+ parallel_pa_high_str +'_nflux_epcut_beam' +'_1_of_velocity' , $

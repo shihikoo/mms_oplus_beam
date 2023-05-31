@@ -272,13 +272,13 @@ end
 pro run_sort_o_beam_map_mms, time_start = time_start, time_end = time_end, reduce = reduce, avoid_2019=avoid_2019
   
 ;  run_non_sort_points_map, time_start = time_start, time_end = time_end, reduce = reduce, avoid_2019=avoid_2019
-;  run_non_sort_2d_map, time_start = time_start, time_end = time_end, reduce = reduce, avoid_2019=avoid_2019
+  run_non_sort_2d_map, time_start = time_start, time_end = time_end, reduce = reduce, avoid_2019=avoid_2019
 ;  run_non_sort_sliced_map, time_start = time_start, time_end = time_end, reduce = reduce, avoid_2019=avoid_2019
 ;  run_hemi_sort_2d_map, time_start = time_start, time_end = time_end, reduce = reduce, avoid_2019=avoid_2019
 ;  run_hemi_imfby_sort_2d_map, time_start = time_start, time_end = time_end, reduce = reduce, avoid_2019=avoid_2019
 ;  run_imfby_sort_2d_map, time_start = time_start, time_end = time_end, reduce = reduce, avoid_2019=avoid_2019
 ;  run_imfbybz_sort_2d_map, time_start = time_start, time_end = time_end, reduce = reduce, avoid_2019=avoid_2019
-  run_imfby_sort_sliced_map, time_start = time_start, time_end = time_end, reduce = reduce, avoid_2019=avoid_2019
+;  run_imfby_sort_sliced_map, time_start = time_start, time_end = time_end, reduce = reduce, avoid_2019=avoid_2019
 ;  run_imfbybz_sort_sliced_map, time_start = time_start, time_end = time_end, reduce = reduce, avoid_2019=avoid_2019
 ;  run_swP_sort_2d_map, time_start = time_start, time_end = time_end, reduce = reduce, avoid_2019=avoid_2019
 ;  run_energy_sort_2d_map, time_start = time_start, time_end = time_end, reduce = reduce, avoid_2019=avoid_2019

@@ -3,12 +3,12 @@
 ;         and then make corresponding mom plot in page1 the whole procedure
 ;         plot in page2
 ;       
-; Keywords: sc           : Cluste no. if not set the default is 1
+; Keywords: sc           : MMS no. if not set the default is 1
 ;           sp           :
 ;           t_s          :
 ;           t_e          : 
 ;           average_time : in seconds , if not set the default is 5 min 
-;           ps           : plot the result plot in dumpdata,
+;           ps_plot           : plot the result plot in dumpdata,
 ;           save_data    : save data into csv file
 ;           store_tplot  : store data into .tplot 
 ;
@@ -24,7 +24,7 @@ PRO find_o_beam_mms, sc = sc, $
                      t_e = t_e, $
                      log_filename = log_filename, $
                      average_time = average_time, $
-                     ps = ps, $
+                     ps_plot = ps_plot, $
                      idl_plot = idl_plot, $
                      save_data = save_data, $
                      store_tplot = store_tplot, $
@@ -42,7 +42,8 @@ PRO find_o_beam_mms, sc = sc, $
                      dispersion_list = dispersion_list, $
                      subtraction = subtraction, $
                      reduced = reduced $
-                     , multi_peak = multi_peak
+                     , multi_peak = multi_peak $
+                     , remove_bidirectional_pa = remove_bidirectional_pa
 ;-----------------------------------------------------
 ; Check keywords  
 ;---------------------------------------------------
@@ -51,7 +52,7 @@ PRO find_o_beam_mms, sc = sc, $
   sc_str = STRING(sc, FORMAT = '(i1.1)')
   
   IF NOT keyword_set(sp) then sp = 3 
-
+  
   IF NOT KEYWORD_SET(AVERAGE_TIME) THEN average_time = 5 * 60 ;in seconds
   at_str = STRCOMPRESS(ROUND(average_time),  /REMOVE_ALL) 
   average_time = FLOAT(average_time)
@@ -165,18 +166,25 @@ PRO find_o_beam_mms, sc = sc, $
 ;-----------------------------------
 ; delete the previouse tplot variables (temp)
 ;----------------------------------
-  if keyword_set(subtraction) then begin 
-     tplot_names, '*subtracted*', names = names
-     if not keyword_set(names)  then begin
-        tplot_names, '*0_nflux_*', names = names
-        store_data, delete = names
-        tplot_names, 'PA*', names = names
-        store_data, delete = names
-        tplot_names, '*oplus*', names = names
-        store_data, delete = names
-     endif
-  endif 
+  ;; if keyword_set(subtraction) then begin 
+  ;;    tplot_names, '*subtracted*', names = names
+  ;;    if not keyword_set(names)  then begin
+  ;;       tplot_names, '*0_nflux_*', names = names
+  ;;       store_data, delete = names
+  ;;       tplot_names, 'PA*', names = names
+  ;;       store_data, delete = names
+  ;;       tplot_names, '*oplus*', names = names
+  ;;       store_data, delete = names
+  ;;    endif
+  ;; endif 
 
+  ;; if keyword_set(remove_bidirectional_pa) then begin
+     
+  ;;    tplot_names,'PAs1_hpca_*_eflux_pa_re_nfluxa_red_*_nflux_*', names = names
+     
+  ;;    store_data, delete = names
+  ;; endif 
+  
 ;-----------------------------------------------------------------
 ;Load the tplot varibles
 ;----------------------------------------------------------------
@@ -250,14 +258,16 @@ PRO find_o_beam_mms, sc = sc, $
 ; Identify different regions and save in tplot var 'location'
 ;------------------------------------------------------------------------ 
   tplot_names, all_tplot_names, names = names
-  IF ~KEYWORD_SET(names) THEN identify_regions, sc_str, all_tplot_names
+;  IF ~KEYWORD_SET(names) THEN $
+  identify_regions, sc_str, all_tplot_names
 
   IF NOT KEYWORD_SET(plot_all) THEN BEGIN
 ; Because region is stored as numeric numbers and the '1' digit stores
 ; magnetosphere region identification, 1 => within magnetosphere, 0 =>
 ; not. Here we take the modulo of 10. to retrive the '1' digit.
-     magnetosphere_region = r_data(all_tplot_names.region_name,/Y) MOD 10.
-     ct_magnetosphere = TOTAL(magnetosphere_region,/nan)
+     magnetosphere_region_index = where((r_data(all_tplot_names.region_name,/Y) MOD 10.) gt 0,  ct_magnetosphere)
+     
+;     ct_magnetosphere = TOTAL(magnetosphere_region,/nan)
      IF ct_magnetosphere EQ 0 THEN BEGIN 
         write_text_to_file, log_filename,  ts + ' TO '+ te + '-----Not in magnetosphere------', /APPEND
         IF KEYWORD_SET(store_tplot)  THEN  BEGIN  
@@ -276,7 +286,7 @@ PRO find_o_beam_mms, sc = sc, $
   tplot_names, all_tplot_names.diffflux_h1_name, names = names
   IF NOT KEYWORD_SET(names) THEN plot_mms_hpca_en_spec, [sc], [0], 'DIFF FLUX',pa=[0,180]
   
-    tplot_names, all_tplot_names.eflux_h1_name, names = names
+  tplot_names, all_tplot_names.eflux_h1_name, names = names
   IF NOT KEYWORD_SET(names) THEN plot_mms_hpca_en_spec, [sc], [0], 'EFLUX',pa=[0,180]
 
  ; tplot_names, all_tplot_names.diffflux_h1_para_name, names = names
@@ -287,6 +297,7 @@ PRO find_o_beam_mms, sc = sc, $
  ; IF NOT KEYWORD_SET(names) THEN plot_mms_hpca_en_spec, [sc], [0], 'DIFF FLUX',pa=[150,180]
 
 ;-- Load H+ pitch angle spectra
+;  stop
   tplot_names, all_tplot_names.diffflux_h1_pa_name, names = names
   IF NOT KEYWORD_SET(names) THEN plot_mms_hpca_pa_spec, [sc], [0], 'DIFF FLUX', no_convert_en = 1, energy = [1.,4.e4]
   
@@ -326,7 +337,7 @@ PRO find_o_beam_mms, sc = sc, $
   average_tplot_variable_with_given_time, all_tplot_names.diffflux_o1_pa_name, average_time, time_avg
   average_tplot_variable_with_given_time, all_tplot_names.eflux_h1_pa_name, average_time, time_avg
   average_tplot_variable_with_given_time, all_tplot_names.eflux_o1_pa_name, average_time, time_avg
-
+  
 ;------------------------------------------------------------------------------------------------------
 ; preprocess energy spectra
 ;---------------------------------------------------------------------------------------------------------
@@ -339,7 +350,7 @@ PRO find_o_beam_mms, sc = sc, $
                      ,  average_time, time_avg,  all_tplot_names.region_name $
                      , t_s = adjusted_t_s, t_e= adjusted_t_e, error_message = error_message $
                      , plot_low_count_filter = plot_low_count_filter, low_count_filename= low_count_filename_para
-  
+
   IF error_message NE ''  THEN BEGIN
      IF KEYWORD_SET(store_tplot)  THEN  BEGIN   
         tplot_save, filename = data_filename                                      
@@ -370,11 +381,11 @@ PRO find_o_beam_mms, sc = sc, $
 ; Identify O+ beam for different directions or pitch angle ranges
 ;-------------------------------------------------------------------------------
 ; parallel 
-  ;tplot_names, all_tplot_names.parallel_epcut_beam_name, names = names
-  ;IF NOT KEYWORD_SET(names(0)) THEN
+  tplot_names, all_tplot_names.parallel_epcut_beam_name, names = names
+; IF NOT KEYWORD_SET(names(0)) THEN $
   identify_beams, [sc], [sp],  para_enspec_name,  all_tplot_names.eflux_o1_parallel_name $
      ,  average_time, time_avg $ 
-     ,  all_tplot_names.beta_name $
+     ,  all_tplot_names.region_name $
      , t_s = adjusted_t_s, t_e= adjusted_t_e $
      , peak_pa_range = parallel_pa_range $
      , low_count_line = low_count_line, pa_count_line = pa_count_line $                        
@@ -383,16 +394,16 @@ PRO find_o_beam_mms, sc = sc, $
      , pa_name =  all_tplot_names.parallel_pa_name, pa_eflux_name =  all_tplot_names.parallel_pa_eflux_name $
      , pa_h_name =  all_tplot_names.parallel_pa_h_name, pa_eflux_h_name =  all_tplot_names.parallel_pa_eflux_h_name $ 
      , pap_name =  all_tplot_names.parallel_pap_name $
-     , pap_beam_name =  all_tplot_names.parallel_pap_beam_name $
+     , pap_beam_name =  all_tplot_names.parallel_pap_beam_name,  pap_range_name =  all_tplot_names.parallel_pap_range_name,  int_flux_name = all_tplot_names.int_diffflux_o1_parallel_subtracted_name $
      , epcut_beam_name = all_tplot_names.parallel_epcut_beam_name, erange_beam_name =  all_tplot_names.parallel_erange_beam_name $
-     , bin_size_pa = bin_size_pa, diff_e = diff_e, diff_pa = diff_pa, multi_peak = multi_peak
+     , bin_size_pa = bin_size_pa, diff_e = diff_e, diff_pa = diff_pa, multi_peak = multi_peak, remove_bidirectional_pa = remove_bidirectional_pa
   
 ; antiparallel
-;  tplot_names,  all_tplot_names.antiparallel_epcut_beam_name, names = names
-;  IF NOT KEYWORD_SET(names) THEN
+  tplot_names,  all_tplot_names.antiparallel_epcut_beam_name, names = names
+;  IF NOT KEYWORD_SET(names) THEN $
   identify_beams, [sc], [sp],anti_enspec_name ,  all_tplot_names.eflux_o1_antiparallel_name $
      ,  average_time, time_avg $
-     ,  all_tplot_names.beta_name $
+     ,  all_tplot_names.region_name $
      , t_s = adjustd_t_s, t_e= adjusted_t_e $
      , peak_pa_range = antiparallel_pa_range $
      , low_count_line = low_count_line, pa_count_line = pa_count_line $
@@ -401,14 +412,14 @@ PRO find_o_beam_mms, sc = sc, $
      , pa_name =  all_tplot_names.antiparallel_pa_name, pa_eflux_name = all_tplot_names.antiparallel_pa_eflux_name $
      , pa_h_name =  all_tplot_names.antiparallel_pa_h_name, pa_eflux_h_name = all_tplot_names.antiparallel_pa_eflux_h_name $
      , pap_name =  all_tplot_names.antiparallel_pap_name $ 
-     , pap_beam_name =  all_tplot_names.antiparallel_pap_beam_name $
+     , pap_beam_name =  all_tplot_names.antiparallel_pap_beam_name,  pap_range_name =  all_tplot_names.antiparallel_pap_range_name,  int_flux_name = all_tplot_names.int_diffflux_o1_antiparallel_subtracted_name $ $
      , epcut_beam_name =  all_tplot_names.antiparallel_epcut_beam_name, erange_beam_name =  all_tplot_names.antiparallel_erange_beam_name $
                                 ;  , dlimf = dlimf, limf = limf, dlimc = dlimc, limc = limc , error_message = error_message
-     , bin_size_pa = bin_size_pa, diff_e = diff_e, diff_pa = diff_pa, multi_peak = multi_peak
-;stop
+     , bin_size_pa = bin_size_pa, diff_e = diff_e, diff_pa = diff_pa, multi_peak = multi_peak, remove_bidirectional_pa = remove_bidirectional_pa
+
 ;-- combine beam results --
   tplot_names,  all_tplot_names.pap_beam_combine_name, names=names
-;  IF NOT KEYWORD_SET(names) THEN  
+  IF NOT KEYWORD_SET(names) THEN  $
   combine_beam, all_tplot_names, start_time = adjusted_t_s, END_time = adjusted_t_e, average_time = average_time
 
 ;-- write to log that beam is found --
@@ -416,7 +427,12 @@ PRO find_o_beam_mms, sc = sc, $
 
 ;-----------------------------------------------------------------------
 ; Calculate Moments for the beam and save them into tplot 
+;---------------------------------------------------------------------- 
+ ; plot_mms_hpca_moments, [sc], [3] , 'GSM'  
+;-----------------------------------------------------------------------
+; Calculate denergy and inverse velocity for the beam and save them into tplot 
 ;----------------------------------------------------------------------
+  
   tplot_names, all_tplot_names.parallel_epcut_beam_denergy_name, names = names
   IF NOT KEYWORD_SET(names) THEN calculate_denergy, all_tplot_names.diffflux_o1_parallel_name,all_tplot_names.parallel_epcut_beam_name, all_tplot_names.parallel_epcut_beam_denergy_name
   
@@ -429,6 +445,7 @@ PRO find_o_beam_mms, sc = sc, $
   tplot_names,  all_tplot_names.antiparallel_beam_inverse_v_name, names = names
   IF NOT KEYWORD_SET(names) THEN calculate_inverse_velocity, sp, all_tplot_names.antiparallel_epcut_beam_name, all_tplot_names.antiparallel_epcut_beam_denergy_name, all_tplot_names.antiparallel_beam_inverse_v_name 
 
+  
 ;-----------------------------------------------------------------------
 ; Calculate convective electric field from Vperp of H+ and O+ and
 ; magnetic field
@@ -485,16 +502,24 @@ PRO find_o_beam_mms, sc = sc, $
      average_tplot_variable_with_given_time, all_tplot_names.omni_tplot_names, average_time, time_avg
   ENDIF
 ;-----------------------------------------------------------------------
-; Load solar wind data from OMNI
+; interplate kp data (since kp is 1 hour data with some gaps, and
+; store it into the orignal tplot name
 ;----------------------------------------------------------------------
   tplot_names, all_tplot_names.kp_name, names = names
-
   IF NOT KEYWORD_SET(names) THEN BEGIN
      read_omni, ALL=1
      get_data,  all_tplot_names.kp_name, data = data,dlim=dlim,lim=lim
      data_kp = INTERPOL(data.y, data.x, time_avg,/NAN)/10.
      store_data, all_tplot_names.kp_name,data={x:time_avg, y:data_kp, dlim:dlim,lim:lim}
   ENDIF
+
+;  tplot_names, all_tplot_names.f107_name, names = names
+;  IF NOT KEYWORD_SET(names) THEN BEGIN
+;     read_omni, ALL=1
+     get_data,  all_tplot_names.f107_name, data = data,dlim=dlim,lim=lim
+     data_f107 = INTERPOL(data.y, data.x, time_avg,/NAN)
+     store_data, all_tplot_names.f107_name,data={x:time_avg, y:data_f107, dlim:dlim,lim:lim}
+;  ENDIF
   
 ;-----------------------------------------------------------------------
 ; Load storm data phase data and store phase flag into tplot variables
@@ -523,7 +548,7 @@ PRO find_o_beam_mms, sc = sc, $
      , all_tplot_names.parallel_dispersion_inverse_v_fitting_dof_name $
      , all_tplot_names.parallel_dispersion_n_name $
      , all_tplot_names.parallel_epcut_name $
-     , ps_plot = ps, idl_plot = idl_plot, output_folder = output_path $
+     , ps_plot = ps_plot, idl_plot = idl_plot, output_folder = output_path $
      , dispersion_list = dispersion_list, dispersion_inverse_v_fitting_rsquare_name =  all_tplot_names.parallel_dispersion_inverse_v_fitting_rsquare_name
 
   tplot_names, all_tplot_names.antiparallel_dispersion_n_name, names = names
@@ -540,7 +565,7 @@ PRO find_o_beam_mms, sc = sc, $
      , all_tplot_names.antiparallel_dispersion_inverse_v_fitting_dof_name $
      , all_tplot_names.antiparallel_dispersion_n_name $
      , all_tplot_names.antiparallel_epcut_name $
-     , ps_plot = ps, idl_plot = idl_plot, output_folder = output_path $
+     , ps_plot = ps_plot, idl_plot = idl_plot, output_folder = output_path $
      , dispersion_list = dispersion_list, dispersion_inverse_v_fitting_rsquare_name =  all_tplot_names.antiparallel_dispersion_inverse_v_fitting_rsquare_name
 
 ;------------- -------------------------------------------------------
@@ -559,8 +584,10 @@ PRO find_o_beam_mms, sc = sc, $
 ;--------------------------------------------------------------
 ; Overview plots
 ;--------------------------------------------------------------
-  if keyword_set(multi_peak) then make_o_beam_tplots_multi, sc_str, t_s, t_e, t_dt, output_path, all_tplot_names, displaytime = displaytime, ps = ps, idl_plot = idl_plot else   make_o_beam_tplots, sc_str, t_s, t_e, t_dt, output_path, all_tplot_names, displaytime = displaytime, ps = ps, idl_plot = idl_plot
 
+if keyword_set(ps_plot) or keyword_set(idl_plot) then begin 
+  if keyword_set(multi_peak) then make_o_beam_tplots_multi, sc_str, t_s, t_e, t_dt, output_path, all_tplot_names, displaytime = displaytime, ps = ps_plot, idl_plot = idl_plot else   make_o_beam_tplots, sc_str, t_s, t_e, t_dt, output_path, all_tplot_names, displaytime = displaytime, ps = ps_plot, idl_plot = idl_plot
+endif 
 ;----------------------------------------------------------------
 ; Print, running_time_s
 ;-----------------------------------------------------------------

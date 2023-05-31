@@ -2,3 +2,6 @@ output/
 delete/
 output*/
 archive/
+data/*.tplot
+data/*.gz
+*.tplot

@@ -26,13 +26,14 @@
 PRO identify_regions, sc_str, all_tplot_names
 
 ;-- load data into arrays
-  get_data, all_tplot_names.h1_density_name, data = data & h_density = data.y
-  get_data, all_tplot_names.h1_velocity_t_name, data = data &  h_velocity = data.y
+  h_density = r_data(all_tplot_names.h1_density_name,/Y)
+  h_velocity = r_data(all_tplot_names.h1_velocity_t_name,/Y)
   get_data, all_tplot_names.x_gse_name, data = data & x_gse = data.y & time_avg = data.x
-  get_data, all_tplot_names.y_gse_name, data = data & y_gse = data.y
-  get_data, all_tplot_names.z_gsm_name, data = data & z_gsm = data.y
-  get_data, all_tplot_names.beta_name, data = data & beta = data.y
-
+  y_gse = r_data(all_tplot_names.y_gse_name,/Y)
+  z_gsm = r_data(all_tplot_names.z_gsm_name,/Y)
+  beta = r_data(all_tplot_names.beta_name,/Y)
+  r = sqrt(x_gse^2 + y_gse^2)
+  
 ;-- sheath, dayside polar region and high latitude region
   sheath_region = h_density GT 3 and h_velocity GT 65
   dayside_polar_region = x_gse gt 1 and ABS(z_gsm) gt 5 and beta gt 0.05  
@@ -55,9 +56,18 @@ PRO identify_regions, sc_str, all_tplot_names
   index = where(~FINITE(beta), ct)
   IF ct GT 0 THEN region[index] = !VALUES.F_NAN
 
+;  lobe_region_index = where((region eq 1) and beta le 0.05, ct)
+;  if ct gt 0 then region[lobe_region_index] = region[lobe_region_index]
+  
+  bl_region_index = where((region eq 1) and ( ((r le -15) and (beta le 1 and beta gt 0.05) ) or ((r gt -15) and (beta le exp(0.14*R-2.1))) and beta gt 0.05), ct)
+  if ct gt 0 then region[bl_region_index] = region[bl_region_index] + 1
+
+  ps_region_index = where((region eq 1) and ( ((r le -15) and (beta gt 1) ) or ((r gt -15) and (beta gt exp(0.14*r-2.1))) ),ct )
+  if ct gt 0 then region[ps_region_index] = region[ps_region_index] +2 
+  
 ;-- store the region information into tplot string  
   str = {x:time_avg, y: region}
   lim = {yrange:[1, 100], ylog: 1, psym:10}
   store_data, all_tplot_names.region_name, data = str, lim = lim
-
+;stop
 END 

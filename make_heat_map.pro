@@ -74,15 +74,20 @@ PRO make_heat_map, x_axis, y_axis, data, filename, title, plot_axis, unit = unit
 
   spawn, 'mkdir -p ' + FILE_DIRNAME(filename)
 
+  ind = where(FINITE(data),ct)
+  if ct gt 0 then begin
+     average_data = TOTAL(data,/nan)/ct
+     title = title + ' avg:' + string(average_data,format='(f7.2)')
+  endif 
   draw_heat_map, x_axis, y_axis, data, no_interp = no_interp, title = title, xtitle = xtitle, ytitle = ytitle, ztitle = ztitle, xrange = xrange, yrange = yrange, zrange = zrange, xlog = xlog, ylog = ylog, zlog = zlog, ps_plot = ps_plot, filename = filename
   
   IF ARRAY_EQUAL(PLOT_AXIS(0), ['MLT']) THEN draw_mlt_heat_map, x_axis, y_axis, data, title = title, xtitle = xtitle, ytitle = ytitle, ztitle = ztitle, r_range = r_range, zrange = zrange, zlog = zlog, ps_plot = ps_plot, filename = filename
-
+  
   IF KEYWORD_SET(ps_plot) THEN BEGIN   
      png_filename = STRMID(filename, 0, STRPOS(filename,'.ps')) + '.png'    
      spawn, 'mogrify -format png -alpha opaque -density 150 '+ filename
      spawn, 'mogrify -rotate -90 '+ png_filename 
-     spawn, 'rm -f ' + filename  
+;     spawn, 'rm -f ' + filename  
   ENDIF 
 
 END 

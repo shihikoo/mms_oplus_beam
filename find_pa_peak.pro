@@ -7,7 +7,7 @@
 ;Created on 03/15/2021
 ;---------------------------------------------------------------------------
 
-PRO find_pa_peak, pa_counts_name, pa_name, pap_name, beta_name, pa_count_line = pa_count_line,flux_threshold=flux_threshold, peak_pa_range = peak_pa_range, def_pap_factor = def_pap_factor, pa_range = pa_range
+PRO find_pa_peak, pa_counts_name, pa_name, pap_name, region_name, pa_count_line = pa_count_line,flux_threshold=flux_threshold, peak_pa_range = peak_pa_range, def_pap_factor = def_pap_factor, pa_range = pa_range
 
 ;-- Check keywords --
   IF NOT keyword_set(flux_threshold) or n_elements(flux_threshold) ne 3 THEN flux_threshold = [0,0,0] ;[0.1,0.15,0.2]
@@ -26,31 +26,34 @@ PRO find_pa_peak, pa_counts_name, pa_name, pap_name, beta_name, pa_count_line = 
   n_valid_pa = MAX(total(FINITE(flux_pa(*,*)), 2),/NAN)
   npa = N_ELEMENTS(pa_pa(0, *))
   
-;-- set up defination of pitch angle for different magnetosphere regions, using plasma beta --
+;-- set up definition of pitch angle for different magnetosphere regions, using plasma beta --
   def_pap = DBLARR(ntime)
   def_pap_relative = DBLARR(ntime)
 ;  IF N_ELEMENTS(def) EQ 0 THEN BEGIN 
-  get_data, beta_name, data = pb
-  time_pb = pb.x
-  data_pb = pb.y
-  data_pb = INTERPOL(data_pb, time_pb, time_pa)
-  time_pb = time_pa
+  
+  region = r_data(region_name,/Y) MOD 10.)
+  
+;  data_region = INTERPOL(data_pb, time_pb, time_pa)
+;  time_region = time_pa
   FOR i = 0, ntime-1 DO BEGIN 
-;    FOR j = 0, npa-1 DO BEGIN               
-     IF data_pb(i) LE 0.05 THEN BEGIN 
-        def_pap(i) = total(flux_pa(i, *),/nan)*def_pap_factor(0)/n_valid_pa > flux_threshold(0)
-        def_pap_relative(i) = 1
-     ENDIF  
+;    FOR j = 0, npa-1 DO BEGIN
+     if region(i) gt 0) then def_pap[i] = total(flux_pa[i, *],/nan)*def_pap_factor(region[i]-1)/n_valid_pa > flux_threshold(region[i]-1)
+     def_pap_relative[i] = 1
      
-     IF data_pb(i) GT 0.05 AND data_pb(i) LE 1 THEN BEGIN 
-        def_pap(i) = total(flux_pa(i, *),/nan)*def_pap_factor(1)/n_valid_pa > flux_threshold(1)
-        def_pap_relative(i) = 1
-     ENDIF  
+;     IF region EQ 1 THEN BEGIN 
+;        def_pap(i) = total(flux_pa(i, *),/nan)*def_pap_factor(0)/n_valid_pa > flux_threshold(0)
+;        def_pap_relative(i) = 1
+;     ENDIF  
      
-     IF data_pb(i) GT 1 THEN BEGIN 
-        def_pap(i) = total(flux_pa(i, *),/nan)*def_pap_factor(2)/n_valid_pa > flux_threshold(2)
-        def_pap_relative(i) = 1
-     ENDIF       
+;     IF region EQ 2 THEN BEGIN 
+;        def_pap(i) = total(flux_pa(i, *),/nan)*def_pap_factor(1)/n_valid_pa > flux_threshold(1)
+;        def_pap_relative(i) = 1
+;     ENDIF  
+     
+;     IF region EQ 3 THEN BEGIN 
+;        def_pap(i) = total(flux_pa(i, *),/nan)*def_pap_factor(2)/n_valid_pa > flux_threshold(2)
+;        def_pap_relative(i) = 1
+;     ENDIF       
 ;        ENDFOR   
   ENDFOR   
 ;  ENDIF   ELSE BEGIN    

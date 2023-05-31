@@ -88,13 +88,14 @@ PRO filter_beams_multi, pap_name, epcut_name, erange_name, pap_beam_name, epcut_
         flux_beam(*,j,*) = temp
      endfor 
   ENDIF
- ;;  window,0
- ;; str = {x:time_avg, y:epcut_beam, energybins:energybins}
- ;; store_data, epcut_beam_name, data = str, dlim = {psym:-7}
-
- ;; tplot,["mms1_hpca_oplus_eflux_pa_red_000_060_nflux", "mms1_hpca_oplus_eflux_pa_red_000_060_nflux_epcut_beam" ]
- ;; options, 84,'color',1
- ;; tplot_panel,v="mms1_hpca_oplus_eflux_pa_red_000_060_nflux",o="mms1_hpca_oplus_eflux_pa_red_000_060_nflux_epcut_beam",psym=-7
+  window,0
+ 
+ str = {x:time_avg, y:epcut_beam, energybins:energybins}
+ store_data, epcut_beam_name, data = str, dlim = {psym:-7}
+ zlim,"mms1_hpca_oplus_eflux_pa_red_000_060_nflux" ,0.1,100
+ tplot,["mms1_hpca_oplus_eflux_pa_red_000_060_nflux", "mms1_hpca_oplus_eflux_pa_red_000_060_nflux_epcut_beam" ]
+ options, 84,'color',1
+ tplot_panel,v="mms1_hpca_oplus_eflux_pa_red_000_060_nflux",o="mms1_hpca_oplus_eflux_pa_red_000_060_nflux_epcut_beam",psym=-7
 
 ;-------------------------------------------------------------------------
 ; 2. Check flow pitch angle. A beam needs to have similar pitch angle. 
@@ -152,13 +153,14 @@ PRO filter_beams_multi, pap_name, epcut_name, erange_name, pap_beam_name, epcut_
 ;     erange_beam(index_gap,) = !VALUES.F_NAN     
   ENDIF 
   
-;; window,1
-;;  str = {x:time_avg, y:epcut_beam, energybins:energybins}
-;;  store_data, epcut_beam_name, data = str, dlim = {psym:-7}
-;; tplot,["mms1_hpca_oplus_eflux_pa_red_000_060_nflux", "mms1_hpca_oplus_eflux_pa_red_000_060_nflux_epcut_beam" ]
+window,1
+ str = {x:time_avg, y:epcut_beam, energybins:energybins}
+ store_data, epcut_beam_name, data = str, dlim = {psym:-7}
+  zlim, epcut_beam_name,0.1,100
+tplot,["mms1_hpca_oplus_eflux_pa_red_000_060_nflux", "mms1_hpca_oplus_eflux_pa_red_000_060_nflux_epcut_beam" ]
  
-;;  options, 84,'color',1
-;;  tplot_panel,v="mms1_hpca_oplus_eflux_pa_red_000_060_nflux",o="mms1_hpca_oplus_eflux_pa_red_000_060_nflux_epcut_beam",psym=-7
+ options, 84,'color',1
+ tplot_panel,v="mms1_hpca_oplus_eflux_pa_red_000_060_nflux",o="mms1_hpca_oplus_eflux_pa_red_000_060_nflux_epcut_beam",psym=-7
  
 ;----------------------------------------------------------------------------------
 ;3. check energy again(longer than 2 times of average_time)
@@ -204,15 +206,15 @@ PRO filter_beams_multi, pap_name, epcut_name, erange_name, pap_beam_name, epcut_
         flux_beam(*,j,*) = temp
      endfor      
   ENDIF
-;; window,2
-;;  str = {x:time_avg, y:epcut_beam,  energybins:energybins}
-;;  store_data, epcut_beam_name, data = str, dlim = {psym:-7}
+window,2
+ str = {x:time_avg, y:epcut_beam,  energybins:energybins}
+ store_data, epcut_beam_name, data = str, dlim = {psym:-7}
+ zlim, epcut_beam_name,0.1,100
+ tplot,["mms1_hpca_oplus_eflux_pa_red_000_060_nflux", "mms1_hpca_oplus_eflux_pa_red_000_060_nflux_epcut_beam" ]
+ options, 84,'color',1
+ tplot_panel,v="mms1_hpca_oplus_eflux_pa_red_000_060_nflux",o="mms1_hpca_oplus_eflux_pa_red_000_060_nflux_epcut_beam",psym=-7
 
-;;  tplot,["mms1_hpca_oplus_eflux_pa_red_000_060_nflux", "mms1_hpca_oplus_eflux_pa_red_000_060_nflux_epcut_beam" ]
-;;  options, 84,'color',1
-;;  tplot_panel,v="mms1_hpca_oplus_eflux_pa_red_000_060_nflux",o="mms1_hpca_oplus_eflux_pa_red_000_060_nflux_epcut_beam",psym=-7
-
-;;  stop
+ stop
 ;-----------------------------------------------------------------------------
 ;save into pitch angle
 ;----------------------------------------------------------------------------

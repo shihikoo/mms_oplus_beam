@@ -2,13 +2,13 @@
 ; Purpose: make tplots in idl and/or ps for streaming O+
 ; Inputs: sc_str, t_s, t_e, t_dt, output_path, all_tplot_names
 ; Keywords: displaytime, ps, idl_plot
-; Written by Jing Liao1
+; Written by Jing Liao
 ; Written on 04/15/2021
 ;-------------------------------------------------------------------------
 
 PRO make_o_beam_tplots_multi, sc_str, t_s, t_e, t_dt, output_path, all_tplot_names, displaytime = displaytime, ps = ps, idl_plot = idl_plot, to_plot = to_plot
   
-  to_plot = ['7'];'1','2','4','6']
+  to_plot = ['7','8','9']       ;'1','2','4','6']
 
   dispersion_list_filename = 'data/dispersion list - mms.csv'
   dispersion_list_data = READ_CSV(dispersion_list_filename, HEADER = dispersion_list_header)
@@ -93,8 +93,8 @@ PRO make_o_beam_tplots_multi, sc_str, t_s, t_e, t_dt, output_path, all_tplot_nam
         ENDIF         
         
         tplot, [  all_tplot_names.beta_name $
-        ;          , all_tplot_names.diffflux_h1_name $
-        ;          , all_tplot_names.bx_name $
+                                ;          , all_tplot_names.diffflux_h1_name $
+                                ;          , all_tplot_names.bx_name $
                   , all_tplot_names.pap_beam_combine_name $
                   , all_tplot_names.diffflux_o1_parallel_name $
 ;                  , all_tplot_names.parallel_pa_name $
@@ -126,10 +126,10 @@ PRO make_o_beam_tplots_multi, sc_str, t_s, t_e, t_dt, output_path, all_tplot_nam
         
         FOR ii = 0, ct-1 DO BEGIN 
            iindex = index[ii]
-   ;        timebar, dispersion_list_start_time[index[ii]], color=2
-   ;        timebar, dispersion_list_end_time[index[ii]], color = 3
-        ;   timebar, dispersion_list_start_time[index[ii]], color=2
-        ;   timebar, dispersion_list_start_time[index[ii]] + dispersion_list_duration[index[ii]], color = 3
+                                ;        timebar, dispersion_list_start_time[index[ii]], color=2
+                                ;        timebar, dispersion_list_end_time[index[ii]], color = 3
+                                ;   timebar, dispersion_list_start_time[index[ii]], color=2
+                                ;   timebar, dispersion_list_start_time[index[ii]] + dispersion_list_duration[index[ii]], color = 3
         ENDFOR
 
         IF KEYWORD_SET(ps) THEN BEGIN  
@@ -194,7 +194,7 @@ PRO make_o_beam_tplots_multi, sc_str, t_s, t_e, t_dt, output_path, all_tplot_nam
         options, all_tplot_names.imf_bz_gsm_name,'ytitle', 'IMF Bz!C(nT)'
 
         options, [all_tplot_names.bx_name,all_tplot_names.sw_p_name, all_tplot_names.imf_bz_gsm_name , all_tplot_names.electric_field_h_name, all_tplot_names.density_ratio_name ], 'yticks', 2
-           
+        
         ylim, all_tplot_names.electric_field_h_name,0,10,0
         ylim, all_tplot_names.electric_field_o_name,0,10,0
         ylim, all_tplot_names.h1_density_name, 0.01,100
@@ -205,25 +205,22 @@ PRO make_o_beam_tplots_multi, sc_str, t_s, t_e, t_dt, output_path, all_tplot_nam
         
         options, [ all_tplot_names.o1_density_name, all_tplot_names.electric_field_o_name], 'color', 2  
         
-        tplot, [all_tplot_names.beta_name, all_tplot_names.bx_name $;, all_tplot_names.mag_name $ 
+        tplot, [all_tplot_names.beta_name, all_tplot_names.bx_name $ ;, all_tplot_names.mag_name $ 
                 , all_tplot_names.sw_p_name, all_tplot_names.imf_bz_gsm_name $
                 , all_tplot_names.diffflux_h1_name, all_tplot_names.diffflux_h1_pa_name $ 
                 , all_tplot_names.diffflux_o1_parallel_name $
-              ;  , all_tplot_names.diffflux_o1_parallel_subtracted_name $
+                                ;  , all_tplot_names.diffflux_o1_parallel_subtracted_name $
 ;                , all_tplot_names.parallel_pa_name $
                 , all_tplot_names.diffflux_o1_antiparallel_name $
-            ;    , all_tplot_names.diffflux_o1_antiparallel_subtracted_name $
+                                ;    , all_tplot_names.diffflux_o1_antiparallel_subtracted_name $
 ;                , all_tplot_names.antiparallel_pa_name $
-      ;          , all_tplot_names.h1_density_name, all_tplot_names.h1_velocity_name, all_tplot_names.o1_velocity_name  $
+                                ;          , all_tplot_names.h1_density_name, all_tplot_names.h1_velocity_name, all_tplot_names.o1_velocity_name  $
                 , all_tplot_names.electric_field_h_name, all_tplot_names.density_ratio_name $
                ], var_label = var_label
         
         tplot_panel, v = all_tplot_names.h1_density_name, o = all_tplot_names.o1_density_name
         tplot_panel, v =  all_tplot_names.diffflux_o1_parallel_name, o =  all_tplot_names.parallel_epcut_beam_name, psym = 0
         tplot_panel, v = all_tplot_names.diffflux_o1_antiparallel_name, o = all_tplot_names.antiparallel_epcut_beam_name, psym = 0
-   ;     tplot_panel, v =  all_tplot_names.diffflux_o1_parallel_name, o =  all_tplot_names.parallel_erange_beam_name, psym = 0
-   ;     tplot_panel, v = all_tplot_names.diffflux_o1_antiparallel_name, o = all_tplot_names.antiparallel_erange_beam_name, psym = 0
-   ;     tplot_panel, v = all_tplot_names.electric_field_h_name, o = all_tplot_names.electric_field_o_name, psym = 0
         
         yline, all_tplot_names.beta_name, offset = 0.05, col = 2
         yline, all_tplot_names.beta_name, offset = 1, col = 2
@@ -234,8 +231,7 @@ PRO make_o_beam_tplots_multi, sc_str, t_s, t_e, t_dt, output_path, all_tplot_nam
            iindex = index[ii]
            timebar, dispersion_list_start_time[index[ii]], color=2
            timebar, dispersion_list_start_time[index[ii]] + dispersion_list_duration[index[ii]], color = 3
-        ;   timebar, dispersion_list_start_time[index[ii]], color=2
-        ;   timebar, dispersion_list_start_time[index[ii]] + dispersion_list_duration[index[ii]], color = 3
+           
         ENDFOR
 
 
@@ -279,12 +275,12 @@ PRO make_o_beam_tplots_multi, sc_str, t_s, t_e, t_dt, output_path, all_tplot_nam
         IF KEYWORD_SET(ps) THEN BEGIN  
            ps_folder = output_path + 'plots/' + 'obeam_day/' + year + '/'
            SPAWN, 'mkdir -p ' + ps_folder
-         
+           
            fln = ps_folder + 'o_beam'+ date_s_plot + '_' + time_s_plot + '_to_'+  date_e_plot + '_' + time_e_plot + '_average_time_study.ps' 
-         
+           
            popen, fln, /port
         ENDIF
- 
+        
         options, all_tplot_names.bx_name, '!CBx (nT)'   
         options, all_tplot_names.diffflux_o1_parallel_name + '_AVG60', 'ytitle', 'AVG!C60' 
         options, all_tplot_names.diffflux_o1_parallel_name + '_AVG120', 'ytitle', 'AVG!C120'
@@ -294,7 +290,7 @@ PRO make_o_beam_tplots_multi, sc_str, t_s, t_e, t_dt, output_path, all_tplot_nam
         options, all_tplot_names.diffflux_o1_antiparallel_name + '_AVG120', 'ytitle', 'AVG!C120'
         options, all_tplot_names.diffflux_o1_antiparallel_name + '_AVG180', 'ytitle', 'AVG!C180'
         options, all_tplot_names.diffflux_o1_antiparallel_name + '_AVG300', 'ytitle', 'AVG!C300'
-                  
+        
         ylim, all_tplot_names.parallel_beam_inverse_v_name,  0, 0.1, 0
         ylim, all_tplot_names.antiparallel_beam_inverse_v_name,  0, 0.1, 0
 
@@ -304,34 +300,31 @@ PRO make_o_beam_tplots_multi, sc_str, t_s, t_e, t_dt, output_path, all_tplot_nam
                  , all_tplot_names.diffflux_o1_parallel_name + '_AVG120' $
                  , all_tplot_names.diffflux_o1_parallel_name + '_AVG180' $
                  , all_tplot_names.diffflux_o1_parallel_name + '_AVG300' $
- ;                , all_tplot_names.parallel_pa_name $ 
+                                ;                , all_tplot_names.parallel_pa_name $ 
                  , all_tplot_names.diffflux_o1_antiparallel_name $
                  , all_tplot_names.diffflux_o1_antiparallel_name + '_AVG60' $
                  , all_tplot_names.diffflux_o1_antiparallel_name + '_AVG120' $
                  , all_tplot_names.diffflux_o1_antiparallel_name + '_AVG180' $
                  , all_tplot_names.diffflux_o1_antiparallel_name + '_AVG300' $
- ;                , all_tplot_names.antiparallel_pa_name $           
+                                ;                , all_tplot_names.antiparallel_pa_name $           
                ], var_label = var_label
         
         tplot_panel, v = all_tplot_names.diffflux_o1_parallel_name + '_AVG120' , o = all_tplot_names.parallel_epcut_beam_name, psym = -7
         tplot_panel, v = all_tplot_names.diffflux_o1_antiparallel_name  + '_AVG120', o = all_tplot_names.antiparallel_epcut_beam_name, psym = -7
         tplot_panel, v = all_tplot_names.diffflux_o1_parallel_name + '_AVG120' , o = all_tplot_names.parallel_dispersion_name, psym = -7
         tplot_panel, v = all_tplot_names.diffflux_o1_antiparallel_name + '_AVG120' , o = all_tplot_names.antiparallel_dispersion_name, psym = -7
-                                ;         tplot_panel, v = all_tplot_names.parallel_dispersion_inverse_v_name, o = all_tplot_names.parallel_dispersion_inverse_v_fitting_name, psym = 0
-                                ;         tplot_panel, v = all_tplot_names.antiparallel_dispersion_inverse_v_name, o = all_tplot_names.antiparallel_dispersion_inverse_v_fitting_name, psym = 0     
         
         index = WHERE( dispersion_list_start_time GE t_s+idisplay*displaytime AND  dispersion_list_start_time LE t_s+(idisplay+1)*displaytime, ct)
         FOR ii = 0, ct-1 DO BEGIN 
            iindex = index[ii]
            timebar, dispersion_list_start_time[index[ii]], color=2
            timebar, dispersion_list_start_time[index[ii]] + dispersion_list_duration[index[ii]], color = 3
-        ;   timebar, dispersion_list_start_time[index[ii]], color=2
-        ;   timebar, dispersion_list_start_time[index[ii]] + dispersion_list_duration[index[ii]], color = 3
+           
         ENDFOR
 
         IF KEYWORD_SET(ps) THEN BEGIN  
            PCLOSE
-                    
+           
            SPAWN, 'mogrify -format png -alpha opaque -density 150 ' + fln
            SPAWN, 'rm -f ' + fln
            
@@ -359,10 +352,10 @@ PRO make_o_beam_tplots_multi, sc_str, t_s, t_e, t_dt, output_path, all_tplot_nam
            fln = ps_folder + 'o_beam'+ date_s_plot + '_' + time_s_plot + '_to_'+  date_e_plot + '_' + time_e_plot + '_example.ps' 
            popen, fln, /port
         ENDIF         
-     
+        
         options, all_tplot_names.parallel_epcut_beam_name,'thick', 3
         options, all_tplot_names.antiparallel_epcut_beam_name,'thick', 3
- 
+        
         ylim, all_tplot_names.diffflux_o1_parallel_name,  1., 4e4, 1
         ylim, all_tplot_names.diffflux_o1_antiparallel_name, 1., 4e4, 1
         
@@ -374,9 +367,9 @@ PRO make_o_beam_tplots_multi, sc_str, t_s, t_e, t_dt, output_path, all_tplot_nam
                 , all_tplot_names.diffflux_o1_antiparallel_name $
                 , all_tplot_names.diffflux_o1_pa_name $
                ], var_label = var_label
-    
-    ;    tplot_panel, v = all_tplot_names.diffflux_o1_parallel_name, o = all_tplot_names.parallel_epcut_beam_name, psym = -7 
-     ;   tplot_panel, v = all_tplot_names.diffflux_o1_antiparallel_name, o = all_tplot_names.antiparallel_epcut_beam_name, psym = -7
+        
+                                ;    tplot_panel, v = all_tplot_names.diffflux_o1_parallel_name, o = all_tplot_names.parallel_epcut_beam_name, psym = -7 
+                                ;   tplot_panel, v = all_tplot_names.diffflux_o1_antiparallel_name, o = all_tplot_names.antiparallel_epcut_beam_name, psym = -7
 ;        tplot_panel, v = all_tplot_names.diffflux_o1_parallel_name, o = all_tplot_names.parallel_erange_name, psym = 0
 ;        tplot_panel, v = all_tplot_names.diffflux_o1_antiparallel_name, o = all_tplot_names.antiparallel_erange_name, psym = 0
 
@@ -424,15 +417,15 @@ PRO make_o_beam_tplots_multi, sc_str, t_s, t_e, t_dt, output_path, all_tplot_nam
 ;, all_tplot_names.bx_name $
 ;                  , all_tplot_names.pap_beam_combine_name $
                   , all_tplot_names.diffflux_o1_parallel_name $
-              ;    , all_tplot_names.parallel_pa_name $
-             ;     , all_tplot_names.parallel_pap_name $
-             ;     , all_tplot_names.parallel_pap_beam_name $
+                                ;    , all_tplot_names.parallel_pa_name $
+                                ;     , all_tplot_names.parallel_pap_name $
+                                ;     , all_tplot_names.parallel_pap_beam_name $
                   , all_tplot_names.parallel_dispersion_inverse_v_name $
                   , all_tplot_names.parallel_dispersion_estimated_distance_name $
                   , all_tplot_names.diffflux_o1_antiparallel_name $
-            ;      , all_tplot_names.antiparallel_pa_name $
-           ;       ,all_tplot_names.antiparallel_pap_name $
-              ;    , all_tplot_names.antiparallel_pap_beam_name $
+                                ;      , all_tplot_names.antiparallel_pa_name $
+                                ;       ,all_tplot_names.antiparallel_pap_name $
+                                ;    , all_tplot_names.antiparallel_pap_beam_name $
                   , all_tplot_names.antiparallel_dispersion_inverse_v_name $
                   , all_tplot_names.antiparallel_dispersion_estimated_distance_name $
                ], var_label = var_label
@@ -479,7 +472,7 @@ PRO make_o_beam_tplots_multi, sc_str, t_s, t_e, t_dt, output_path, all_tplot_nam
   ENDIF 
 
   index = WHERE(to_plot EQ '7', ct)
-    IF ct GT 0 THEN BEGIN 
+  IF ct GT 0 THEN BEGIN 
      FOR idisplay = 0, CEIL(t_dt/displaytime)-1 DO BEGIN 
         ts_plot = time_string(t_s + idisplay*displaytime)
         te_plot = time_string(t_s + (idisplay + 1)*displaytime)
@@ -498,63 +491,60 @@ PRO make_o_beam_tplots_multi, sc_str, t_s, t_e, t_dt, output_path, all_tplot_nam
            fln = ps_folder + 'o_beam'+ date_s_plot + '_' + time_s_plot + '_to_'+  date_e_plot + '_' + time_e_plot + '_plasma_condition_short.ps' 
            popen, fln, /port
         ENDIF         
-     
-        options, all_tplot_names.diffflux_h1_pa_name, 'ytitle', 'H!U+!N!CPA'
-        options,  all_tplot_names.parallel_pa_h_name, 'ytitle', 'H+'
-        options,  all_tplot_names.parallel_pa_eflux_name, 'ytitle', 'O+!Ceflux'
-        options,  all_tplot_names.parallel_pa_eflux_h_name, 'ytitle', 'H+!Ceflux'
+        average_tplot_variable, all_tplot_names.diffflux_o1_name, 300
+
+        options, all_tplot_names.diffflux_h1_pa_name, 'ytitle', 'H!U+!N(PA)'
+        options, all_tplot_names.diffflux_h1_name, 'ytitle', 'H!U+!N(eV)'
+        options, all_tplot_names.diffflux_o1_name, 'ytitle', 'O!U+!N(eV)'
+        options, all_tplot_names.diffflux_o1_pa_name, 'ytitle', 'O!U+!N(PA)'
+
+     ;        options,  all_tplot_names.parallel_pa_eflux_name, 'ytitle', 'O+!Ceflux'
+;        options,  all_tplot_names.parallel_pa_eflux_h_name, 'ytitle', 'H+!Ceflux'
+
         options, all_tplot_names.parallel_epcut_beam_name, 'color',0
-          options, all_tplot_names.antiparallel_epcut_beam_name,'color',0
+        options, all_tplot_names.antiparallel_epcut_beam_name,'color',0
         options, all_tplot_names.parallel_epcut_beam_name,'thick', 5
         options, all_tplot_names.antiparallel_epcut_beam_name,'thick', 5
-           
+        
         ylim, all_tplot_names.diffflux_o1_parallel_name,  1., 4e4, 1
         ylim, all_tplot_names.diffflux_o1_antiparallel_name, 1., 4e4, 1
         zlim, [ all_tplot_names.parallel_pa_h_name, all_tplot_names.antiparallel_pa_h_name],10,1e4
+        zlim, [  all_tplot_names.diffflux_o1_name,  all_tplot_names.diffflux_o1_pa_name],0.01,10
         zlim,[ all_tplot_names.parallel_pa_eflux_name, all_tplot_names.antiparallel_pa_eflux_name],1e3,1e6
         zlim,[   all_tplot_names.parallel_pa_eflux_h_name,  all_tplot_names.antiparallel_pa_eflux_h_name ],1e6,1e9
         
         tplot_names, all_tplot_names.diffflux_o1_parallel_subtracted_name , names = names
         if keyword_set(names) then begin
-           tplot, [all_tplot_names.beta_name, all_tplot_names.diffflux_h1_name, all_tplot_names.diffflux_h1_pa_name $
+           options, all_tplot_names.diffflux_o1_parallel_subtracted_name, 'ytitle', 'O!U+!N!(eV)!Cpara'
+           options, all_tplot_names.diffflux_o1_antiparallel_subtracted_name, 'ytitle', 'O!U+!N(eV)!Canti'
+           options, all_tplot_names.parallel_epcut_beam_name, 'symsize', 1
+           options, all_tplot_names.antiparallel_epcut_beam_name, 'symsize', 0.5
+           tplot, [all_tplot_names.beta_name, all_tplot_names.diffflux_h1_name $
+                ;   , all_tplot_names.diffflux_h1_pa_name $
                    , all_tplot_names.diffflux_o1_name,  all_tplot_names.diffflux_o1_pa_name $
                    , all_tplot_names.diffflux_o1_parallel_subtracted_name $
-;                   , all_tplot_names.parallel_pa_name $
-;                   , all_tplot_names.parallel_pa_h_name $
-;                   , all_tplot_names.parallel_pa_eflux_name $
-;                   , all_tplot_names.parallel_pa_eflux_h_name $
                    , all_tplot_names.diffflux_o1_antiparallel_subtracted_name $
-;                   , all_tplot_names.antiparallel_pa_name $
-;                   , all_tplot_names.antiparallel_pa_h_name $
-;                   , all_tplot_names.antiparallel_pa_eflux_name $
-;                   , all_tplot_names.antiparallel_pa_eflux_h_name $
+                   , all_tplot_names.o1_density_name $
                   ], var_label = var_label
            
-     ;      tplot_panel, v = all_tplot_names.h1_density_name, o = all_tplot_names.o1_density_name
-           tplot_panel, v = all_tplot_names.diffflux_o1_parallel_subtracted_name, o =  all_tplot_names.parallel_epcut_beam_name, psym = 7
-           tplot_panel, v = all_tplot_names.diffflux_o1_antiparallel_subtracted_name, o = all_tplot_names.antiparallel_epcut_beam_name, psym = 7
+                                ;      tplot_panel, v = all_tplot_names.h1_density_name, o = all_tplot_names.o1_density_name
+           tplot_panel, v = all_tplot_names.diffflux_o1_parallel_subtracted_name, o =  all_tplot_names.parallel_epcut_beam_name, psym = -1
+           tplot_panel, v = all_tplot_names.diffflux_o1_antiparallel_subtracted_name, o = all_tplot_names.antiparallel_epcut_beam_name, psym = -1
         endif else begin 
            tplot, [all_tplot_names.beta_name, all_tplot_names.diffflux_h1_name, all_tplot_names.diffflux_h1_pa_name $
                    , all_tplot_names.diffflux_o1_name,  all_tplot_names.diffflux_o1_pa_name $
                    , all_tplot_names.diffflux_o1_parallel_name $
- ;                  , all_tplot_names.parallel_pa_name $
- ;                  , all_tplot_names.parallel_pa_h_name $
- ;                   , all_tplot_names.parallel_pa_eflux_name $
- ;                  , all_tplot_names.parallel_pa_eflux_h_name $
                    , all_tplot_names.diffflux_o1_antiparallel_name $
-  ;                  , all_tplot_names.antiparallel_pa_name $
- ;                  , all_tplot_names.antiparallel_pa_h_name $
- ;                    , all_tplot_names.antiparallel_pa_eflux_name $
- ;                  , all_tplot_names.antiparallel_pa_eflux_h_name $
+                   , all_tplot_names.o1_density_name $
                   ], var_label = var_label
            
-   ;        tplot_panel, v = all_tplot_names.h1_density_name, o = all_tplot_names.o1_density_name
-           tplot_panel, v =  all_tplot_names.diffflux_o1_parallel_name, o =  all_tplot_names.parallel_epcut_beam_name, psym = 0
-           tplot_panel, v = all_tplot_names.diffflux_o1_antiparallel_name, o = all_tplot_names.antiparallel_epcut_beam_name, psym = 0
+                                ;        tplot_panel, v = all_tplot_names.h1_density_name, o = all_tplot_names.o1_density_name
+           tplot_panel, v =  all_tplot_names.diffflux_o1_parallel_name, o =  all_tplot_names.parallel_epcut_beam_name, psym = 1
+           tplot_panel, v = all_tplot_names.diffflux_o1_antiparallel_name, o = all_tplot_names.antiparallel_epcut_beam_name, psym = 1
         endelse
         
-        yline, all_tplot_names.beta_name, offset = 0.05, col = 2
-        yline, all_tplot_names.beta_name, offset = 1, col = 2
+        yline, all_tplot_names.beta_name, offset = 0.05, col = 2, thick=2
+        yline, all_tplot_names.beta_name, offset = 1, col = 2,thick=2
         
         index = WHERE(dispersion_list_start_time GE t_s+idisplay*displaytime AND  dispersion_list_start_time LE t_s+(idisplay+1)*displaytime, ct)
         FOR ii = 0, ct-1 DO BEGIN 
@@ -566,11 +556,188 @@ PRO make_o_beam_tplots_multi, sc_str, t_s, t_e, t_dt, output_path, all_tplot_nam
         IF KEYWORD_SET(ps) THEN BEGIN  
            pclose
            spawn, 'mogrify -format png -alpha opaque -density 150 '+fln
-           spawn, 'rm -f '+fln
+;           spawn, 'rm -f '+fln
         ENDIF ELSE stop
      ENDFOR
+  ENDIF   
+
+  index = WHERE(to_plot EQ '8', ct)
+  IF ct GT 0 THEN BEGIN
+;--- seperate pitch angle data and pitch angle peak beam into
+;    different energy pitch angle, so they can be plotted ---
+     get_data, all_tplot_names.parallel_pa_name,data=data,dlim=dlim,lim=lim
+     nenergybins = (size(data.y))[2]
+     for k = 0, nenergybins-1 do begin
+        store_data,all_tplot_names.parallel_pa_name+'_'+string(k,format='(i2.2)'), data = {x:data.x, y:reform(data.y[*,*,k]), v:reform(data.v[*,*,k])} , dlim =dlim , lim = lim
+        options, all_tplot_names.parallel_pa_name+'_'+string(k,format='(i2.2)'), 'ytitle', 'para!C!C'+string(k,format='(i2.2)')
+     endfor 
+;       get_data, all_tplot_names.parallel_pap_name,data=data,dlim=dlim
+;       for k = 0, nenergybins-1 do store_data,
+;       all_tplot_names.parallel_pap_name+'_'+string(k,format='(i2.2)'), data = {x:data.x, y:reform(data.y[*,*,k]), v:reform(data.v[*,*,k])} , dlim =dlim , lim = lim
+     ;; options, all_tplot_names.parallel_pap_beam_name+'_??','color',0
+     get_data, all_tplot_names.parallel_pap_beam_name,data=data,dlim=dlim
+
+     for k = 0, nenergybins-1 do begin
+        data_y = reform((data.y[*,*,k] gt 0) * data.v[*,*,k])
+        index = where(data_y eq 0, ct)
+        if ct gt 0 then data_y(index) = !values.f_nan
+        store_data,all_tplot_names.parallel_pap_beam_name+'_'+string(k,format='(i2.2)'), data = {x:data.x, y:data_y} , dlim =dlim , lim = lim
+     endfor 
+   ;  for k = 0, nenergybins-1 do store_data,all_tplot_names.parallel_pap_beam_name+'_'+string(k,format='(i2.2)'), data = {x:data.x, y:reform(data.y[*,*,k]), v:reform(data.v[*,*,k])} , dlim =dlim , lim = lim
+     options, all_tplot_names.parallel_pap_beam_name+'_??','color',0
+                                ;stop
+;--- plot tplots for different time frames ---     
+     FOR idisplay = 0, CEIL(t_dt/displaytime)-1 DO BEGIN 
+        ts_plot = time_string(t_s + idisplay*displaytime)
+        te_plot = time_string(t_s + (idisplay + 1)*displaytime)
+        date_s_plot = STRMID(ts_plot, 0, 4) + STRMID(ts_plot, 5, 2) + STRMID(ts_plot, 8, 2)
+        time_s_plot = STRMID(ts_plot, 11, 2) + STRMID(ts_plot, 14, 2) + STRMID(ts_plot, 17, 2)
+        date_e_plot = STRMID(te_plot, 0, 4) + STRMID(te_plot, 5, 2) + STRMID(te_plot, 8, 2)
+        time_e_plot = STRMID(te_plot, 11, 2) + STRMID(te_plot, 14, 2) + STRMID(te_plot, 17, 2)
+        year = STRMID(ts_plot, 0, 4)
+        
+        timespan, t_s+idisplay*displaytime, displaytime, /SECONDS
+
+        IF KEYWORD_SET(ps) THEN BEGIN  
+           ps_folder = output_path + 'plots/' + 'obeam_day/' + year + '/'
+           spawn, 'mkdir -p ' + ps_folder
+           
+           fln = ps_folder + 'o_beam'+ date_s_plot + '_' + time_s_plot + '_to_'+  date_e_plot + '_' + time_e_plot + '_multi_para.ps' 
+           popen, fln, /port
+        ENDIF         
+        
+        options, all_tplot_names.parallel_epcut_beam_name, 'color',0
+        options, all_tplot_names.parallel_epcut_beam_name,'thick', 5
+        
+        ylim, all_tplot_names.diffflux_o1_parallel_name,  1., 4e4, 1
+
+;--- plot data ----        
+        tplot_names, all_tplot_names.diffflux_o1_parallel_subtracted_name , names = names
+        if keyword_set(names) then begin
+           tplot_names,  all_tplot_names.parallel_pa_name + '_??', names = names
+           tplot, [ all_tplot_names.diffflux_o1_parallel_subtracted_name, reverse(names)], var_label = var_label
+           
+           tplot_panel, v = all_tplot_names.diffflux_o1_parallel_subtracted_name, o =  all_tplot_names.parallel_epcut_beam_name, psym = 1
+           for k = 0, nenergybins-1 do tplot_panel, o=all_tplot_names.parallel_pap_beam_name+'_'+string(k,format='(i2.2)'), v =  all_tplot_names.parallel_pa_name+'_'+string(k,format='(i2.2)'), psym=7
+        endif else begin
+           tplot_names,  all_tplot_names.parallel_pa_name + '_??',names=names
+           tplot, [ all_tplot_names.diffflux_o1_parallel_name, reverse(names)], var_label = var_label
+           tplot_panel, v =  all_tplot_names.diffflux_o1_parallel_name, o =  all_tplot_names.parallel_epcut_beam_name, psym = 1
+           for k = 0, nenergybins-1 do tplot_panel, o=all_tplot_names.parallel_pap_beam_name+'_'+string(k,format='(i2.2)'), v =  all_tplot_names.parallel_pa_name+'_'+string(k,format='(i2.2)'), psym=7 
+        endelse
+        
+        index = WHERE(dispersion_list_start_time GE t_s+idisplay*displaytime AND  dispersion_list_start_time LE t_s+(idisplay+1)*displaytime, ct)
+        FOR ii = 0, ct-1 DO BEGIN 
+           iindex = index[ii]
+           timebar, dispersion_list_start_time[index[ii]], color = 2
+           timebar, dispersion_list_start_time[index[ii]] + dispersion_list_duration[index[ii]], color = 3
+        ENDFOR
+
+        IF KEYWORD_SET(ps) THEN BEGIN  
+           pclose
+           spawn, 'mogrify -format png -alpha opaque -density 150 '+fln
+;           spawn, 'rm -f '+fln
+        ENDIF ELSE stop
+     ENDFOR
+     tplot_names, all_tplot_names.parallel_pa_name+'_??', names=names
+     store_data, delete = names
+     tplot_names, all_tplot_names.parallel_pap_name+'_??', names=names
+     store_data, delete = names
+     tplot_names, all_tplot_names.parallel_pap_beam_name+'_??', names=names
+     store_data, delete = names
+     
+  ENDIF 
+
+  index = WHERE(to_plot EQ '9', ct)
+  IF ct GT 0 THEN BEGIN
+;--- seperate pitch angle data and pitch angle peak beam into
+;    different energy pitch angle, so they can be plotted ---
+     get_data, all_tplot_names.antiparallel_pa_name,data=data,dlim=dlim,lim=lim
+     for k = 0, nenergybins-1 do begin
+        store_data,all_tplot_names.antiparallel_pa_name+'_'+string(k,format='(i2.2)'), data = {x:data.x, y:reform(data.y[*,*,k]), v:reform(data.v[*,*,k])} , dlim =dlim , lim = lim
+         options, all_tplot_names.antiparallel_pa_name+'_'+string(k,format='(i2.2)'), 'ytitle', 'anti!C!C'+string(k,format='(i2.2)')
+     endfor 
+;       get_data, all_tplot_names.antiparallel_pap_name,data=data,dlim=dlim
+;       for k = 0, nenergybins-1 do store_data,
+;       all_tplot_names.antiparallel_pap_name+'_'+string(k,format='(i2.2)'), data = {x:data.x, y:reform(data.y[*,*,k]), v:reform(data.v[*,*,k])} , dlim =dlim , lim = lim
+     ;; options, all_tplot_names.antiparallel_pap_name+'_*','color',0 
+     get_data, all_tplot_names.antiparallel_pap_beam_name,data=data,dlim=dlim
+     
+     for k = 0, nenergybins-1 do begin
+       
+        data_y = reform((data.y[*,*,k] gt 0) * data.v[*,*,k])
+        index = where(data_y eq 0, ct)
+        if ct gt 0 then data_y(index) = !values.f_nan
+        store_data,all_tplot_names.antiparallel_pap_beam_name+'_'+string(k,format='(i2.2)'), data = {x:data.x, y:data_y} , dlim =dlim , lim = lim
+     endfor 
+     ;; for k = 0, nenergybins-1 do store_data,all_tplot_names.antiparallel_pap_beam_name+'_'+string(k,format='(i2.2)'), data = {x:data.x, y:reform((data.y[*,*,k] gt 0) * data.v[*,*,k])} , dlim =dlim , lim = lim
+;     for k = 0, nenergybins-1 do store_data,all_tplot_names.antiparallel_pap_beam_name+'_'+string(k,format='(i2.2)'), data = {x:data.x, y:reform(data.y[*,*,k]), v:reform(data.v[*,*,k])} , dlim =dlim , lim = lim
+     options, all_tplot_names.antiparallel_pap_beam_name+'_??','color',0
+     
+; --- plot data for different time frame ---   
+     FOR idisplay = 0, CEIL(t_dt/displaytime)-1 DO BEGIN 
+        ts_plot = time_string(t_s + idisplay*displaytime)
+        te_plot = time_string(t_s + (idisplay + 1)*displaytime)
+        date_s_plot = STRMID(ts_plot, 0, 4) + STRMID(ts_plot, 5, 2) + STRMID(ts_plot, 8, 2)
+        time_s_plot = STRMID(ts_plot, 11, 2) + STRMID(ts_plot, 14, 2) + STRMID(ts_plot, 17, 2)
+        date_e_plot = STRMID(te_plot, 0, 4) + STRMID(te_plot, 5, 2) + STRMID(te_plot, 8, 2)
+        time_e_plot = STRMID(te_plot, 11, 2) + STRMID(te_plot, 14, 2) + STRMID(te_plot, 17, 2)
+        year = STRMID(ts_plot, 0, 4)
+        
+        timespan, t_s+idisplay*displaytime, displaytime, /SECONDS
+
+        IF KEYWORD_SET(ps) THEN BEGIN  
+           ps_folder = output_path + 'plots/' + 'obeam_day/' + year + '/'
+           spawn, 'mkdir -p ' + ps_folder
+           
+           fln = ps_folder + 'o_beam'+ date_s_plot + '_' + time_s_plot + '_to_'+  date_e_plot + '_' + time_e_plot + '_multi_anti.ps' 
+           popen, fln, /port
+        ENDIF         
+        
+        options, all_tplot_names.antiparallel_epcut_beam_name,'color',0
+        options, all_tplot_names.antiparallel_epcut_beam_name,'thick', 4      
+        ylim, all_tplot_names.diffflux_o1_antiparallel_name, 1., 4e4, 1
+        
+;--- plot data ----
+        tplot_names, all_tplot_names.diffflux_o1_antiparallel_subtracted_name , names = names
+        if keyword_set(names) then begin
+           tplot_names,  all_tplot_names.antiparallel_pa_name + '_??', names=names
+           tplot, [ all_tplot_names.diffflux_o1_antiparallel_subtracted_name,reverse(names)], var_label = var_label
+           
+           tplot_panel, v = all_tplot_names.diffflux_o1_antiparallel_subtracted_name, o = all_tplot_names.antiparallel_epcut_beam_name, psym = 1
+           for k = 0, nenergybins-1 do tplot_panel, o=all_tplot_names.antiparallel_pap_beam_name+'_'+string(k,format='(i2.2)'), v =  all_tplot_names.antiparallel_pa_name+'_'+string(k,format='(i2.2)'), psym=7 
+           
+        endif else begin
+           tplot_names,  all_tplot_names.antiparallel_pa_name + '_??', names=names
+           tplot, [ all_tplot_names.diffflux_o1_antiparallel_name,  reverse(names)], var_label = var_label
+           
+           tplot_panel, v = all_tplot_names.diffflux_o1_antiparallel_name, o = all_tplot_names.antiparallel_epcut_beam_name, psym = 1
+           for k = 0, nenergybins-1 do tplot_panel, o=all_tplot_names.antiparallel_pap_beam_name+'_'+string(k,format='(i2.2)'), v =  all_tplot_names.antiparallel_pa_name+'_'+string(k,format='(i2.2)'), psym=7 
+        endelse
+        
+        index = WHERE(dispersion_list_start_time GE t_s+idisplay*displaytime AND  dispersion_list_start_time LE t_s+(idisplay+1)*displaytime, ct)
+        FOR ii = 0, ct-1 DO BEGIN 
+           iindex = index[ii]
+           timebar, dispersion_list_start_time[index[ii]], color = 2
+           timebar, dispersion_list_start_time[index[ii]] + dispersion_list_duration[index[ii]], color = 3
+        ENDFOR
+
+        IF KEYWORD_SET(ps) THEN BEGIN  
+           pclose
+           spawn, 'mogrify -format png -alpha opaque -density 150 '+fln
+;           spawn, 'rm -f '+fln
+        ENDIF ELSE stop
+     ENDFOR
+
+; delete the temperary tplots
+     tplot_names, all_tplot_names.antiparallel_pa_name+'_??', names=names
+     store_data, delete = names
+     tplot_names, all_tplot_names.antiparallel_pap_name+'_??', names=names
+     store_data, delete = names
+     tplot_names, all_tplot_names.antiparallel_pap_beam_name+'_??', names=names
+     store_data, delete = names
+     
   ENDIF
-  
   
   timespan, t_s, t_dt, /SECONDS
 END

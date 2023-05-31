@@ -1,7 +1,7 @@
 FUNCTION calculate_B_model, datetime_str, xgsm, ygsm, zgsm, model = model, kp = kp, pdyn = pdyn, Dst = Dst, imfBy = imfBy, imfBz = imfBz
 
   IF NOT KEYWORD_SET(model) THEN model = 't89'
-
+  
   year = STRMID(datetime_str,0,4)
   month =  STRMID(datetime_str,5,2)
   date =  STRMID(datetime_str,8,2)
