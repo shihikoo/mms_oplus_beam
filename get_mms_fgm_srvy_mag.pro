@@ -12,7 +12,7 @@ PRO get_mms_fgm_srvy_mag, sc, coord, localpath=localpath, newfln=newfln, varname
   IF path2 EQ '' THEN path2 = GETENV('MMS' + sc_str + '_FGM_SRVY')
 
   ; Find data file with manually entered filename
-  IF NOT KEYWORD_SET(newfln)  THEN BEGIN
+  IF ~KEYWORD_SET(newfln)  THEN BEGIN
     fln2 =''
   ENDIF ELSE BEGIN
     fln2 = newfln
@@ -170,7 +170,7 @@ PRO get_mms_fgm_srvy_mag, sc, coord, localpath=localpath, newfln=newfln, varname
   ;>>--------------------------------------------------------------------
   ; Create tplot variables
   ;----------------------------------------------------------------------
-  IF NOT KEYWORD_SET(varname) THEN BEGIN
+  IF ~KEYWORD_SET(varname) THEN BEGIN
     varname = 'MMS' + sc_str + $
               '_FGM_SRVY_MAG' + $
               '_' + STRUPCASE(coord)

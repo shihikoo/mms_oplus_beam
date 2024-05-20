@@ -26,10 +26,10 @@ PRO plot_o_beam_dispersion_mms, time_start = time_start, time_end = time_end, st
 ;---------------------------------------------------------------
 ; Handle keywords
 ;--------------------------------------------------------------
-  IF NOT keyword_set(sc) THEN sc = 1 ; set the satallite number   
-  IF NOT keyword_set(sp) THEN sp = 3 ; set the species, 0: H+, 3: O+
-  IF NOT keyword_set(time_start) THEN  time_start = '2016-01-01/00:00:00'
-  IF NOT keyword_set(time_end) THEN time_end = '2018-01-01/00:00:00'
+  IF ~KEYWORD_SET(sc) THEN sc = 1 ; set the satallite number   
+  IF ~KEYWORD_SET(sp) THEN sp = 3 ; set the species, 0: H+, 3: O+
+  IF ~KEYWORD_SET(time_start) THEN  time_start = '2016-01-01/00:00:00'
+  IF ~KEYWORD_SET(time_end) THEN time_end = '2018-01-01/00:00:00'
 ;--------------------------------------------------------------
 ; Set up for day runing routines
 ;--------------------------------------------------------------

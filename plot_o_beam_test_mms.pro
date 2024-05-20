@@ -27,12 +27,12 @@ PRO plot_o_beam_test_mms, stop = stop, beam_recalc = beam_recalc, store_tplot = 
 ;---------------------------------------------------------------
 ; Handle keyword
 ;--------------------------------------------------------------
-  IF NOT keyword_set(sc) THEN sc = 1                               ; set the satallite number   
-  IF NOT keyword_set(sp) THEN sp = 3                               ; set the species, 0: H+, 3: O+
-  if not keyword_set(flux_threshold) then flux_threshold = [0,0,0] ;[0.1, 0.15, 0.2]
+  IF ~KEYWORD_SET(sc) THEN sc = 1                               ; set the satallite number   
+  IF ~KEYWORD_SET(sp) THEN sp = 3                               ; set the species, 0: H+, 3: O+
+  if ~KEYWORD_SET(flux_threshold) then flux_threshold = [0,0,0] ;[0.1, 0.15, 0.2]
   if array_equal(flux_threshold, [0,0,0]) then  flux_threshold_str = '' else flux_threshold_str = '_flux'+string(flux_threshold[0],format='(f4.2)')+ string(flux_threshold[1],format='(f4.2)')+ string(flux_threshold[2],format='(f4.2)')
   
-  if not keyword_set(def_pap_factor) then def_pap_factor = [1,1,1] ;[1.7, 1.4, 1.1]
+  if ~KEYWORD_SET(def_pap_factor) then def_pap_factor = [1,1,1] ;[1.7, 1.4, 1.1]
   if array_equal(def_pap_factor, [1,1,1]) then  def_pap_factor_str = ''  else def_pap_factor_str = '_pap'+string(def_pap_factor[0],format='(f3.1)')+ string(def_pap_factor[1],format='(f3.1)')+ string(def_pap_factor[2],format='(f3.1)')
   
 ;------------------------------
@@ -45,7 +45,7 @@ PRO plot_o_beam_test_mms, stop = stop, beam_recalc = beam_recalc, store_tplot = 
   
   test_days = (test_days[UNIQ(test_days)])
   
-  if not keyword_set(itest_days) then itest_days = 1
+  if ~KEYWORD_SET(itest_days) then itest_days = 1
   test_days = test_days[itest_days:(N_ELEMENTS(test_days)-1)]
   
   n_time = N_ELEMENTS(test_days)
@@ -56,7 +56,7 @@ PRO plot_o_beam_test_mms, stop = stop, beam_recalc = beam_recalc, store_tplot = 
   
   calc_time = 24.* 60. * 60.                                  ;< dt ; in seconds
   display_time = 4. * 60 * 60                                 ;< dt ; in seconds
-  if not keyword_set(average_time) then average_time = 2 * 60 ; in seconds 
+  if ~KEYWORD_SET(average_time) then average_time = 2 * 60 ; in seconds 
 ;----------------------------------------------------
 ; Set up folders and log filenames
 ;-----------------------------------------------------

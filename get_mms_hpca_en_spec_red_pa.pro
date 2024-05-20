@@ -167,6 +167,12 @@ PRO get_mms_hpca_en_spec_red_pa, sat, species, units, tplot_var_name, pa, no_con
      return
   endif
   get_data, tplot_var_dflux_name, data=d2
+   ; Jing: handle the condition the data stored in tplot variable is "0".  example date: 2016-06-15
+  if ~keyword_set(d2) then begin
+     get_err_no = 1
+     return
+  endif
+
   store_data, tplot_var_dflux_name, data={x:d2.x, y:d2.y, v1:d1.v1, v2:d1.v2}
 
                                 ;----------------------------------------------------------------------

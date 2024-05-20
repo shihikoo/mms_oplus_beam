@@ -2,4 +2,6 @@ output/
 delete/
 output*/
 archive/
-temp/
+data/*.tplot
+data/*.gz
+linux64/

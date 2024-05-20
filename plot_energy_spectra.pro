@@ -24,17 +24,17 @@ PRO plot_energy_spectra, time_start = time_start, time_end = time_end, stop = st
 ;---------------------------------------------------------------
 ; Handle keywords
 ;--------------------------------------------------------------
-  IF NOT keyword_set(sc) THEN sc = 1 ; set the satallite number   
+  IF ~KEYWORD_SET(sc) THEN sc = 1 ; set the satallite number   
   sc_str = STRING(sc, FORMAT = '(i1.1)')
-  IF NOT keyword_set(sp) THEN sp = 3 ; set the species, 0: H+, 3: O+
-  IF NOT keyword_set(time_start) THEN  time_start = '2016-01-01/00:00:00'
+  IF ~KEYWORD_SET(sp) THEN sp = 3 ; set the species, 0: H+, 3: O+
+  IF ~KEYWORD_SET(time_start) THEN  time_start = '2016-01-01/00:00:00'
 
   IF KEYWORD_SET(time_start) AND KEYWORD_SET(time_end) THEN BEGIN
      PRINT, 'Cannot have time_end and time_duration at the same time.'
      STOP
-  ENDIF ELSE IF (NOT keyword_set(time_end)) AND NOT (keyword_set(time_duration)) THEN BEGIN
+  ENDIF ELSE IF (~KEYWORD_SET(time_end)) AND NOT (keyword_set(time_duration)) THEN BEGIN
      time_end = '2020-01-01/00:00:00'
-  ENDIF ELSE IF NOT KEYWORD_SET(time_end) AND keyword_set(time_duration) THEN time_end = time_string(time_double(time_start) + time_duration*24.*3600.) ; second
+  ENDIF ELSE IF ~KEYWORD_SET(time_end) AND keyword_set(time_duration) THEN time_end = time_string(time_double(time_start) + time_duration*24.*3600.) ; second
 
   if ~keyword_set(to_plot) then to_plot='enspec'
   
@@ -179,8 +179,7 @@ PRO plot_energy_spectra, time_start = time_start, time_end = time_end, stop = st
            ENDIF ELSE stop
            
         endif
-
-           
+     
         ENDFOR 
      ENDFOR   
 
