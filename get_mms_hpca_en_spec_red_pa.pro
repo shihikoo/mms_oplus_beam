@@ -13,7 +13,7 @@
 PRO convertfrom63to16, tvar
 
   get_data, tvar, data=data, dlim=dlim, lim=lim
-  p01 = tvar                    ;+ '_new'
+  p01 = tvar                    
 
                                 ; Get new energy table
   energy = data.v
@@ -63,7 +63,7 @@ PRO convertfrom63to16, tvar
 END
 
 
-PRO get_mms_hpca_en_spec_red_pa, sat, species, units, tplot_var_name, pa, no_convert_en=no_convert_en
+PRO get_mms_hpca_en_spec_red_pa, sat, species, units, tplot_var_name, pa, no_convert_en=no_convert_en, weight = weight
 
   COMMON get_error, get_err_no, get_err_msg, default_verbose
 ;----------------------------------------------------------------------
@@ -195,13 +195,45 @@ PRO get_mms_hpca_en_spec_red_pa, sat, species, units, tplot_var_name, pa, no_con
   ENDFOR
 
   pa_idx = WHERE(data.v2 GE pa(0) AND data.v2 LE pa(1), ipa_idx)
-
+  
   if ipa_idx EQ 0 then stop
   if ipa_idx eq 1 then begin
-     store_data, tplot_var_name, data={x:data.x, y:REFORM(data.y(*,*,pa_idx)), v:data.v1, dv:denergy}, dlim=dlim, lim=lim
+    store_data, tplot_var_name, data={x:data.x, y:REFORM(data.y(*,*,pa_idx)), v:data.v1, dv:denergy}, dlim=dlim, lim=lim
   endif else begin
-     store_data, tplot_var_name, data={x:data.x, y:REFORM(MEAN(data.y(*,*,pa_idx), DIM=3, /NaN)), v:data.v1, dv:denergy}, dlim=dlim, lim=lim
+
+    ;!!!new - to weight the PA for the energy spectra
+   ;  weight = 1
+   
+    if keyword_set(weight) then begin
+      omni_data = fltarr(n_elements(data.y[*,0,0]),n_elements(data.y[0,*,0]))
+      pa_for_weight = data.v2
+      pa_for_weight = pa_for_weight * !pi / 180.
+      delta_pa_for_weight = 11.25 / 2.
+      delta_pa_for_weight = delta_pa_for_weight * !pi / 180.
+
+
+      pa_weight = 4. * !pi * SIN(pa_for_weight) * sin(delta_pa_for_weight)
+
+      for itime = 0, n_elements(data.x)-1 do begin
+        for ienergy = 0, n_elements(data.v1)-1 do begin
+          omni_data[itime,ienergy] = total(data.y[itime,ienergy,*] * pa_weight, /NaN) / total(pa_weight, /NaN)
+        endfor
+      endfor
+      store_data, tplot_var_name, data={x:data.x, y:omni_data, v:data.v1, dv:denergy}, dlim=dlim, lim=lim
+    endif else begin
+      store_data, tplot_var_name, data={x:data.x, y:REFORM(mean(data.y(*,*,pa_idx), dim=3, /NaN)), v:data.v1, dv:denergy}, dlim=dlim, lim=lim
+    endelse
   endelse
+
+;   if ipa_idx EQ 0 then stop
+;   if ipa_idx eq 1 then begin
+;      store_data, tplot_var_name, data={x:data.x, y:REFORM(data.y(*,*,pa_idx)), v:data.v1, dv:denergy}, dlim=dlim, lim=lim
+;   endif else begin
+;    ;   store_data, tplot_var_name, data={x:data.x, y:REFORM(MEAN(data.y(*,*,pa_idx), DIM=3, /NaN)), v:data.v1, dv:denergy}, dlim=dlim, lim=lim
+; stop
+;      store_data, tplot_var_name, data={x:data.x, y:REFORM(total(data.y(*,*,pa_idx)*sin(data.v[*,*,pa_idx]),/nan)/total(sin(data.v[*,*,pa_idx]),/nan)), v:data.v1, dv:denergy}, dlim=dlim, lim=lim
+
+;   endelse
 
   store_data, tplot_var_dflux_name, /DEL
                                 ;----------------------------------------------------------------------

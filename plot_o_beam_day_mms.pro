@@ -23,7 +23,7 @@
 ; Written by Jing Liao  03/10/2021
 ;-------------------------------------------------------------------------------
 
-PRO plot_o_beam_day_mms, sc = sc, sp = sp, time_start = time_start, time_end = time_end, stop = stop, beam_recalc = beam_recalc, store_tplot = store_tplot, ps_plot = ps_plot, save_data = save_data, idl_plot = idl_plot, diff_en = diff_en, diff_pa = diff_pa, time_duration = time_duration, subtraction = subtraction, reduced = reduced, flux_threshold = flux_threshold, def_pap_factor = def_pap_factor, average_time = average_time, multi_peak = multi_peak, remove_bidirectional_pa = remove_bidirectional_pa, display_time = display_time, low_count_line = low_count_line, plot_all_region= plot_all_region, plot_low_count_filter = plot_low_count_filter
+PRO plot_o_beam_day_mms, sc = sc, sp = sp, time_start = time_start, time_end = time_end, stop = stop, beam_recalc = beam_recalc, store_tplot = store_tplot, ps_plot = ps_plot, save_data = save_data, idl_plot = idl_plot, diff_en = diff_en, diff_pa = diff_pa, time_duration = time_duration, subtraction = subtraction, reduced = reduced, flux_threshold = flux_threshold, def_pap_factor = def_pap_factor, average_time = average_time, multi_peak = multi_peak, remove_bidirectional_pa = remove_bidirectional_pa, display_time = display_time, low_count_line = low_count_line, plot_all_region= plot_all_region, plot_low_count_filter = plot_low_count_filter, moment_weight = moment_weight
 
 COMMON SHARE1,ENERGY_BINS, DENERGY_BINS, PA_BINS, ERROR_MESSAGE
 
@@ -70,6 +70,8 @@ ERROR_MESSAGE = ''
 
   if ~keyword_set(diff_pa) then diff_pa = 2
   if ~keyword_set(diff_en) then diff_en = 2
+
+  moment_weight = 1
 ;------------------------------------------------------------------
 ; Settings for running process
 ;-----------------------------------------------------------------
@@ -121,6 +123,7 @@ ERROR_MESSAGE = ''
   ts = time_double(time_start)
   te = time_double(time_end)
   ntime = CEIL((te - ts)/calc_time)
+  
 ;------------------------------------------------------------
   FOR i = 0l, ntime-1 DO BEGIN  
 ; Timespan over each calculation time
@@ -153,7 +156,8 @@ ERROR_MESSAGE = ''
                       , subtraction = subtraction $
                       , reduced = reduced $
                       , multi_peak = multi_peak $
-                      , remove_bidirectional_pa = remove_bidirectional_pa
+                      , remove_bidirectional_pa = remove_bidirectional_pa $
+                      , moment_weight = moment_weight
                       ; , stop = stop
      
      if keyword_set(stop) then stop
